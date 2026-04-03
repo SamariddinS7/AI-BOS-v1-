@@ -1,0 +1,5 @@
+{
+  "name": "AI-BOS: Smart Business OS",
+  "description": "AI yordamida boshqariladigan biznes operatsion tizimi. Moliya, marketing, HR va ombor tahlillari.",
+  "requestFramePermissions": ["camera", "microphone"]
+}

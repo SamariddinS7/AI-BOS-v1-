@@ -1,0 +1,170 @@
+{
+  "entities": {
+    "Employee": {
+      "title": "Employee",
+      "description": "HR employee record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "position": { "type": "string" },
+        "department": { "type": "string" },
+        "salary": { "type": "number" },
+        "status": { "type": "string", "enum": ["Faol", "Ta'tilda", "Bo'shatilgan"] },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "position", "department", "salary"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Daily attendance record",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "$ref": "Employee" },
+        "date": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["Keldi", "Kechikdi", "Kelmagan"] },
+        "checkIn": { "type": "string" },
+        "checkOut": { "type": "string" }
+      },
+      "required": ["employeeId", "date", "status"]
+    },
+    "KPI": {
+      "title": "KPI",
+      "description": "Key Performance Indicator record",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "$ref": "Employee" },
+        "month": { "type": "string" },
+        "score": { "type": "number" },
+        "target": { "type": "number" },
+        "achieved": { "type": "number" }
+      },
+      "required": ["employeeId", "month", "score"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Business project record",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["Rejalashtirilgan", "Jarayonda", "To'xtatilgan", "Yakunlangan"] },
+        "managerId": { "type": "string", "$ref": "Employee" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" }
+      },
+      "required": ["name", "status"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Project task record",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "$ref": "Project" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "assigneeId": { "type": "string", "$ref": "Employee" },
+        "status": { "type": "string", "enum": ["Bajarilishi kerak", "Jarayonda", "Tekshiruvda", "Bajarildi"] },
+        "priority": { "type": "string", "enum": ["Past", "O'rta", "Yuqori", "Kritik"] },
+        "dueDate": { "type": "string", "format": "date" }
+      },
+      "required": ["projectId", "title", "status"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "CRM client record",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "company": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "status": { "type": "string", "enum": ["Yangi", "Muzokara", "Shartnoma", "Yopilgan"] },
+        "lastContact": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "status"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Inventory product record",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "minStock": { "type": "number" },
+        "unit": { "type": "string" }
+      },
+      "required": ["name", "category", "price", "stock"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Finance transaction record",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string", "$ref": "Client" },
+        "productId": { "type": "string", "$ref": "Product" },
+        "type": { "type": "string", "enum": ["Kirim", "Chiqim"] },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "amount", "category", "date"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "Task comment record",
+      "type": "object",
+      "properties": {
+        "taskId": { "type": "string", "$ref": "Task" },
+        "userId": { "type": "string", "$ref": "Employee" },
+        "userName": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["taskId", "userId", "text", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/employees": {
+      "schema": "Employee",
+      "description": "Collection of employees"
+    },
+    "/attendance": {
+      "schema": "Attendance",
+      "description": "Collection of attendance records"
+    },
+    "/kpi": {
+      "schema": "KPI",
+      "description": "Collection of KPI records"
+    },
+    "/projects": {
+      "schema": "Project",
+      "description": "Collection of business projects"
+    },
+    "/tasks": {
+      "schema": "Task",
+      "description": "Collection of project tasks"
+    },
+    "/clients": {
+      "schema": "Client",
+      "description": "Collection of CRM clients"
+    },
+    "/products": {
+      "schema": "Product",
+      "description": "Collection of inventory products"
+    },
+    "/transactions": {
+      "schema": "Transaction",
+      "description": "Collection of finance transactions"
+    },
+    "/comments": {
+      "schema": "Comment",
+      "description": "Collection of task comments"
+    }
+  }
+}

@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../../
+      dockerfile: infra/docker/backend.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/ai_bos
+      - REDIS_URL=redis://redis:6379/0
+      - AI_MODE=PURE_LOCAL
+      - ENV=development
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ../../backend:/app/backend
+    networks:
+      - ai-bos-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: infra/docker/frontend.Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - ai-bos-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ai_bos
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai-bos-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - ai-bos-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional Local LLM Service (e.g., Ollama or vLLM)
+  local-llm:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - ai-bos-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+networks:
+  ai-bos-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  ollama_data:

@@ -1,0 +1,154 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: employees
+    // Fields: name (string), position (string), department (string), salary (number), status (string), email (string), phone (string), joinedAt (timestamp)
+    //
+    // Collection: attendance
+    // Fields: employeeId (string), date (string), status (string), checkIn (string), checkOut (string)
+    //
+    // Collection: kpi
+    // Fields: employeeId (string), month (string), score (number), target (number), achieved (number)
+    //
+    // Collection: projects
+    // Fields: name (string), description (string), status (string), managerId (string), startDate (string), endDate (string)
+    //
+    // Collection: tasks
+    // Fields: projectId (string), title (string), description (string), assigneeId (string), status (string), priority (string), dueDate (string)
+    //
+    // Collection: clients
+    // Fields: name (string), company (string), email (string), phone (string), status (string), lastContact (timestamp)
+    //
+    // Collection: products
+    // Fields: name (string), category (string), price (number), stock (number), minStock (number), unit (string)
+    //
+    // Collection: transactions
+    // Fields: clientId (string), productId (string), type (string), amount (number), category (string), description (string), date (timestamp)
+    //
+    // Collection: comments
+    // Fields: taskId (string), userId (string), userName (string), text (string), createdAt (timestamp)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "boshqahramon0@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Validators
+    // ===============================================================
+    function isValidEmployee(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.position is string && data.department is string &&
+             data.salary is number && data.salary >= 0;
+    }
+
+    function isValidAttendance(data) {
+      return data.employeeId is string && data.date is string &&
+             data.status in ["Keldi", "Kechikdi", "Kelmagan"];
+    }
+
+    function isValidKPI(data) {
+      return data.employeeId is string && data.month is string &&
+             data.score is number && data.score >= 0 && data.score <= 100;
+    }
+
+    function isValidProject(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.status in ["Rejalashtirilgan", "Jarayonda", "To'xtatilgan", "Yakunlangan"];
+    }
+
+    function isValidTask(data) {
+      return data.projectId is string && data.title is string &&
+             data.status in ["Bajarilishi kerak", "Jarayonda", "Tekshiruvda", "Bajarildi"];
+    }
+
+    function isValidComment(data) {
+      return data.keys().hasAll(['taskId', 'userId', 'userName', 'text', 'createdAt']) &&
+             data.taskId is string && data.taskId.size() < 100 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.userName is string && data.userName.size() < 100 &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    function isCommentImmutableFieldsUnchanged() {
+      return request.resource.data.taskId == resource.data.taskId &&
+             request.resource.data.userId == resource.data.userId &&
+             request.resource.data.userName == resource.data.userName &&
+             request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /employees/{employeeId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /kpi/{kpiId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /projects/{projectId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /clients/{clientId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidComment(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(resource.data.userId) && isValidComment(request.resource.data) && isCommentImmutableFieldsUnchanged();
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+  }
+}
