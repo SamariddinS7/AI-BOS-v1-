@@ -103,7 +103,7 @@ export default function Warehouse() {
         </div>
         <button 
           onClick={() => setIsAddProductModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/20 font-bold text-base"
+          className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20 font-bold text-base"
         >
           <Plus className="w-5 h-5" />
           Mahsulot Qo'shish
@@ -170,7 +170,7 @@ export default function Warehouse() {
               }}
               className={`flex items-center gap-2 px-4 py-2 text-base font-bold rounded-xl transition-all ${
                 isSorted 
-                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' 
+                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20' 
                   : 'text-text-secondary bg-surface-card hover:bg-surface-dark border border-border-dark'
               }`}
             >
@@ -218,9 +218,9 @@ export default function Warehouse() {
                   <td className="px-6 py-4 font-black text-brand-400">{product.sales.toLocaleString()} dona</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 text-base font-black uppercase tracking-wider rounded-full ${
-                      product.status === 'Mavjud' ? 'text-emerald-400 bg-emerald-900/30 border border-emerald-900/50' :
-                      product.status === 'Kam qolgan' ? 'text-yellow-400 bg-yellow-900/30 border border-yellow-900/50' :
-                      'text-rose-400 bg-rose-900/30 border border-rose-900/50'
+                      product.status === 'Mavjud' ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' :
+                      product.status === 'Kam qolgan' ? 'text-amber-400 bg-amber-500/10 border border-amber-500/20' :
+                      'text-rose-400 bg-rose-500/10 border border-rose-500/20'
                     }`}>
                       {product.status}
                     </span>

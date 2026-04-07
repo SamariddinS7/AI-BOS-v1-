@@ -40,6 +40,17 @@ export function exportJSON(data: any[], name: string) {
   const a=document.createElement("a"); a.href=url; a.download=`${name}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+/**
+ * Calculates tax based on income and a specific rate.
+ * @param income The total income figure.
+ * @param rate The tax rate (e.g., 0.12 for 12%).
+ * @returns The calculated tax amount.
+ */
+export function calculateTax(income: number, rate: number = 0.12): number {
+  if (isNaN(income) || income < 0) return 0;
+  return income * rate;
+}
+
 import { useState, useEffect } from 'react';
 import { useFilters as useFiltersContext } from '../context/FilterContext';
 

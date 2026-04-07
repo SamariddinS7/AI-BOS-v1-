@@ -1,20 +1,20 @@
 export const T = {
   // — Backgrounds (layered depth model)
-  bg:       "#0B0F19",
-  surface:  "#111827",
-  card:     "#1A2236",
-  cardHov:  "#1E2840",
+  bg:       "var(--color-app-bg)",
+  surface:  "var(--color-surface-ground)",
+  card:     "var(--color-surface-card)",
+  cardHov:  "var(--color-surface-layer)",
   overlay:  "rgba(7,11,22,0.92)",
 
   // — Borders
-  border:   "#2A3655",
-  borderHi: "#3D4F78",
+  border:   "var(--color-border-dark)",
+  borderHi: "var(--color-border-glow)",
 
   // — Accent palette
-  accent:   "#00D4FF",
-  accentDim:"rgba(0,212,255,0.10)",
-  accentMid:"rgba(0,212,255,0.18)",
-  accentStr:"rgba(0,212,255,0.28)",
+  accent:   "var(--color-brand-500)",
+  accentDim: "rgba(0, 212, 255, 0.1)",
+  accentMid: "rgba(0, 212, 255, 0.18)",
+  accentStr: "rgba(0, 212, 255, 0.28)",
 
   green:    "#22C55E",  greenDim: "rgba(34,197,94,0.12)",
   amber:    "#F59E0B",  amberDim: "rgba(245,158,11,0.12)",
@@ -24,10 +24,10 @@ export const T = {
   sky:      "#38BDF8",  skyDim:   "rgba(56,189,248,0.11)",
 
   // — Text scale
-  t1: "#F0F4FF",   // heading
-  t2: "#8B9EC4",   // body
-  t3: "#4D618A",   // meta
-  t4: "#283350",   // muted/disabled
+  t1: "var(--color-text-primary)",   // heading
+  t2: "var(--color-text-secondary)",   // body
+  t3: "var(--color-text-muted)",   // meta
+  t4: "var(--color-border-dark)",   // muted/disabled
 
   // — Typography
   sans: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif",

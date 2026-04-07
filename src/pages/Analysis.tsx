@@ -11,13 +11,13 @@ export default function Analysis() {
           <h1 className="text-2xl font-bold text-text-primary">Tahlil Markazi</h1>
           <p className="text-text-muted">Real vaqt rejimida tahlillar va prognozlar.</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-900/20 border border-emerald-900/50 rounded-full">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-          <span className="text-base font-bold text-emerald-400 uppercase tracking-wider">Tizim Onlayn</span>
-        </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="text-base font-bold text-emerald-400 uppercase tracking-wider">Tizim Onlayn</span>
+          </div>
       </div>
 
       <AIInsightCard 
@@ -40,13 +40,13 @@ export default function Analysis() {
             module="revenue" 
             metric="amount" 
             title="Umumiy Daromad" 
-            color="#10b981" 
+            color="var(--color-emerald-500)" 
           />
           <UniversalChart 
             module="sales" 
             metric="count" 
             title="Savdo Hajmi" 
-            color="#3b82f6" 
+            color="var(--color-brand-500)" 
           />
         </div>
       </section>
@@ -54,7 +54,7 @@ export default function Analysis() {
       {/* Marketing & Growth */}
       <section>
         <div className="flex items-center gap-2 mb-4">
-          <Megaphone className="w-5 h-5 text-purple-500" />
+          <Megaphone className="w-5 h-5 text-violet-500" />
           <h2 className="text-lg font-bold text-text-primary">Marketing va O'sish</h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -62,13 +62,13 @@ export default function Analysis() {
             module="marketing" 
             metric="roi" 
             title="Marketing ROI" 
-            color="#8b5cf6" 
+            color="var(--color-violet-500)" 
           />
           <UniversalChart 
             module="marketing" 
             metric="leads" 
             title="Lidlar Generatsiyasi" 
-            color="#ec4899" 
+            color="var(--color-brand-400)" 
           />
         </div>
       </section>
@@ -76,7 +76,7 @@ export default function Analysis() {
       {/* Operational Efficiency */}
       <section>
         <div className="flex items-center gap-2 mb-4">
-          <Package className="w-5 h-5 text-orange-500" />
+          <Package className="w-5 h-5 text-amber-500" />
           <h2 className="text-lg font-bold text-text-primary">Operatsion Samaradorlik</h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -84,13 +84,13 @@ export default function Analysis() {
             module="inventory" 
             metric="stock" 
             title="Ombor Qoldig'i" 
-            color="#f97316" 
+            color="var(--color-amber-500)" 
           />
           <UniversalChart 
             module="hr" 
             metric="performance" 
             title="Xodimlar Samaradorligi" 
-            color="#ef4444" 
+            color="var(--color-rose-500)" 
           />
         </div>
       </section>

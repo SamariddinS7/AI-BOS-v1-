@@ -51,19 +51,19 @@ const AIRecommendations = memo(() => {
   const { t } = useLanguage();
 
   return (
-    <div className="rounded-2xl border border-border-dark glass-panel p-6 relative overflow-hidden shadow-sm">
-      <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-purple-500">
+    <div className="enterprise-card p-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none text-brand-500">
         <Sparkles size={120} />
       </div>
       
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
+          <div className="p-2 bg-brand-500/10 rounded-xl text-brand-500">
             <Sparkles size={20} />
           </div>
-          <h3 className="text-lg font-bold text-text-primary">{t('ai_strategic_recommendations')}</h3>
+          <h3 className="text-lg font-bold text-white">{t('ai_strategic_recommendations')}</h3>
         </div>
-        <span className="text-base font-semibold text-purple-500 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
+        <span className="text-base font-bold text-brand-500 bg-brand-500/10 px-2.5 py-1 rounded-full border border-brand-500/20">
           {t('live_analysis')}
         </span>
       </div>
@@ -85,7 +85,7 @@ const AIRecommendations = memo(() => {
 
       <button 
         onClick={() => success(t('generating_new_insights'))}
-        className="w-full mt-6 py-3 bg-gradient-to-r from-purple-600 to-brand-600 hover:from-purple-500 hover:to-brand-500 text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 relative z-10 group"
+        className="w-full mt-6 py-3 bg-brand-600 hover:bg-brand-500 text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-brand-600/20 flex items-center justify-center gap-2 relative z-10 group"
       >
         <RefreshCw size={16} className="group-hover:rotate-180 transition-transform duration-500" />
         {t('generate_new_insights')}

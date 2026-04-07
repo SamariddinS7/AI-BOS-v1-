@@ -62,7 +62,7 @@ export default function NotificationSettings() {
       </div>
 
       {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-green-200 dark:border-green-800">
+        <div className="mb-6 p-4 bg-green-500/10 text-green-700 text-green-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-green-200 dark:border-green-800">
           <Check className="w-5 h-5" />
           {successMessage}
         </div>
@@ -73,9 +73,9 @@ export default function NotificationSettings() {
         <div>
           <h4 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-4">Yetkazib berish kanallari</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${settings.email_enabled ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-800'}`} onClick={() => toggleSetting('email_enabled')}>
+            <div className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${settings.email_enabled ? 'border-blue-600 bg-brand-500/10' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-800'}`} onClick={() => toggleSetting('email_enabled')}>
               <div className="flex justify-between items-center mb-2">
-                <Mail className={`w-6 h-6 ${settings.email_enabled ? 'text-blue-600' : 'text-gray-400'}`} />
+                <Mail className={`w-6 h-6 ${settings.email_enabled ? 'text-brand-500' : 'text-gray-400'}`} />
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${settings.email_enabled ? 'border-blue-600 bg-blue-600' : 'border-gray-300 dark:border-gray-600'}`}>
                   {settings.email_enabled && <Check className="w-3 h-3 text-white" />}
                 </div>
@@ -84,9 +84,9 @@ export default function NotificationSettings() {
               <p className={`text-base mt-1 ${settings.email_enabled ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}>Asosiy xabarlar</p>
             </div>
 
-            <div className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${settings.sms_enabled ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-800'}`} onClick={() => toggleSetting('sms_enabled')}>
+            <div className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${settings.sms_enabled ? 'border-blue-600 bg-brand-500/10' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-800'}`} onClick={() => toggleSetting('sms_enabled')}>
               <div className="flex justify-between items-center mb-2">
-                <MessageSquare className={`w-6 h-6 ${settings.sms_enabled ? 'text-blue-600' : 'text-gray-400'}`} />
+                <MessageSquare className={`w-6 h-6 ${settings.sms_enabled ? 'text-brand-500' : 'text-gray-400'}`} />
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${settings.sms_enabled ? 'border-blue-600 bg-blue-600' : 'border-gray-300 dark:border-gray-600'}`}>
                   {settings.sms_enabled && <Check className="w-3 h-3 text-white" />}
                 </div>
@@ -95,9 +95,9 @@ export default function NotificationSettings() {
               <p className={`text-base mt-1 ${settings.sms_enabled ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}>Muhim ogohlantirishlar</p>
             </div>
 
-            <div className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${settings.push_enabled ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-800'}`} onClick={() => toggleSetting('push_enabled')}>
+            <div className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${settings.push_enabled ? 'border-blue-600 bg-brand-500/10' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-800'}`} onClick={() => toggleSetting('push_enabled')}>
               <div className="flex justify-between items-center mb-2">
-                <Smartphone className={`w-6 h-6 ${settings.push_enabled ? 'text-blue-600' : 'text-gray-400'}`} />
+                <Smartphone className={`w-6 h-6 ${settings.push_enabled ? 'text-brand-500' : 'text-gray-400'}`} />
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${settings.push_enabled ? 'border-blue-600 bg-blue-600' : 'border-gray-300 dark:border-gray-600'}`}>
                   {settings.push_enabled && <Check className="w-3 h-3 text-white" />}
                 </div>

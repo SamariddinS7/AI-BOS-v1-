@@ -2,44 +2,7 @@ import { Camera, CameraType, CameraStatus } from '../types';
 
 const STORAGE_KEY = 'sentinel_cameras_db_v1';
 
-const mockCameras: Camera[] = [
-  {
-    id: 'CAM-001',
-    name: 'Ombor Kirish',
-    type: 'Bullet',
-    status: 'Online',
-    location: 'Asosiy Darvoza',
-    ipAddress: '192.168.1.101',
-    lastActive: 'Hozir'
-  },
-  {
-    id: 'CAM-002',
-    name: 'Ombor Ichki Hudud',
-    type: 'Dome',
-    status: 'Online',
-    location: 'A Sektor',
-    ipAddress: '192.168.1.102',
-    lastActive: 'Hozir'
-  },
-  {
-    id: 'CAM-003',
-    name: 'Yuklash Zonasi',
-    type: 'PTZ',
-    status: 'Maintenance',
-    location: 'Orqa Hovli',
-    ipAddress: '192.168.1.103',
-    lastActive: '2 soat oldin'
-  },
-  {
-    id: 'CAM-004',
-    name: 'Kassa',
-    type: 'Fisheye',
-    status: 'Offline',
-    location: 'Ofis',
-    ipAddress: '192.168.1.104',
-    lastActive: 'Kecha'
-  }
-];
+const mockCameras: Camera[] = [];
 
 export const cameraService = {
   getAllCameras: (): Camera[] => {

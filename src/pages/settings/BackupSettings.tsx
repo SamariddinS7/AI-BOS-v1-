@@ -62,7 +62,7 @@ export default function BackupSettings() {
       </div>
 
       {successMessage && (
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg flex items-center gap-2 border border-green-200 dark:border-green-800">
+        <div className="p-4 bg-green-500/10 text-green-700 text-green-400 rounded-lg flex items-center gap-2 border border-green-200 dark:border-green-800">
           <Check className="w-5 h-5" />
           {successMessage}
         </div>
@@ -73,7 +73,7 @@ export default function BackupSettings() {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+              <div className="p-2 bg-brand-500/10 rounded-lg text-brand-500 dark:text-blue-400">
                 <Clock className="w-6 h-6" />
               </div>
               <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">Avtomatik Arxivlash</h4>
@@ -124,7 +124,7 @@ export default function BackupSettings() {
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400">
+              <div className="p-2 bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400">
                 <Cloud className="w-6 h-6" />
               </div>
               <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">Saqlash Joyi</h4>
@@ -138,7 +138,7 @@ export default function BackupSettings() {
                   value="local"
                   checked={settings.storageLocation === 'local'}
                   onChange={(e) => setSettings({...settings, storageLocation: e.target.value})}
-                  className="text-blue-600 focus:ring-blue-500"
+                  className="text-brand-500 focus:ring-blue-500"
                 />
                 <HardDrive className="w-5 h-5 text-gray-500" />
                 <span className="text-base font-medium text-gray-900 dark:text-gray-100">Lokal Server (Disk)</span>
@@ -151,7 +151,7 @@ export default function BackupSettings() {
                   value="s3"
                   checked={settings.storageLocation === 's3'}
                   onChange={(e) => setSettings({...settings, storageLocation: e.target.value})}
-                  className="text-blue-600 focus:ring-blue-500"
+                  className="text-brand-500 focus:ring-blue-500"
                 />
                 <Cloud className="w-5 h-5 text-gray-500" />
                 <span className="text-base font-medium text-gray-900 dark:text-gray-100">AWS S3 / Cloud Storage</span>
@@ -178,10 +178,10 @@ export default function BackupSettings() {
                   <div className="flex justify-between items-center">
                     <span className="text-base text-gray-400">{backup.date}</span>
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" title="Yuklab olish">
+                      <button className="p-1.5 text-brand-500 hover:bg-brand-500/5 dark:hover:bg-blue-900/20 rounded" title="Yuklab olish">
                         <Download className="w-3 h-3" />
                       </button>
-                      <button className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded" title="Qayta tiklash">
+                      <button className="p-1.5 text-green-500 hover:bg-green-500/5 dark:hover:bg-green-900/20 rounded" title="Qayta tiklash">
                         <RotateCcw className="w-3 h-3" />
                       </button>
                     </div>
@@ -189,7 +189,7 @@ export default function BackupSettings() {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-4 py-2 text-base text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+            <button className="w-full mt-4 py-2 text-base text-brand-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
               Barcha arxivlarni ko'rish
             </button>
           </div>

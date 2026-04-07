@@ -162,8 +162,8 @@ export default function AddAgentForm({ onCancel }: AddAgentFormProps) {
           </div>
         </div>
 
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex gap-3">
-          <ShieldAlert className="w-5 h-5 text-blue-600 dark:text-blue-500 flex-shrink-0 mt-0.5" />
+        <div className="bg-brand-500/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex gap-3">
+          <ShieldAlert className="w-5 h-5 text-brand-500 dark:text-blue-500 flex-shrink-0 mt-0.5" />
           <div>
             <h5 className="text-base font-bold text-blue-800 dark:text-blue-400 mb-1">Security Note</h5>
             <p className="text-base text-blue-700 dark:text-blue-500/80 leading-relaxed">

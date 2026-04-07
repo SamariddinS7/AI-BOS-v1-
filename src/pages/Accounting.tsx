@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calculator, FileText, Download, ArrowUpRight, ArrowDownLeft, Clock, Calendar, DollarSign, TrendingUp, TrendingDown, Search, Filter, Plus } from 'lucide-react';
 import KPICard from '../components/dashboard/KPICard';
 import Card from '../components/ui/Card';
@@ -6,30 +6,6 @@ import AIInsightCard from '../components/dashboard/AIInsightCard';
 import { useCurrencyFormatter } from '../hooks/useCurrencyFormatter';
 import DrillDownModal from '../components/analytics/DrillDownModal';
 import { useToast } from '../hooks/useToast';
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  amount: number;
-  status: 'Muvaffaqiyatli' | 'Jarayonda' | 'Bekor Qilindi';
-  type: 'income' | 'expense';
-}
-// ... (rest of the mock data)
-const mockPendingTransactions: Transaction[] = [
-  { id: 'PEN-001', date: '2023-10-28', description: 'Soliq To\'lovi (QQS)', category: 'Soliq', amount: -12500000, status: 'Jarayonda', type: 'expense' },
-  { id: 'PEN-002', date: '2023-10-30', description: 'Xodimlar Maoshi', category: 'Ish Haqi', amount: -45000000, status: 'Jarayonda', type: 'expense' },
-  { id: 'PEN-003', date: '2023-11-01', description: 'Mijoz D dan Kutilayotgan Tushum', category: 'Savdo', amount: 18000000, status: 'Jarayonda', type: 'income' },
-];
-
-const mockPayments = [
-  { id: '#PAY1', counterparty: 'Mijoz A', type: 'Kiruvchi', date: '2023-10-21', amount: 500000, status: 'Muvaffaqiyatli' },
-  { id: '#PAY2', counterparty: 'Yetkazib beruvchi B', type: 'Chiquvchi', date: '2023-10-22', amount: -1200000, status: 'Jarayonda' },
-  { id: '#PAY3', counterparty: 'Mijoz C', type: 'Kiruvchi', date: '2023-10-23', amount: 1500000, status: 'Bekor qilindi' },
-  { id: '#PAY4', counterparty: 'Xizmat ko\'rsatuvchi D', type: 'Chiquvchi', date: '2023-10-24', amount: -200000, status: 'Muvaffaqiyatli' },
-  { id: '#PAY5', counterparty: 'Mijoz E', type: 'Kiruvchi', date: '2023-10-25', amount: 2500000, status: 'Kutilmoqda' },
-];
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -50,6 +26,27 @@ export default function Accounting() {
   const { success, info } = useToast();
   const [analytics, setAnalytics] = useState<{isOpen: boolean, title: string, metric: string}>({isOpen: false, title: '', metric: ''});
   const { formatCurrency } = useCurrencyFormatter();
+  const [kpis, setKpis] = useState({ currentBalance: 0, expectedIncome: 0, accountsPayable: 0 });
+  const [transactions, setTransactions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [kpiRes, transRes] = await Promise.all([
+          fetch('/api/accounting/kpis'),
+          fetch('/api/accounting/transactions')
+        ]);
+        if (kpiRes.ok) setKpis(await kpiRes.json());
+        if (transRes.ok) setTransactions(await transRes.json());
+      } catch (error) {
+        console.error('Error fetching accounting data:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const completedPayments = transactions.filter(t => t.status === 'Muvaffaqiyatli');
+  const pendingPayments = transactions.filter(t => t.status === 'Jarayonda');
 
   // Mock data for sparklines
   const sparklineData = [
@@ -99,7 +96,7 @@ export default function Accounting() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <KPICard 
           title="Joriy Balans" 
-          value={formatCurrency(1250000000)} 
+          value={formatCurrency(kpis.currentBalance)} 
           change="+8.00%" 
           trend="up" 
           icon={DollarSign} 
@@ -108,7 +105,7 @@ export default function Accounting() {
         />
         <KPICard 
           title="Kutilayotgan Tushum" 
-          value={formatCurrency(150000000)} 
+          value={formatCurrency(kpis.expectedIncome)} 
           change="+15.00%" 
           trend="up" 
           icon={TrendingUp} 
@@ -117,7 +114,7 @@ export default function Accounting() {
         />
         <KPICard 
           title="To'lanishi Kerak" 
-          value={formatCurrency(45000000)} 
+          value={formatCurrency(kpis.accountsPayable)} 
           change="-5.00%" 
           trend="down" 
           icon={TrendingDown} 
@@ -165,24 +162,24 @@ export default function Accounting() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-dark">
-              {mockPayments.map((payment) => (
+              {completedPayments.map((payment) => (
                 <tr 
                   key={payment.id} 
                   onClick={() => info(`${payment.id} to'lovi tafsilotlari`)}
                   className="hover:bg-surface-card/30 transition-colors group cursor-pointer"
                 >
-                  <td className="px-6 py-4 text-text-muted font-mono text-base">{payment.id}</td>
-                  <td className="px-6 py-4 font-bold text-text-primary">{payment.counterparty}</td>
+                  <td className="px-6 py-4 text-text-muted font-mono text-base">{payment.id.substring(0, 8)}</td>
+                  <td className="px-6 py-4 font-bold text-text-primary">{payment.description}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-base font-black uppercase tracking-wider ${
-                      payment.type === 'Kiruvchi' ? 'bg-emerald-900/30 text-emerald-400' : 'bg-rose-900/30 text-rose-400'
+                      payment.type === 'income' ? 'bg-emerald-900/30 text-emerald-400' : 'bg-rose-900/30 text-rose-400'
                     }`}>
-                      {payment.type}
+                      {payment.type === 'income' ? 'Kiruvchi' : 'Chiquvchi'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-text-muted">{payment.date}</td>
-                  <td className={`px-6 py-4 font-black ${payment.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {payment.amount > 0 ? '+' : ''}{formatCurrency(Math.abs(payment.amount))}
+                  <td className="px-6 py-4 text-text-muted">{new Date(payment.date).toLocaleDateString()}</td>
+                  <td className={`px-6 py-4 font-black ${payment.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {payment.type === 'income' ? '+' : '-'}{formatCurrency(Math.abs(payment.amount))}
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 text-base font-black uppercase tracking-wider rounded-full ${getStatusColor(payment.status)}`}>
@@ -216,13 +213,13 @@ export default function Accounting() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-dark">
-              {mockPendingTransactions.map((trx) => (
+              {pendingPayments.map((trx) => (
                 <tr 
                   key={trx.id} 
                   onClick={() => info(`${trx.id} kutilayotgan to'lovi tafsilotlari`)}
                   className="hover:bg-surface-card/30 transition-colors group cursor-pointer"
                 >
-                  <td className="px-6 py-4 text-text-muted">{trx.date}</td>
+                  <td className="px-6 py-4 text-text-muted">{new Date(trx.date).toLocaleDateString()}</td>
                   <td className="px-6 py-4 font-bold text-text-primary">{trx.description}</td>
                   <td className="px-6 py-4 text-text-secondary">
                     <span className="px-2.5 py-1 bg-surface-card rounded-lg text-base font-bold border border-border-dark">
@@ -230,7 +227,7 @@ export default function Accounting() {
                     </span>
                   </td>
                   <td className={`px-6 py-4 font-black ${trx.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {trx.type === 'income' ? '+' : ''}{formatCurrency(Math.abs(trx.amount))}
+                    {trx.type === 'income' ? '+' : '-'}{formatCurrency(Math.abs(trx.amount))}
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-2.5 py-1 text-base font-black uppercase tracking-wider text-yellow-400 bg-yellow-900/30 rounded-full border border-yellow-900/50">

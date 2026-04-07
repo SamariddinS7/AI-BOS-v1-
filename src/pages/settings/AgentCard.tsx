@@ -20,7 +20,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ name, type, status, lastActivity,
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
             type === 'n8n' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' :
             type === 'Zapier' ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' :
-            'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+            'bg-blue-100 text-brand-500 dark:bg-blue-900/30 dark:text-blue-400'
           }`}>
             <LinkIcon className="w-5 h-5" />
           </div>
@@ -63,8 +63,8 @@ const AgentCard: React.FC<AgentCardProps> = ({ name, type, status, lastActivity,
           </button>
           <button className={`p-1.5 transition-colors rounded-md ${
             status === 'active' 
-              ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 bg-surface-ground' 
-              : 'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 bg-surface-ground'
+              ? 'text-red-500 hover:bg-red-500/5 dark:hover:bg-red-900/20 bg-surface-ground' 
+              : 'text-green-500 hover:bg-green-500/5 dark:hover:bg-green-900/20 bg-surface-ground'
           }`}>
             <Power className="w-4 h-4" />
           </button>

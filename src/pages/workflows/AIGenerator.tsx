@@ -74,7 +74,7 @@ export default function AIGenerator() {
                   <h4 className="text-lg font-bold text-text-primary">{generatedWorkflow.name}</h4>
                   <p className="text-base text-text-muted mt-1">{generatedWorkflow.description}</p>
                 </div>
-                <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-base font-bold flex items-center gap-1">
+                <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 text-green-400 rounded-full text-base font-bold flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4" /> Ready to Deploy
                 </span>
               </div>
@@ -115,11 +115,11 @@ export default function AIGenerator() {
                     ))}
                   </div>
                 </div>
-                <div className="p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 rounded-lg">
-                  <p className="text-base text-green-700 dark:text-green-400 font-medium flex items-center gap-2">
+                <div className="p-3 bg-green-500/5 dark:bg-green-900/10 border border-green-200 dark:border-green-900/30 rounded-lg">
+                  <p className="text-base text-green-700 text-green-400 font-medium flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5" /> Guardrails Passed
                   </p>
-                  <p className="text-base text-green-600 dark:text-green-500/80 mt-1">
+                  <p className="text-base text-green-500 dark:text-green-500/80 mt-1">
                     This workflow does not violate any financial limits or RBAC policies.
                   </p>
                 </div>

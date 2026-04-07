@@ -85,7 +85,7 @@ export default function Settings() {
                   }}
                   className={`flex items-center gap-3 px-4 py-3 text-base font-bold rounded-xl transition-all duration-200 group ${
                     activeTab === tab.id
-                      ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20'
+                      ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20'
                       : 'text-text-secondary hover:bg-surface-dark hover:text-text-primary'
                   }`}
                 >

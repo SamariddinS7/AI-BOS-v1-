@@ -22,9 +22,9 @@ export default function Workflows() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-full font-sans bg-surface-ground transition-colors duration-200">
+    <div className="flex-1 flex flex-col h-full font-sans bg-transparent transition-colors duration-200">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-border-dark bg-surface-card flex justify-between items-center shrink-0 shadow-sm z-10">
+      <div className="px-6 py-5 border-b border-border-dark glass flex justify-between items-center shrink-0 shadow-sm z-10">
         <div>
           <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
             <Network className="w-6 h-6 text-brand-600" />

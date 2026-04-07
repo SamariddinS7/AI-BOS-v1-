@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { Mic, X, Volume2, Square, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { GoogleGenAI } from "@google/genai";
 
 const VoiceWave = memo(({ active }: { active: boolean }) => (
   <div className="flex items-center gap-1 h-6">
@@ -78,28 +77,10 @@ class SentenceQueue {
   }
 }
 
+import { geminiService } from '../../services/geminiService';
+
 async function callAIStream(messages: any[], system: string, onChunk: (chunk: string) => void) {
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
-    const promptString = messages.map(m => `${m.role}: ${m.content}`).join('\n');
-
-    const responseStream = await ai.models.generateContentStream({
-      model: "gemini-3-flash-preview",
-      contents: promptString,
-      config: {
-        systemInstruction: system || "Siz AI-BOS ovozli yordamchisisiz. Qisqa, aniq va suhbatdoshdek javob bering.",
-      }
-    });
-
-    for await (const chunk of responseStream) {
-      if (chunk.text) {
-        onChunk(chunk.text);
-      }
-    }
-  } catch (e: any) {
-    onChunk("Xatolik: " + e.message);
-  }
+  await geminiService.generateStream(messages, system, onChunk);
 }
 
 function useVoiceAgent() {
@@ -242,7 +223,7 @@ export default function AIChat() {
         onClick={toggleOpen}
         className={`p-4 rounded-full shadow-lg transition-all duration-300 relative flex items-center justify-center ${
           isOpen 
-            ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/30' 
+            ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/30' 
             : 'bg-brand-600 hover:bg-brand-500 hover:scale-110 text-white shadow-brand-500/30'
         }`}
       >
@@ -266,12 +247,12 @@ export default function AIChat() {
                   <div className="text-base font-bold text-text-primary">AI-BOS Voice</div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      state === "listening" ? "bg-green-500 shadow-[0_0_5px_#22c55e]" :
-                      state === "thinking" ? "bg-brand-500 shadow-[0_0_5px_#14b8a6]" :
-                      state === "speaking" ? "bg-brand-500 shadow-[0_0_5px_#14b8a6]" : "bg-text-muted"
+                      state === "listening" ? "bg-emerald-500 shadow-[0_0_5px_#10b981]" :
+                      state === "thinking" ? "bg-brand-500 shadow-[0_0_5px_var(--color-brand-500)]" :
+                      state === "speaking" ? "bg-brand-500 shadow-[0_0_5px_var(--color-brand-500)]" : "bg-text-muted"
                     }`} />
                     <span className={`text-base ${
-                      state === "listening" ? "text-green-500" :
+                      state === "listening" ? "text-emerald-500" :
                       state === "thinking" ? "text-brand-500" :
                       state === "speaking" ? "text-brand-500" : "text-text-muted"
                     }`}>

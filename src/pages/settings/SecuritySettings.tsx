@@ -74,7 +74,7 @@ export default function SecuritySettings() {
       </div>
 
       {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-green-200 dark:border-green-800">
+        <div className="mb-6 p-4 bg-green-500/10 text-green-700 text-green-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-green-200 dark:border-green-800">
           <Check className="w-5 h-5" />
           {successMessage}
         </div>
@@ -84,7 +84,7 @@ export default function SecuritySettings() {
         {/* 2FA */}
         <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+            <div className="p-3 bg-brand-500/10 rounded-lg text-brand-500 dark:text-blue-400">
               <Shield className="w-6 h-6" />
             </div>
             <div>
@@ -109,7 +109,7 @@ export default function SecuritySettings() {
         {/* Biometrics */}
         <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400">
+            <div className="p-3 bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400">
               <Smartphone className="w-6 h-6" />
             </div>
             <div>

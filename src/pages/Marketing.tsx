@@ -20,17 +20,17 @@ import { useToast } from '../hooks/useToast';
 
 // Color Palette
 const COLORS = {
-  primary: '#3b82f6', // blue-500
-  positive: '#10b981', // emerald-500
-  warning: '#f59e0b', // amber-500
-  negative: '#ef4444', // red-500
-  surface: '#0f172a', // slate-900
-  teal: '#0d9488', // teal-600
-  violet: '#8b5cf6', // violet-500
-  sky: '#0ea5e9', // sky-500
-  border: '#1e293b', // slate-800
-  t3: '#64748b', // slate-500
-  t1: '#f8fafc' // slate-50
+  primary: 'var(--color-brand-500)', // blue-500
+  positive: 'var(--color-emerald-500)', // emerald-500
+  warning: 'var(--color-amber-500)', // amber-500
+  negative: 'var(--color-rose-500)', // red-500
+  surface: 'var(--color-surface-card)', // slate-900
+  teal: 'var(--color-enterprise-teal)', // teal-600
+  violet: 'var(--color-violet-500)', // violet-500
+  sky: 'var(--color-brand-400)', // sky-500
+  border: 'var(--color-border-dark)', // slate-800
+  t3: 'var(--color-text-muted)', // slate-500
+  t1: 'var(--color-text-primary)' // slate-50
 };
 
 const MONTHS = ["Yan","Fev","Mar","Apr","May","Iyun","Iyul","Avg","Sen","Okt","Noy","Dek"];

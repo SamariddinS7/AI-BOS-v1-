@@ -39,12 +39,12 @@ const ProactiveGrowthSuggestions = memo(() => {
   ];
 
   return (
-    <div className="rounded-2xl border border-border-dark glass-panel p-6 shadow-sm">
+    <div className="rounded-2xl border border-border-dark enterprise-card p-6 shadow-sm">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-500">
           <TrendingUp className="w-5 h-5" />
         </div>
-        <h3 className="text-lg font-bold text-text-primary">{t('proactive_growth_opportunities')}</h3>
+        <h3 className="text-lg font-bold text-white">{t('proactive_growth_opportunities')}</h3>
       </div>
       
       <div className="space-y-4">
@@ -54,7 +54,7 @@ const ProactiveGrowthSuggestions = memo(() => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
             key={s.id} 
-            className="group p-5 rounded-xl bg-surface-dark border border-border-dark hover:bg-surface-card hover:border-brand-500/30 transition-all cursor-pointer shadow-sm"
+            className="group p-5 rounded-xl bg-surface-layer/30 border border-border-dark hover:bg-surface-layer hover:border-brand-500/30 transition-all cursor-pointer shadow-sm"
           >
             <div className="flex items-start gap-4">
               <div className={`p-2.5 rounded-xl ${s.type === 'savings' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-brand-500/10 text-brand-500'}`}>
@@ -62,15 +62,15 @@ const ProactiveGrowthSuggestions = memo(() => {
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-start">
-                  <h4 className="font-semibold text-text-primary text-base">{t(s.titleKey)}</h4>
+                  <h4 className="font-bold text-white text-base">{t(s.titleKey)}</h4>
                   <span className={`text-base font-bold px-2.5 py-1 rounded-lg ${s.type === 'savings' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-brand-500/10 text-brand-500'}`}>
                     {t(s.potentialImpactKey)}
                   </span>
                 </div>
-                <p className="text-base text-text-secondary mt-2 leading-relaxed">{t(s.descriptionKey)}</p>
+                <p className="text-base text-text-muted mt-2 leading-relaxed font-bold">{t(s.descriptionKey)}</p>
                 
                 <div className="mt-4 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                   <button className="text-base text-brand-500 font-semibold flex items-center gap-1 hover:gap-2 transition-all">
+                   <button className="text-base text-brand-500 font-bold flex items-center gap-1 hover:gap-2 transition-all">
                     {t('view_details')} <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

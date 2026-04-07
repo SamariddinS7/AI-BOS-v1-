@@ -10,21 +10,21 @@ import { useToast } from '../hooks/useToast';
 
 // Color Palette from user's code
 const T = {
-  accent:   "#3b82f6", // blue-500
-  accentDim:"rgba(59,130,246,0.10)",
-  accentStr:"rgba(59,130,246,0.28)",
-  green:    "#10b981",  greenDim: "rgba(16,185,129,0.12)",
-  amber:    "#f59e0b",  amberDim: "rgba(245,158,11,0.12)",
-  red:      "#ef4444",  redDim:   "rgba(239,68,68,0.11)",
-  violet:   "#8b5cf6",  violetDim:"rgba(139,92,246,0.12)",
-  teal:     "#0d9488",  tealDim:  "rgba(13,148,136,0.11)",
-  sky:      "#0ea5e9",  skyDim:   "rgba(14,165,233,0.11)",
-  border:   "#1e293b", // slate-800
-  borderHi: "#334155", // slate-700
-  t1: "#f8fafc", // slate-50
-  t2: "#cbd5e1", // slate-300
-  t3: "#64748b", // slate-500
-  t4: "#334155", // slate-700
+  accent:   "var(--color-brand-500)", // cyan
+  accentDim: "rgba(0, 212, 255, 0.1)",
+  accentStr: "rgba(0, 212, 255, 0.3)",
+  green:    "var(--color-emerald-500)",  greenDim: "rgba(16,185,129,0.12)",
+  amber:    "var(--color-amber-500)",  amberDim: "rgba(245,158,11,0.12)",
+  red:      "var(--color-rose-500)",  redDim:   "rgba(239,68,68,0.11)",
+  violet:   "var(--color-violet-500)",  violetDim: "rgba(139,92,246,0.12)",
+  teal:     "var(--color-enterprise-teal)",  tealDim:  "rgba(13,148,136,0.11)",
+  sky:      "var(--color-brand-400)",  skyDim:   "rgba(14,165,233,0.11)",
+  border:   "var(--color-border-dark)", // zinc-800
+  borderHi: "var(--color-border-glow)", // slate-700
+  t1: "var(--color-text-primary)", // slate-50
+  t2: "var(--color-text-secondary)", // slate-300
+  t3: "var(--color-text-muted)", // slate-500
+  t4: "var(--color-border-dark)", // slate-700
 };
 
 const STRAT_TABS = [
@@ -358,7 +358,7 @@ export default function StrategyPage() {
         <Card className="p-4 border-l-4 border-l-amber-500 bg-surface-card">
           <div className="text-base font-bold text-amber-500 mb-2">Asosiy Qoida</div>
           <p className="text-base text-text-secondary leading-relaxed">
-            AI (L4) <strong className="text-text-primary">hech qachon</strong> ROI, ROAS, CAC yoki boshqa raqamli ko'rsatkichlarni <strong className="text-red-500">hisoblamaydi</strong>. Barcha arifmetik hisob-kitoblar L2 da deterministik formulalar orqali amalga oshiriladi.
+            AI (L4) <strong className="text-text-primary">hech qachon</strong> ROI, ROAS, CAC yoki boshqa raqamli ko'rsatkichlarni <strong className="text-rose-500">hisoblamaydi</strong>. Barcha arifmetik hisob-kitoblar L2 da deterministik formulalar orqali amalga oshiriladi.
           </p>
         </Card>
 

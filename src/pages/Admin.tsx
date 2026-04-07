@@ -87,47 +87,47 @@ const AdminDashboard = () => {
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="p-6">
+        <Card className="p-6 enterprise-card">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <UsersIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-brand-500/10 rounded-lg border border-brand-500/20">
+              <UsersIcon className="w-6 h-6 text-brand-500" />
             </div>
             <div>
               <p className="text-base text-text-muted">Faol Foydalanuvchilar</p>
-              <h3 className="text-2xl font-bold text-text-primary">{metrics.activeUsers}</h3>
+              <h3 className="text-2xl font-bold text-white">{metrics.activeUsers}</h3>
             </div>
           </div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-6 enterprise-card">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+              <CheckCircle className="w-6 h-6 text-emerald-500" />
             </div>
             <div>
               <p className="text-base text-text-muted">Tizim Holati</p>
-              <h3 className="text-2xl font-bold text-green-600">{metrics.systemHealth}</h3>
+              <h3 className="text-2xl font-bold text-emerald-500">{metrics.systemHealth}</h3>
             </div>
           </div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-6 enterprise-card">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <Activity className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-violet-500/10 rounded-lg border border-violet-500/20">
+              <Activity className="w-6 h-6 text-violet-500" />
             </div>
             <div>
               <p className="text-base text-text-muted">Oxirgi 24s Faollik</p>
-              <h3 className="text-2xl font-bold text-text-primary">{metrics.recentActivity}</h3>
+              <h3 className="text-2xl font-bold text-white">{metrics.recentActivity}</h3>
             </div>
           </div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-6 enterprise-card">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-              <Database className="w-6 h-6 text-orange-600" />
+            <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+              <Database className="w-6 h-6 text-amber-500" />
             </div>
             <div>
               <p className="text-base text-text-muted">Jami Avtomatlashtirish</p>
-              <h3 className="text-2xl font-bold text-text-primary">{metrics.totalWorkflows}</h3>
+              <h3 className="text-2xl font-bold text-white">{metrics.totalWorkflows}</h3>
             </div>
           </div>
         </Card>
@@ -191,59 +191,59 @@ export const UserManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-text-primary">Foydalanuvchilar Boshqaruvi</h3>
+        <h3 className="text-lg font-bold text-white">Foydalanuvchilar Boshqaruvi</h3>
         <button 
           onClick={handleAddUser}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/20"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-black rounded-lg hover:bg-brand-500 transition-colors shadow-lg shadow-brand-600/20 font-bold"
         >
           <Plus className="w-4 h-4" />
           Yangi Foydalanuvchi
         </button>
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden enterprise-card">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-surface-ground border-b border-border-dark">
+            <tr className="bg-surface-layer/50 border-b border-border-dark">
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Ism</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Email</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Rol</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Bo'lim</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Holat</th>
-              <th className="px-6 py-4 text-base font-semibold text-text-muted">Amallar</th>
+              <th className="px-6 py-4 text-base font-semibold text-text-muted text-right">Amallar</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-dark">
             {users.map((user, index) => (
-              <tr key={user.id || `user-${index}`} className="hover:bg-surface-ground/50 transition-colors">
-                <td className="px-6 py-4 text-base text-text-primary font-medium">{user.name}</td>
-                <td className="px-6 py-4 text-base text-text-secondary">{user.email}</td>
+              <tr key={user.id || `user-${index}`} className="hover:bg-surface-layer/30 transition-colors group">
+                <td className="px-6 py-4 text-base text-white font-medium">{user.name}</td>
+                <td className="px-6 py-4 text-base text-text-muted">{user.email}</td>
                 <td className="px-6 py-4 text-base">
-                  <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded text-base font-medium">
+                  <span className="px-2 py-1 bg-brand-500/10 text-brand-500 rounded text-base font-medium border border-brand-500/20">
                     {user.role_name || 'Noma\'lum'}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-base text-text-secondary">{user.department}</td>
+                <td className="px-6 py-4 text-base text-text-muted">{user.department}</td>
                 <td className="px-6 py-4 text-base">
-                  <span className={`px-2 py-1 rounded text-base font-medium ${
+                  <span className={`px-2 py-1 rounded text-base font-medium border ${
                     user.status === 'active' 
-                      ? 'bg-green-50 dark:bg-green-900/20 text-green-600' 
-                      : 'bg-red-50 dark:bg-red-900/20 text-red-600'
+                      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+                      : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
                   }`}>
                     {user.status === 'active' ? 'Faol' : 'Nofaol'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-base">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-end gap-2">
                     <button 
                       onClick={() => handleEditUser(user)}
-                      className="p-1 text-text-muted hover:text-brand-500 transition-colors"
+                      className="p-2 text-text-muted hover:text-brand-500 hover:bg-brand-500/10 rounded-lg transition-all"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => handleDeleteUser(user.id)}
-                      className="p-1 text-text-muted hover:text-rose-500 transition-colors"
+                      className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -294,28 +294,28 @@ const AuditLogs = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-text-primary">Audit Jurnali</h3>
+        <h3 className="text-lg font-bold text-white">Audit Jurnali</h3>
         <div className="flex gap-2">
           <button 
             onClick={handleExportLogs}
-            className="flex items-center gap-2 px-4 py-2 text-base font-medium text-text-secondary hover:text-brand-500 transition-colors border border-border-dark rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 text-base font-medium text-text-muted hover:text-brand-500 transition-colors border border-border-dark rounded-lg hover:bg-surface-layer"
           >
             <Download className="w-4 h-4" />
             Eksport
           </button>
           <button 
             onClick={handleClearLogs}
-            className="flex items-center gap-2 px-4 py-2 text-base font-medium text-rose-500 hover:text-rose-600 transition-colors border border-border-dark rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 text-base font-medium text-rose-500 hover:text-rose-600 transition-colors border border-border-dark rounded-lg hover:bg-surface-layer"
           >
             <Trash2 className="w-4 h-4" />
             Tozalash
           </button>
         </div>
       </div>
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden enterprise-card">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-surface-ground border-b border-border-dark">
+            <tr className="bg-surface-layer/50 border-b border-border-dark">
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Foydalanuvchi</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Amal</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Modul</th>
@@ -330,11 +330,11 @@ const AuditLogs = () => {
               </tr>
             ) : (
               logs.map((log, index) => (
-                <tr key={log.id || `log-${index}`} className="hover:bg-surface-ground/50 transition-colors">
-                  <td className="px-6 py-4 text-base font-medium text-text-primary">{log.user_name || 'Tizim'}</td>
-                  <td className="px-6 py-4 text-base text-text-secondary">{log.action}</td>
+                <tr key={log.id || `log-${index}`} className="hover:bg-surface-layer/30 transition-colors">
+                  <td className="px-6 py-4 text-base font-medium text-white">{log.user_name || 'Tizim'}</td>
+                  <td className="px-6 py-4 text-base text-text-muted">{log.action}</td>
                   <td className="px-6 py-4 text-base">
-                    <span className="px-2 py-1 bg-surface-ground rounded text-base text-text-muted border border-border-dark">
+                    <span className="px-2 py-1 bg-surface-layer rounded text-base text-text-muted border border-border-dark">
                       {log.module}
                     </span>
                   </td>
@@ -368,42 +368,42 @@ const SecuritySettings = () => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-text-primary">Xavfsizlik Sozlamalari</h3>
+        <h3 className="text-lg font-bold text-white">Xavfsizlik Sozlamalari</h3>
         <button 
           onClick={handleSave}
-          className="px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/20 font-bold text-base"
+          className="px-6 py-2 bg-brand-600 text-black rounded-lg hover:bg-brand-500 transition-colors shadow-lg shadow-brand-600/20 font-bold text-base"
         >
           Saqlash
         </button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6">
+        <Card className="p-6 enterprise-card">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Lock className="w-5 h-5 text-brand-500" />
-              <span className="font-medium text-text-primary">Ikki bosqichli autentifikatsiya (2FA)</span>
+              <span className="font-medium text-white">Ikki bosqichli autentifikatsiya (2FA)</span>
             </div>
             <input 
               type="checkbox" 
               checked={settings.twoFactor}
               onChange={(e) => setSettings({...settings, twoFactor: e.target.checked})}
-              className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-ground" 
+              className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-layer" 
             />
           </div>
           <p className="text-base text-text-muted">Tizimga kirishda qo'shimcha xavfsizlik qatlamini yoqish.</p>
         </Card>
-        <Card className="p-6">
+        <Card className="p-6 enterprise-card">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <Activity className="w-5 h-5 text-brand-500" />
-              <span className="font-medium text-text-primary">Sessiya muddati (daqiqa)</span>
+              <span className="font-medium text-white">Sessiya muddati (daqiqa)</span>
             </div>
             <input 
               type="number" 
               value={settings.sessionTimeout}
               onChange={(e) => setSettings({...settings, sessionTimeout: parseInt(e.target.value)})}
-              className="w-20 px-2 py-1 bg-surface-ground border border-border-dark rounded text-base text-text-primary outline-none focus:border-brand-500" 
+              className="w-20 px-2 py-1 bg-surface-layer border border-border-dark rounded text-base text-white outline-none focus:border-brand-500" 
             />
           </div>
           <p className="text-base text-text-muted">Foydalanuvchi harakatsiz bo'lganda sessiyani avtomatik yakunlash.</p>
@@ -411,24 +411,24 @@ const SecuritySettings = () => {
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-text-primary mb-4">Parol Siyosati</h3>
+        <h3 className="text-lg font-bold text-white mb-4">Parol Siyosati</h3>
         <div className="space-y-4">
-          <Card className="flex items-center justify-between p-4">
-            <span className="text-base text-text-primary">Minimal uzunlik</span>
+          <Card className="flex items-center justify-between p-4 enterprise-card">
+            <span className="text-base text-white">Minimal uzunlik</span>
             <input 
               type="number" 
               value={settings.minLength}
               onChange={(e) => setSettings({...settings, minLength: parseInt(e.target.value)})}
-              className="w-16 px-2 py-1 bg-surface-ground border border-border-dark rounded text-base text-text-primary outline-none focus:border-brand-500" 
+              className="w-16 px-2 py-1 bg-surface-layer border border-border-dark rounded text-base text-white outline-none focus:border-brand-500" 
             />
           </Card>
-          <Card className="flex items-center justify-between p-4">
-            <span className="text-base text-text-primary">Maxsus belgilar talab qilinadi</span>
+          <Card className="flex items-center justify-between p-4 enterprise-card">
+            <span className="text-base text-white">Maxsus belgilar talab qilinadi</span>
             <input 
               type="checkbox" 
               checked={settings.requireSpecialChars}
               onChange={(e) => setSettings({...settings, requireSpecialChars: e.target.checked})}
-              className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-ground" 
+              className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-layer" 
             />
           </Card>
         </div>
@@ -484,10 +484,10 @@ export const RolesManagement = () => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-text-primary">Rollar va Huquqlar</h3>
+        <h3 className="text-lg font-bold text-white">Rollar va Huquqlar</h3>
         <button 
           onClick={handleAddRole}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/20"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-black rounded-lg hover:bg-brand-500 transition-colors shadow-lg shadow-brand-600/20 font-bold"
         >
           <Plus className="w-4 h-4" />
           Yangi Rol
@@ -499,14 +499,14 @@ export const RolesManagement = () => {
           <h4 className="font-bold text-base text-text-muted uppercase tracking-wider">Mavjud Rollar</h4>
           <div className="space-y-2">
             {roles.map((role, index) => (
-              <Card key={role.id || `role-${index}`} className="p-4 flex justify-between items-center hover:border-brand-500/30 transition-colors">
+              <Card key={role.id || `role-${index}`} className="p-4 flex justify-between items-center hover:border-brand-500/30 transition-colors enterprise-card">
                 <div>
-                  <p className="font-bold text-text-primary">{role.name}</p>
+                  <p className="font-bold text-white">{role.name}</p>
                   <p className="text-base text-text-muted">{role.description}</p>
                 </div>
                 <button 
                   onClick={() => handleEditRole(role)}
-                  className="p-2 text-text-muted hover:text-brand-500 transition-colors"
+                  className="p-2 text-text-muted hover:text-brand-500 hover:bg-brand-500/10 rounded-lg transition-all"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
@@ -517,15 +517,15 @@ export const RolesManagement = () => {
 
         <div className="space-y-4">
           <h4 className="font-bold text-base text-text-muted uppercase tracking-wider">Tizim Huquqlari</h4>
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden enterprise-card">
             <div className="divide-y divide-border-dark">
               {permissions.map((perm, index) => (
-                <div key={perm.id || `perm-${index}`} className="p-4 flex items-center justify-between hover:bg-surface-ground/50 transition-colors">
+                <div key={perm.id || `perm-${index}`} className="p-4 flex items-center justify-between hover:bg-surface-layer/30 transition-colors">
                   <div>
-                    <p className="text-base font-medium text-text-primary">{perm.name}</p>
+                    <p className="text-base font-medium text-white">{perm.name}</p>
                     <p className="text-base text-text-muted">{perm.description}</p>
                   </div>
-                  <Shield className="w-4 h-4 text-text-muted" />
+                  <Shield className="w-4 h-4 text-brand-500/50" />
                 </div>
               ))}
             </div>
@@ -575,17 +575,17 @@ const ApiKeyManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-text-primary">API Kalitlar</h3>
+        <h3 className="text-lg font-bold text-white">API Kalitlar</h3>
         <button 
           onClick={handleCreateKey}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/20"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-black rounded-lg hover:bg-brand-500 transition-colors shadow-lg shadow-brand-600/20 font-bold"
         >
           <Plus className="w-4 h-4" />
           Yangi Kalit Yaratish
         </button>
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden enterprise-card">
         {keys.length === 0 ? (
           <div className="p-12 text-center text-text-muted">
             <Key className="w-12 h-12 mx-auto mb-4 opacity-20" />
@@ -594,7 +594,7 @@ const ApiKeyManagement = () => {
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-surface-ground border-b border-border-dark">
+              <tr className="bg-surface-layer/50 border-b border-border-dark">
                 <th className="px-6 py-4 text-base font-semibold text-text-muted">Nomi</th>
                 <th className="px-6 py-4 text-base font-semibold text-text-muted">Kalit</th>
                 <th className="px-6 py-4 text-base font-semibold text-text-muted">Huquqlar</th>
@@ -604,17 +604,17 @@ const ApiKeyManagement = () => {
             </thead>
             <tbody className="divide-y divide-border-dark">
               {keys.map((key, index) => (
-                <tr key={key.id || `key-${index}`} className="hover:bg-surface-ground/50 transition-colors">
-                  <td className="px-6 py-4 text-base text-text-primary">{key.name}</td>
-                  <td className="px-6 py-4 text-base font-mono text-text-secondary">••••••••••••••••</td>
-                  <td className="px-6 py-4 text-base text-text-secondary">{key.scopes}</td>
+                <tr key={key.id || `key-${index}`} className="hover:bg-surface-layer/30 transition-colors">
+                  <td className="px-6 py-4 text-base text-white">{key.name}</td>
+                  <td className="px-6 py-4 text-base font-mono text-text-muted">••••••••••••••••</td>
+                  <td className="px-6 py-4 text-base text-text-muted">{key.scopes}</td>
                   <td className="px-6 py-4 text-base">
-                    <span className="px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-600 rounded text-base">Faol</span>
+                    <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded text-base border border-emerald-500/20">Faol</span>
                   </td>
                   <td className="px-6 py-4 text-base">
                     <button 
                       onClick={() => handleRevokeKey(key.id)}
-                      className="text-rose-500 hover:text-rose-600 font-medium"
+                      className="text-rose-500 hover:text-rose-600 font-bold"
                     >
                       Bekor qilish
                     </button>
@@ -689,12 +689,12 @@ const BackupManagement = () => {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-bold text-text-primary">Arxivlash va Tiklash</h3>
+          <h3 className="text-lg font-bold text-white">Arxivlash va Tiklash</h3>
           <p className="text-base text-text-muted">Tizim ma'lumotlarini zaxiralash va qayta tiklash</p>
         </div>
         <button 
           onClick={handleCreateBackup}
-          className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition-all"
+          className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-black rounded-xl hover:bg-brand-500 shadow-lg shadow-brand-600/20 transition-all font-bold"
         >
           <RefreshCw className="w-4 h-4" />
           Zaxira Nusxa Yaratish
@@ -702,57 +702,57 @@ const BackupManagement = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/30">
+        <Card className="p-6 bg-brand-500/10 border-brand-500/20 enterprise-card">
           <div className="flex items-center gap-3 mb-4">
-            <RefreshCw className="w-5 h-5 text-blue-600" />
-            <span className="font-bold text-blue-900 dark:text-blue-100">Avtomatik Zaxira</span>
+            <RefreshCw className="w-5 h-5 text-brand-500" />
+            <span className="font-bold text-white">Avtomatik Zaxira</span>
           </div>
-          <p className="text-base text-blue-700 dark:text-blue-300 mb-4">Har kuni soat 00:00 da tizim to'liq zaxiralanadi.</p>
+          <p className="text-base text-text-muted mb-4">Har kuni soat 00:00 da tizim to'liq zaxiralanadi.</p>
           <div className="flex items-center justify-between">
-            <span className="text-base font-medium text-blue-600">{autoBackup ? 'Yoqilgan' : 'O\'chirilgan'}</span>
+            <span className="text-base font-bold text-brand-500">{autoBackup ? 'Yoqilgan' : 'O\'chirilgan'}</span>
             <button 
               onClick={toggleAutoBackup}
-              className={`w-10 h-5 rounded-full relative transition-colors ${autoBackup ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+              className={`w-10 h-5 rounded-full relative transition-colors ${autoBackup ? 'bg-brand-600' : 'bg-surface-layer border border-border-dark'}`}
             >
               <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${autoBackup ? 'right-1' : 'left-1'}`}></div>
             </button>
           </div>
         </Card>
-        <Card className="p-6">
+        <Card className="p-6 enterprise-card">
           <div className="flex items-center gap-3 mb-4">
-            <Database className="w-5 h-5 text-text-muted" />
-            <span className="font-bold text-text-primary">Oxirgi Zaxira</span>
+            <Database className="w-5 h-5 text-brand-500" />
+            <span className="font-bold text-white">Oxirgi Zaxira</span>
           </div>
-          <p className="text-base text-text-secondary mb-4">Bugun, 00:00</p>
-          <p className="text-base text-text-muted">Hajmi: 124.5 MB</p>
+          <p className="text-base text-text-muted mb-4">Bugun, 00:00</p>
+          <p className="text-base text-text-muted">Hajmi: <span className="text-white">124.5 MB</span></p>
         </Card>
-        <Card className="p-6">
+        <Card className="p-6 enterprise-card">
           <div className="flex items-center gap-3 mb-4">
-            <AlertTriangle className="w-5 h-5 text-orange-500" />
-            <span className="font-bold text-text-primary">Tiklash Nuqtasi</span>
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            <span className="font-bold text-white">Tiklash Nuqtasi</span>
           </div>
-          <p className="text-base text-text-secondary mb-4">24 soat ichidagi o'zgarishlar</p>
+          <p className="text-base text-text-muted mb-4">24 soat ichidagi o'zgarishlar</p>
           <button 
             onClick={() => handleRestore({ filename: 'Oxirgi nuqta' })}
-            className="text-base font-bold text-orange-500 hover:underline"
+            className="text-base font-bold text-amber-500 hover:text-amber-400 transition-colors"
           >
             Tiklashni boshlash
           </button>
         </Card>
       </div>
 
-      <Card className="overflow-hidden">
-        <div className="px-6 py-4 border-b border-border-dark">
-          <h4 className="font-bold text-text-primary">Zaxira Tarixi</h4>
+      <Card className="overflow-hidden enterprise-card">
+        <div className="px-6 py-4 border-b border-border-dark bg-surface-layer/30">
+          <h4 className="font-bold text-white">Zaxira Tarixi</h4>
         </div>
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-surface-ground border-b border-border-dark">
+            <tr className="bg-surface-layer/50 border-b border-border-dark">
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Fayl Nomi</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Hajmi</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Sana</th>
               <th className="px-6 py-4 text-base font-semibold text-text-muted">Holat</th>
-              <th className="px-6 py-4 text-base font-semibold text-text-muted">Amallar</th>
+              <th className="px-6 py-4 text-base font-semibold text-text-muted text-right">Amallar</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-dark">
@@ -762,24 +762,24 @@ const BackupManagement = () => {
               </tr>
             ) : (
               backups.map((backup, index) => (
-                <tr key={backup.id || `backup-${index}`} className="hover:bg-surface-ground/50 transition-colors">
-                  <td className="px-6 py-4 text-base font-medium text-text-primary">{backup.filename}</td>
+                <tr key={backup.id || `backup-${index}`} className="hover:bg-surface-layer/30 transition-colors">
+                  <td className="px-6 py-4 text-base font-medium text-white">{backup.filename}</td>
                   <td className="px-6 py-4 text-base text-text-muted">{(backup.size / 1024 / 1024).toFixed(2)} MB</td>
                   <td className="px-6 py-4 text-base text-text-muted">{new Date(backup.created_at).toLocaleString()}</td>
                   <td className="px-6 py-4 text-base">
-                    <span className="px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-600 rounded text-base">Muvaffaqiyatli</span>
+                    <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded text-base border border-emerald-500/20">Muvaffaqiyatli</span>
                   </td>
                   <td className="px-6 py-4 text-base">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-end gap-3">
                       <button 
                         onClick={() => handleDownload(backup)}
-                        className="text-brand-500 hover:text-brand-600"
+                        className="p-2 text-text-muted hover:text-brand-500 hover:bg-brand-500/10 rounded-lg transition-all"
                       >
                         <Download className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleRestore(backup)}
-                        className="text-orange-500 hover:text-orange-600"
+                        className="p-2 text-text-muted hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-all"
                       >
                         <RefreshCw className="w-4 h-4" />
                       </button>
@@ -814,64 +814,64 @@ const SystemSettings = () => {
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-text-primary">Tizim Sozlamalari</h3>
+        <h3 className="text-lg font-bold text-white">Tizim Sozlamalari</h3>
         <button 
           onClick={handleSave}
-          className="px-6 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/20 font-bold text-base"
+          className="px-6 py-2 bg-brand-600 text-black rounded-lg hover:bg-brand-500 transition-colors shadow-lg shadow-brand-600/20 font-bold text-base"
         >
           Saqlash
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h4 className="font-bold mb-4 flex items-center gap-2 text-text-primary">
-            <Sparkles className="w-5 h-5 text-purple-500" />
+        <Card className="p-6 enterprise-card">
+          <h4 className="font-bold mb-4 flex items-center gap-2 text-white">
+            <Sparkles className="w-5 h-5 text-brand-500" />
             AI Sozlamalari
           </h4>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-base text-text-secondary">AI Tavsiyalarini yoqish</span>
+              <span className="text-base text-text-muted">AI Tavsiyalarini yoqish</span>
               <input 
                 type="checkbox" 
                 checked={settings.aiRecommendations}
                 onChange={(e) => setSettings({...settings, aiRecommendations: e.target.checked})}
-                className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-ground" 
+                className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-layer" 
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-base text-text-secondary">Avtomatik AI qarorlari</span>
+              <span className="text-base text-text-muted">Avtomatik AI qarorlari</span>
               <input 
                 type="checkbox" 
                 checked={settings.aiDecisions}
                 onChange={(e) => setSettings({...settings, aiDecisions: e.target.checked})}
-                className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-ground" 
+                className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-layer" 
               />
             </div>
           </div>
         </Card>
-        <Card className="p-6">
-          <h4 className="font-bold mb-4 flex items-center gap-2 text-text-primary">
+        <Card className="p-6 enterprise-card">
+          <h4 className="font-bold mb-4 flex items-center gap-2 text-white">
             <RefreshCw className="w-5 h-5 text-brand-500" />
             Avtomatlashtirish
           </h4>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-base text-text-secondary">Ish oqimlarini yoqish</span>
+              <span className="text-base text-text-muted">Ish oqimlarini yoqish</span>
               <input 
                 type="checkbox" 
                 checked={settings.workflows}
                 onChange={(e) => setSettings({...settings, workflows: e.target.checked})}
-                className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-ground" 
+                className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-layer" 
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-base text-text-secondary">Xatolikda qayta urinish</span>
+              <span className="text-base text-text-muted">Xatolikda qayta urinish</span>
               <input 
                 type="checkbox" 
                 checked={settings.retryOnError}
                 onChange={(e) => setSettings({...settings, retryOnError: e.target.checked})}
-                className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-ground" 
+                className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-layer" 
               />
             </div>
           </div>
@@ -879,24 +879,24 @@ const SystemSettings = () => {
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-text-primary mb-4">Bildirishnoma Afzalliklari</h3>
+        <h3 className="text-lg font-bold text-white mb-4">Bildirishnoma Afzalliklari</h3>
         <div className="space-y-4">
-          <Card className="flex items-center justify-between p-4">
-            <span className="text-base text-text-secondary">Email bildirishnomalari (Global)</span>
+          <Card className="flex items-center justify-between p-4 enterprise-card">
+            <span className="text-base text-text-muted">Email bildirishnomalari (Global)</span>
             <input 
               type="checkbox" 
               checked={settings.globalEmail}
               onChange={(e) => setSettings({...settings, globalEmail: e.target.checked})}
-              className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-ground" 
+              className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-layer" 
             />
           </Card>
-          <Card className="flex items-center justify-between p-4">
-            <span className="text-base text-text-secondary">SMS bildirishnomalari (Global)</span>
+          <Card className="flex items-center justify-between p-4 enterprise-card">
+            <span className="text-base text-text-muted">SMS bildirishnomalari (Global)</span>
             <input 
               type="checkbox" 
               checked={settings.globalSms}
               onChange={(e) => setSettings({...settings, globalSms: e.target.checked})}
-              className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-ground" 
+              className="w-5 h-5 rounded border-border-dark text-brand-600 focus:ring-brand-500 bg-surface-layer" 
             />
           </Card>
         </div>
@@ -953,10 +953,10 @@ export const TenantManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-bold text-text-primary">Tashkilotlar (Multi-Tenant)</h3>
+        <h3 className="text-lg font-bold text-white">Tashkilotlar (Multi-Tenant)</h3>
         <button 
           onClick={handleAddTenant}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/20"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-black rounded-lg hover:bg-brand-500 transition-colors shadow-lg shadow-brand-600/20 font-bold"
         >
           <Plus className="w-4 h-4" />
           Yangi Tashkilot
@@ -965,41 +965,41 @@ export const TenantManagement = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {tenants.map((tenant, index) => (
-          <Card key={tenant.id || `tenant-${index}`} className="p-6">
+          <Card key={tenant.id || `tenant-${index}`} className="p-6 enterprise-card">
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <Building2 className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-brand-500/10 rounded-lg border border-brand-500/20">
+                  <Building2 className="w-5 h-5 text-brand-500" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-text-primary">{tenant.name}</h4>
+                  <h4 className="font-bold text-white">{tenant.name}</h4>
                   <p className="text-base text-text-muted">{tenant.domain}</p>
                 </div>
               </div>
-              <span className="px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-600 rounded text-base font-bold uppercase">
+              <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded text-base font-bold uppercase border border-emerald-500/20">
                 {tenant.status}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="p-3 bg-surface-ground rounded-lg border border-border-dark">
+              <div className="p-3 bg-surface-layer/30 rounded-lg border border-border-dark">
                 <p className="text-base text-text-muted uppercase">Foydalanuvchilar</p>
-                <p className="font-bold text-text-primary">{tenant.users}</p>
+                <p className="font-bold text-white">{tenant.users}</p>
               </div>
-              <div className="p-3 bg-surface-ground rounded-lg border border-border-dark">
+              <div className="p-3 bg-surface-layer/30 rounded-lg border border-border-dark">
                 <p className="text-base text-text-muted uppercase">Yaratilgan</p>
-                <p className="font-bold text-base text-text-primary">{new Date(tenant.created_at).toLocaleDateString()}</p>
+                <p className="font-bold text-base text-white">{new Date(tenant.created_at).toLocaleDateString()}</p>
               </div>
             </div>
             <div className="flex gap-2">
               <button 
                 onClick={() => handleManageTenant(tenant)}
-                className="flex-1 py-2 text-base font-medium border border-border-dark rounded-lg hover:bg-surface-ground text-text-secondary transition-colors"
+                className="flex-1 py-2 text-base font-bold border border-border-dark rounded-lg hover:bg-surface-layer text-text-muted hover:text-white transition-colors"
               >
                 Boshqarish
               </button>
               <button 
                 onClick={() => handleDeleteTenant(tenant.id)}
-                className="p-2 text-text-muted hover:text-rose-500 transition-colors"
+                className="p-2 text-text-muted hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -1060,19 +1060,19 @@ export default function Admin() {
     <div className="flex-1 overflow-y-auto p-6 md:p-8 font-sans transition-all duration-500 space-y-8 animate-slide-in">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary">Tizim Boshqaruvi</h2>
+          <h2 className="text-2xl font-bold text-white">Tizim Boshqaruvi</h2>
           <p className="text-text-muted">Platformani boshqarish va nazorat qilish markazi</p>
         </div>
         <div className="flex gap-3">
           <button 
             onClick={handleGlobalRefresh}
-            className="p-2 bg-surface-card border border-border-dark rounded-lg shadow-sm hover:bg-surface-dark transition-colors text-text-secondary"
+            className="p-2 bg-surface-card border border-border-dark rounded-lg shadow-sm hover:bg-surface-layer transition-colors text-text-muted hover:text-white"
           >
             <RefreshCw className="w-5 h-5" />
           </button>
           <button 
             onClick={handleDownloadReport}
-            className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-700 shadow-lg shadow-brand-500/20 transition-all font-bold text-base"
+            className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-black rounded-xl hover:bg-brand-500 shadow-lg shadow-brand-600/20 transition-all font-bold text-base"
           >
             <Download className="w-4 h-4" />
             Hisobot Yuklash
@@ -1083,7 +1083,7 @@ export default function Admin() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-3">
-          <Card className="p-2 overflow-hidden sticky top-6">
+          <Card className="p-2 overflow-hidden sticky top-6 enterprise-card">
             <nav className="flex flex-col space-y-1">
               {tabs.map((tab) => (
                 <button
@@ -1091,11 +1091,11 @@ export default function Admin() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-3 px-4 py-3 text-base font-bold rounded-xl transition-all duration-200 group ${
                     activeTab === tab.id
-                      ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20'
-                      : 'text-text-secondary hover:bg-surface-dark hover:text-text-primary'
+                      ? 'bg-brand-600 text-black shadow-lg shadow-brand-600/20'
+                      : 'text-text-muted hover:bg-surface-layer hover:text-white'
                   }`}
                 >
-                  <tab.icon className={`w-5 h-5 transition-colors ${activeTab === tab.id ? 'text-white' : 'text-text-muted group-hover:text-text-primary'}`} />
+                  <tab.icon className={`w-5 h-5 transition-colors ${activeTab === tab.id ? 'text-black' : 'text-text-muted group-hover:text-white'}`} />
                   {tab.label}
                 </button>
               ))}

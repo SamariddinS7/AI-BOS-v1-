@@ -252,15 +252,20 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-96 glass-panel shadow-2xl z-50 flex flex-col border-l border-border-dark transform transition-transform duration-300 ease-in-out font-sans">
-      {/* Header */}
+    <>
+      <div 
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]" 
+        onClick={onClose}
+      />
+      <div className="fixed inset-y-0 right-0 w-full sm:w-96 glass-panel shadow-2xl z-[9999] flex flex-col border-l border-border-dark transform transition-transform duration-300 ease-in-out font-sans">
+        {/* Header */}
       <div className="p-4 border-b border-border-dark flex justify-between items-center bg-surface-card/50 backdrop-blur-md text-text-primary transition-colors">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center shadow-lg shadow-brand-500/20">
               <Bot className="w-6 h-6 text-white" />
             </div>
-            <div className="absolute -bottom-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-surface-dark"></div>
+            <div className="absolute -bottom-1 -right-1 bg-emerald-500 w-3 h-3 rounded-full border-2 border-surface-dark"></div>
           </div>
           <div>
             <h3 className="font-bold text-base tracking-wide">AI-BOS</h3>
@@ -278,7 +283,7 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
       </div>
 
       {/* Capabilities Banner */}
-      <div className="bg-brand-900/20 p-3 border-b border-brand-900/30 flex justify-around text-base text-brand-300 font-medium">
+      <div className="bg-brand-900/20 p-3 border-b border-brand-900/30 flex justify-around text-base text-brand-400 font-medium">
         <div className="flex items-center gap-1">
           <Activity className="w-3 h-3" /> {t('accounting')}
         </div>
@@ -310,19 +315,19 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
                   <div className="grid grid-cols-2 gap-2 text-base">
                     <div className="bg-surface-dark p-2 rounded-lg">
                       <span className="text-text-muted block mb-1">KPI</span>
-                      <span className="font-semibold text-green-400">{msg.report.kpi_change}</span>
+                      <span className="font-semibold text-emerald-400">{msg.report.kpi_change}</span>
                     </div>
                     <div className="bg-surface-dark p-2 rounded-lg">
                       <span className="text-text-muted block mb-1">Impact</span>
-                      <span className="font-semibold text-brand-400">{msg.report.financial_impact}</span>
+                      <span className="font-semibold text-brand-500">{msg.report.financial_impact}</span>
                     </div>
                     <div className="bg-surface-dark p-2 rounded-lg">
                       <span className="text-text-muted block mb-1">Risk</span>
-                      <span className="font-semibold text-yellow-400">{msg.report.risk_impact}</span>
+                      <span className="font-semibold text-amber-400">{msg.report.risk_impact}</span>
                     </div>
                     <div className="bg-surface-dark p-2 rounded-lg">
                       <span className="text-text-muted block mb-1">Confidence</span>
-                      <span className="font-semibold text-purple-400">{msg.report.confidence_level}</span>
+                      <span className="font-semibold text-violet-400">{msg.report.confidence_level}</span>
                     </div>
                   </div>
                 </div>
@@ -362,7 +367,7 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
                   transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                 />
               </div>
-              <span className="text-base text-brand-400 font-medium tracking-wide">{t('ai_thinking')}</span>
+              <span className="text-base text-brand-500 font-medium tracking-wide">{t('ai_thinking')}</span>
             </div>
           </div>
         )}
@@ -389,7 +394,7 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
               disabled={isProcessingVoice}
               className={`p-2 rounded-full transition-all duration-200 ${
                 isRecording 
-                  ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' 
+                  ? 'bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30' 
                   : 'text-text-muted hover:bg-surface-card hover:text-text-primary'
               }`}
               title={isRecording ? "Yozishni to'xtatish" : "Ovozli buyruq"}
@@ -414,7 +419,7 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
         </div>
         <p className="text-base text-center text-text-muted mt-2">
           {isRecording ? (
-            <span className="text-red-500 font-medium animate-pulse">Ovoz yozilmoqda...</span>
+            <span className="text-rose-500 font-medium animate-pulse">Ovoz yozilmoqda...</span>
           ) : isProcessingVoice ? (
             <span className="text-brand-500 font-medium">Ovoz qayta ishlanmoqda...</span>
           ) : (
@@ -423,6 +428,7 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
         </p>
       </div>
     </div>
+    </>
   );
 });
 

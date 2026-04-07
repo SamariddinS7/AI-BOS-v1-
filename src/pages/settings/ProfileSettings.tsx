@@ -76,7 +76,7 @@ export default function ProfileSettings() {
       </div>
       
       {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-green-200 dark:border-green-800">
+        <div className="mb-6 p-4 bg-green-500/10 text-green-700 text-green-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-green-200 dark:border-green-800">
           <Check className="w-5 h-5" />
           {successMessage}
         </div>
@@ -120,7 +120,7 @@ export default function ProfileSettings() {
             }`}
           />
           {errors.firstName && (
-            <p className="mt-1 text-base text-red-600 dark:text-red-400 flex items-center gap-1">
+            <p className="mt-1 text-base text-red-500 text-red-400 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" /> {errors.firstName}
             </p>
           )}

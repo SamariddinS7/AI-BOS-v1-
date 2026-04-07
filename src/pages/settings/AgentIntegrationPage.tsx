@@ -67,7 +67,7 @@ export default function AgentIntegrationPage() {
             onClick={() => setActiveSubTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 text-base font-medium rounded-t-lg transition-colors whitespace-nowrap ${
               activeSubTab === tab.id
-                ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-50/50 dark:bg-brand-900/10'
+                ? 'text-brand-600 border-b-2 border-brand-600 bg-brand-500/5/50 dark:bg-brand-900/10'
                 : 'text-text-muted hover:text-text-primary hover:bg-surface-ground'
             }`}
           >

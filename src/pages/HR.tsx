@@ -16,13 +16,13 @@ import { EmployeeList } from '../components/hr/EmployeeList';
 import { HRAttendance } from '../components/hr/HRAttendance';
 
 const T = {
-  accent: "#3b82f6",
-  violet: "#8b5cf6",
-  teal: "#0d9488",
-  amber: "#f59e0b",
-  green: "#10b981",
-  sky: "#0ea5e9",
-  red: "#ef4444",
+  accent: "var(--color-brand-500)",
+  violet: "var(--color-violet-500)",
+  teal: "var(--color-enterprise-teal)",
+  amber: "var(--color-amber-500)",
+  green: "var(--color-emerald-500)",
+  sky: "var(--color-brand-400)",
+  red: "var(--color-rose-500)",
 };
 
 const HR_DATA = [
@@ -74,12 +74,12 @@ export default function HR() {
         <div className="h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={DEPT_KPI} layout="vertical" margin={{left: -20}}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-dark)" horizontal={false} />
               <XAxis type="number" domain={[0, 100]} hide />
-              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#8B9EC4', fontSize: 16}} width={100} />
+              <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} width={100} />
               <Tooltip 
-                contentStyle={{backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '16px'}}
-                itemStyle={{color: '#F0F4FF'}}
+                contentStyle={{backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px'}}
+                itemStyle={{color: 'var(--color-text-primary)'}}
               />
               <Bar dataKey="kpi" radius={[0, 4, 4, 0]} barSize={20}>
                 {DEPT_KPI.map((entry, index) => (
@@ -248,12 +248,12 @@ export default function HR() {
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={DEPT_KPI} layout="vertical" margin={{left: -20}}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-dark)" horizontal={false} />
                     <XAxis type="number" domain={[0, 100]} hide />
-                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#8B9EC4', fontSize: 16}} width={100} />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} width={100} />
                     <Tooltip 
-                      contentStyle={{backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '16px'}}
-                      itemStyle={{color: '#F0F4FF'}}
+                      contentStyle={{backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px'}}
+                      itemStyle={{color: 'var(--color-text-primary)'}}
                     />
                     <Bar dataKey="kpi" radius={[0, 4, 4, 0]} barSize={16}>
                       {DEPT_KPI.map((entry, index) => (

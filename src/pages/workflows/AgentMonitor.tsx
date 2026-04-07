@@ -74,12 +74,12 @@ export default function AgentMonitor() {
         </Card>
         <Card className="p-6 flex flex-col items-center justify-center">
           <h4 className="text-base font-medium text-text-muted mb-2">Success Rate</h4>
-          <p className="text-4xl font-black text-green-600 dark:text-green-400">{stats.successRate.toFixed(1)}%</p>
+          <p className="text-4xl font-black text-green-500 text-green-400">{stats.successRate.toFixed(1)}%</p>
         </Card>
         <Card className="p-6 flex flex-col items-center justify-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-bl-full"></div>
           <h4 className="text-base font-medium text-text-muted mb-2">Failed Executions</h4>
-          <p className="text-4xl font-black text-red-600 dark:text-red-400">{stats.failed}</p>
+          <p className="text-4xl font-black text-red-500 text-red-400">{stats.failed}</p>
         </Card>
       </div>
 
@@ -113,17 +113,17 @@ export default function AgentMonitor() {
                   <td className="py-4 px-6 font-medium text-text-primary">{exec.workflowName}</td>
                   <td className="py-4 px-6">
                     {exec.status === 'running' && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-base font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-base font-medium bg-brand-500/10 text-brand-500 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30">
                         <PlayCircle className="w-5 h-5 animate-pulse" /> Running
                       </span>
                     )}
                     {exec.status === 'completed' && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-base font-medium bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800/30">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-base font-medium bg-green-500/10 text-green-500 text-green-400 border border-green-100 dark:border-green-800/30">
                         <CheckCircle2 className="w-5 h-5" /> Success
                       </span>
                     )}
                     {exec.status === 'failed' && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-base font-medium bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/30">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-base font-medium bg-red-500/10 text-red-500 text-red-400 border border-red-100 dark:border-red-800/30">
                         <XCircle className="w-5 h-5" /> Failed
                       </span>
                     )}

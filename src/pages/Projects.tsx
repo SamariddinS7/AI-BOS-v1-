@@ -98,7 +98,7 @@ export default function Projects() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/20 font-bold text-base active:scale-95"
+          className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20 font-bold text-base active:scale-95"
         >
           <Plus className="w-5 h-5" />
           Yangi Loyiha
@@ -119,20 +119,20 @@ export default function Projects() {
         {projects.map((project) => (
           <Card 
             key={project.id} 
-            className={`p-6 hover:shadow-xl transition-all group cursor-pointer border-border-dark ${selectedProject?.id === project.id ? 'ring-2 ring-brand-500/50 border-brand-500/50' : 'hover:border-brand-500/30'}`}
+            className={`p-6 hover:shadow-xl transition-all group cursor-pointer border-border-dark ${selectedProject?.id === project.id ? 'ring-2 ring-brand-600/50 border-brand-600/50' : 'hover:border-brand-600/30'}`}
             onClick={() => {
               setSelectedProject(project);
               info(`${project.name} loyihasi tanlandi`);
             }}
           >
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-bold text-text-primary group-hover:text-brand-400 transition-colors text-base">{project.name}</h3>
+              <h3 className="text-lg font-bold text-text-primary group-hover:text-brand-500 transition-colors text-base">{project.name}</h3>
               <span className={`px-2.5 py-1 text-base font-black uppercase tracking-wider rounded-full border ${
                 project.status === 'completed' 
-                  ? 'bg-emerald-900/30 text-emerald-400 border-emerald-900/50' 
+                  ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
                   : project.status === 'active'
-                  ? 'bg-blue-900/30 text-blue-400 border-blue-900/50'
-                  : 'bg-orange-900/30 text-orange-400 border-orange-900/50'
+                  ? 'bg-sky-500/10 text-sky-500 border-sky-500/20'
+                  : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
               }`}>
                 {project.status}
               </span>
@@ -164,15 +164,15 @@ export default function Projects() {
 
       {selectedProject && (
         <div className="animate-in slide-in-from-bottom-4 duration-500">
-          <Card className="p-6 border-brand-500/20 bg-brand-500/5">
+          <Card className="p-6 border-brand-600/20 bg-brand-600/5">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-text-primary flex items-center gap-2">
-                <ListTodo className="w-6 h-6 text-brand-400" />
+                <ListTodo className="w-6 h-6 text-brand-500" />
                 Vazifalar: {selectedProject.name}
               </h3>
               <button 
                 onClick={() => success("Yangi vazifa qo'shish oynasi ochilmoqda")}
-                className="text-base font-bold text-brand-400 hover:text-brand-300 flex items-center gap-1"
+                className="text-base font-bold text-brand-500 hover:text-brand-400 flex items-center gap-1"
               >
                 <Plus className="w-5 h-5" />
                 Vazifa qo'shish
@@ -184,10 +184,10 @@ export default function Projects() {
                 <div 
                   key={task.id} 
                   onClick={() => info(`${task.title} vazifasi tafsilotlari`)}
-                  className="p-4 rounded-xl bg-surface-card border border-border-dark flex items-center gap-3 cursor-pointer hover:border-brand-500/30 transition-all"
+                  className="p-4 rounded-xl bg-surface-card border border-border-dark flex items-center gap-3 cursor-pointer hover:border-brand-600/30 transition-all"
                 >
                   <div className={`w-2 h-2 rounded-full ${
-                    task.status === 'done' ? 'bg-emerald-500' : task.status === 'in-progress' ? 'bg-blue-500' : 'bg-text-muted'
+                    task.status === 'done' ? 'bg-emerald-500' : task.status === 'in-progress' ? 'bg-sky-500' : 'bg-text-muted'
                   }`} />
                   <span className={`text-base font-medium ${task.status === 'done' ? 'text-text-muted line-through' : 'text-text-primary'}`}>
                     {task.title}
@@ -252,7 +252,7 @@ export default function Projects() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 px-4 py-2.5 bg-brand-600 text-white rounded-xl font-bold text-base hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/20"
+                  className="flex-1 px-4 py-2.5 bg-brand-600 text-white rounded-xl font-bold text-base hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20"
                 >
                   Saqlash
                 </button>

@@ -1,26 +1,28 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Plus, X, Check, AlertCircle, Bot, Globe, Shield, Zap, Trash2, Edit2, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
 
 const T = {
-  bg:       "#0B0F19",
-  surface:  "#111827",
-  card:     "#1A2236",
-  cardHov:  "#1E2840",
-  border:   "#2A3655",
-  borderHi: "#3D4F78",
-  accent:   "#00D4FF",
-  accentDim:"rgba(0,212,255,0.10)",
-  accentStr:"rgba(0,212,255,0.28)",
+  bg:       "var(--color-app-bg)",
+  surface:  "rgba(9, 9, 11, 0.2)",
+  card:     "rgba(24, 24, 27, 0.4)",
+  cardHov:  "var(--color-surface-layer)", // 30% hover
+  border:   "var(--color-border-dark)",
+  borderHi: "var(--color-border-glow)",
+  accent:   "var(--color-brand-500)", // 10%
+  accentDim: "rgba(0, 212, 255, 0.1)",
+  accentStr: "rgba(0, 212, 255, 0.3)",
   green:    "#22C55E",  greenDim: "rgba(34,197,94,0.12)",
   amber:    "#F59E0B",  amberDim: "rgba(245,158,11,0.12)",
   red:      "#EF4444",  redDim:   "rgba(239,68,68,0.11)",
   violet:   "#A78BFA",  violetDim:"rgba(167,139,250,0.12)",
   teal:     "#2DD4BF",  tealDim:  "rgba(45,212,191,0.11)",
   sky:      "#38BDF8",  skyDim:   "rgba(56,189,248,0.11)",
-  t1: "#F0F4FF",
-  t2: "#8B9EC4",
-  t3: "#4D618A",
-  t4: "#283350",
+  t1: "var(--color-text-primary)",
+  t2: "var(--color-text-secondary)",
+  t3: "var(--color-text-muted)",
+  t4: "var(--color-border-dark)",
   sans: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif",
   mono: "'JetBrains Mono', 'Fira Code', monospace",
   r1: "6px", r2: "10px", r3: "14px", r4: "20px",
@@ -199,7 +201,7 @@ const AgentCard = memo(({ agent, onRun, status, active }: any) => {
           <span style={{width:7,height:7,borderRadius:"50%",background:statusColor,boxShadow:`0 0 6px ${statusColor}`,flexShrink:0}}/>
           <span style={{fontSize:16,color:statusColor,fontFamily:T.mono,fontWeight:600}}>{statusLabel}</span>
         </div>
-        <button className="active:scale-95 transition-all duration-150 hover:opacity-80" style={{fontSize:16,padding:"6px 16px",pointerEvents:isRunning?"none":"auto",opacity:isRunning?0.5:1, background: isRunning?"transparent":T.accentDim, color: isRunning?T.t3:T.accent, border: `1px solid ${isRunning?T.border:T.accentStr}`, borderRadius: T.r1, cursor: "pointer", fontWeight: 600}}
+        <button className="active:scale-95 transition-all duration-150 hover:opacity-80 shadow-lg shadow-cyan-500/20" style={{fontSize:16,padding:"6px 16px",pointerEvents:isRunning?"none":"auto",opacity:isRunning?0.5:1, background: isRunning?"transparent":T.accent, color: isRunning?T.t3:T.bg, border: isRunning?`1px solid ${T.border}`:"none", borderRadius: T.r1, cursor: "pointer", fontWeight: 700}}
           onClick={e=>{e.stopPropagation();!isRunning&&onRun(agent.id);}}>
           {isRunning?"...":"Ishga tushir"}
         </button>
@@ -313,7 +315,7 @@ const OrchestratorPanel = memo(({ onStart, running, results }: any) => {
             <div style={{fontSize: 16,fontWeight:700,color:T.accent,fontFamily:T.mono}}>{done}/{total}</div>
             <div style={{fontSize: 16,color:T.t3}}>bajarildi</div>
           </div>
-          <button className="active:scale-95 transition-all duration-150 hover:opacity-80" style={{padding:"9px 20px",fontSize: 16,opacity:running?0.5:1, background: T.accentDim, color: T.accent, border: `1px solid ${T.accentStr}`, borderRadius: T.r1, cursor: "pointer", fontWeight: 600}} onClick={onStart} disabled={running}>
+          <button className="active:scale-95 transition-all duration-150 hover:opacity-80 shadow-lg shadow-cyan-500/20" style={{padding:"9px 20px",fontSize: 16,opacity:running?0.5:1, background: T.accent, color: T.bg, border: "none", borderRadius: T.r1, cursor: "pointer", fontWeight: 700}} onClick={onStart} disabled={running}>
             {running?"Orkestrlash...":"Hammasini ishga tushir"}
           </button>
         </div>
@@ -366,6 +368,105 @@ export default function AgentsPage() {
   const [history,      setHistory]      = useState<any[]>([]);
   const [historyView,  setHistoryView]  = useState<any>(null);
   const [filter,       setFilter]       = useState("all");
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [registeredAgents, setRegisteredAgents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [newAgent, setNewAgent] = useState({
+    name: '',
+    platform: 'Telegram',
+    webhook_url: '',
+    allowed_events: [] as string[],
+    permissions: [] as string[]
+  });
+
+  const fetchAgents = useCallback(async () => {
+    try {
+      const response = await fetch('/api/agents');
+      if (response.ok) {
+        const data = await response.json();
+        setRegisteredAgents(data);
+      }
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+    }
+  }, []);
+
+  const checkAgentHealth = useCallback(async (agentId: string) => {
+    try {
+      const response = await fetch(`/api/agents/${agentId}/check-health`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        const updatedAgent = await response.json();
+        setRegisteredAgents(prev => prev.map(a => a.id === updatedAgent.id ? updatedAgent : a));
+      }
+    } catch (error) {
+      console.error(`Error checking health for agent ${agentId}:`, error);
+    }
+  }, []);
+
+  const registeredAgentsRef = useRef(registeredAgents);
+  useEffect(() => {
+    registeredAgentsRef.current = registeredAgents;
+  }, [registeredAgents]);
+
+  useEffect(() => {
+    fetchAgents();
+    
+    // Periodic health check every 30 seconds
+    const intervalId = setInterval(() => {
+      registeredAgentsRef.current.forEach(agent => {
+        checkAgentHealth(agent.id);
+      });
+    }, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, [fetchAgents, checkAgentHealth]);
+
+  const handleRegisterAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/agents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAgent)
+      });
+
+      if (response.ok) {
+        toast.success('Agent muvaffaqiyatli ro\'yxatdan o\'tkazildi');
+        setIsRegisterModalOpen(false);
+        setNewAgent({
+          name: '',
+          platform: 'Telegram',
+          webhook_url: '',
+          allowed_events: [],
+          permissions: []
+        });
+        fetchAgents();
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Xatolik yuz berdi');
+      }
+    } catch (error) {
+      toast.error('Server bilan bog\'lanishda xatolik');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAgent = async (id: string) => {
+    if (!confirm('Haqiqatan ham ushbu agentni o\'chirmoqchimisiz?')) return;
+    try {
+      const response = await fetch(`/api/agents/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        toast.success('Agent o\'chirildi');
+        fetchAgents();
+      }
+    } catch (error) {
+      toast.error('O\'chirishda xatolik');
+    }
+  };
 
   const runAgent = useCallback(async(agentId: string) => {
     const agent = AGENT_DEFS.find(a=>a.id===agentId);
@@ -411,9 +512,31 @@ export default function AgentsPage() {
   const runningCount   = Object.values(agentStatus).filter(s=>s==="running").length;
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8 font-sans transition-all duration-500 space-y-8 animate-slide-in" style={{background: T.bg, color: T.t1}}>
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 font-sans transition-all duration-500 space-y-8 animate-slide-in" style={{background: 'transparent', color: T.t1}}>
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-text-primary tracking-tight">AI Agentlar</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">AI Agentlar</h1>
+          <button 
+            onClick={() => setIsRegisterModalOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 20px',
+              background: T.accent,
+              color: T.bg,
+              border: 'none',
+              borderRadius: T.r2,
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            className="hover:scale-105 active:scale-95 shadow-lg shadow-cyan-500/20"
+          >
+            <Plus size={20} />
+            Yangi Agent
+          </button>
+        </div>
         <p className="text-base text-text-muted">Avtomatik AI agent tizimi — har bir agent mustaqil vazifa bajaradi va real vaqtda natija beradi</p>
       </div>
 
@@ -475,6 +598,68 @@ export default function AgentsPage() {
                 onRun={(id: string)=>{ runAgent(id); }}/>
             ))}
           </div>
+
+          {registeredAgents.length > 0 && (
+            <div style={{marginTop: 32}}>
+              <h2 style={{fontSize: 20, fontWeight: 700, color: T.t1, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8}}>
+                <Globe size={20} color={T.accent} />
+                Ro'yxatdan o'tgan Agentlar
+              </h2>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:12}}>
+                {registeredAgents.map(agent => (
+                  <div 
+                    key={agent.id}
+                    style={{
+                      padding: '18px 20px',
+                      background: T.card,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: T.r3,
+                      position: 'relative'
+                    }}
+                  >
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12}}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
+                        <div style={{width: 36, height: 36, borderRadius: T.r2, background: T.accentDim, display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center', color: T.accent}}>
+                          <Bot size={20} />
+                        </div>
+                        <div>
+                          <h3 style={{fontSize: 16, fontWeight: 700, color: T.t1}}>{agent.name}</h3>
+                          <span style={{fontSize: 12, color: T.t3, fontFamily: T.mono}}>{agent.platform}</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteAgent(agent.id)}
+                        style={{background: 'transparent', border: 'none', color: T.t4, cursor: 'pointer'}}
+                        className="hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    
+                    <div style={{fontSize: 14, color: T.t2, marginBottom: 12}}>
+                      <div style={{display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4}}>
+                        <Zap size={14} color={T.amber} />
+                        <span>{agent.allowed_events.length} ta hodisa</span>
+                      </div>
+                      <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
+                        <Shield size={14} color={T.green} />
+                        <span>{agent.permissions.length} ta ruxsatnoma</span>
+                      </div>
+                    </div>
+
+                    <div style={{display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${T.border}`}}>
+                      <div style={{flex: 1, fontSize: 12, color: T.t3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                        {agent.webhook_url || 'Webhook yo\'q'}
+                      </div>
+                      <Tag color={agent.status === 'active' ? T.green : agent.status === 'error' ? T.red : T.t4} dim={agent.status === 'active' ? T.greenDim : agent.status === 'error' ? T.redDim : undefined}>
+                        {agent.status}
+                      </Tag>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -491,7 +676,7 @@ export default function AgentsPage() {
                   <div style={{fontSize:16,color:T.t2,fontFamily:T.mono,lineHeight:1.6,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical"}}>
                     {agentResults[agent.id].output}
                   </div>
-                  <button className="active:scale-95 hover:opacity-80 transition-all duration-150" style={{marginTop:8,fontSize:16,padding:"6px 12px", background: T.accentDim, color: T.accent, border: `1px solid ${T.accentStr}`, borderRadius: T.r1, cursor: "pointer", fontWeight: 600}}
+                  <button className="active:scale-95 hover:opacity-80 transition-all duration-150 shadow-lg shadow-cyan-500/20" style={{marginTop:8,fontSize:16,padding:"6px 12px", background: T.accent, color: T.bg, border: "none", borderRadius: T.r1, cursor: "pointer", fontWeight: 700}}
                     onClick={()=>{setActiveAgent(agent.id);}}>
                     To'liq ko'rish {"->"}
                   </button>
@@ -546,6 +731,220 @@ export default function AgentsPage() {
           </div>
         </div>
       </div>
+
+      {/* Register Agent Modal */}
+      {isRegisterModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          background: 'rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(8px)'
+        }}>
+          <div 
+            style={{
+              width: '100%',
+              maxWidth: '500px',
+              background: T.surface,
+              border: `1px solid ${T.borderHi}`,
+              borderRadius: T.r4,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
+            }}
+            className="animate-in fade-in zoom-in duration-200"
+          >
+            <div style={{padding: '20px 24px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <h2 style={{fontSize: 20, fontWeight: 700, color: T.t1}}>Yangi Agent Ro'yxatdan O'tkazish</h2>
+              <button 
+                onClick={() => setIsRegisterModalOpen(false)}
+                style={{background: 'transparent', border: 'none', color: T.t3, cursor: 'pointer'}}
+                className="hover:text-white"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleRegisterAgent} style={{padding: '24px'}}>
+              <div style={{display: 'flex', flexDirection: 'column', gap: 16}}>
+                <div>
+                  <label style={{display: 'block', fontSize: 14, fontWeight: 600, color: T.t2, marginBottom: 6}}>Agent Nomi</label>
+                  <input 
+                    type="text"
+                    required
+                    value={newAgent.name}
+                    onChange={e => setNewAgent({...newAgent, name: e.target.value})}
+                    placeholder="Masalan: Telegram Bot Analitiki"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      background: T.card,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: T.r2,
+                      color: T.t1,
+                      outline: 'none'
+                    }}
+                    className="focus:border-cyan-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label style={{display: 'block', fontSize: 14, fontWeight: 600, color: T.t2, marginBottom: 6}}>Platforma</label>
+                  <select 
+                    value={newAgent.platform}
+                    onChange={e => setNewAgent({...newAgent, platform: e.target.value})}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      background: T.card,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: T.r2,
+                      color: T.t1,
+                      outline: 'none'
+                    }}
+                    className="focus:border-cyan-500 transition-colors"
+                  >
+                    <option value="Telegram">Telegram</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Web">Web Widget</option>
+                    <option value="Slack">Slack</option>
+                    <option value="Discord">Discord</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{display: 'block', fontSize: 14, fontWeight: 600, color: T.t2, marginBottom: 6}}>Webhook URL</label>
+                  <input 
+                    type="url"
+                    value={newAgent.webhook_url}
+                    onChange={e => setNewAgent({...newAgent, webhook_url: e.target.value})}
+                    placeholder="https://your-api.com/webhook"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      background: T.card,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: T.r2,
+                      color: T.t1,
+                      outline: 'none'
+                    }}
+                    className="focus:border-cyan-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label style={{display: 'block', fontSize: 14, fontWeight: 600, color: T.t2, marginBottom: 6}}>Ruxsat etilgan hodisalar</label>
+                  <div style={{display: 'flex', flexWrap: 'wrap', gap: 8}}>
+                    {['message', 'join', 'leave', 'payment', 'error'].map(event => (
+                      <button
+                        key={event}
+                        type="button"
+                        onClick={() => {
+                          const events = newAgent.allowed_events.includes(event)
+                            ? newAgent.allowed_events.filter(e => e !== event)
+                            : [...newAgent.allowed_events, event];
+                          setNewAgent({...newAgent, allowed_events: events});
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '16px',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          background: newAgent.allowed_events.includes(event) ? T.accentDim : T.card,
+                          color: newAgent.allowed_events.includes(event) ? T.accent : T.t3,
+                          border: `1px solid ${newAgent.allowed_events.includes(event) ? T.accentStr : T.border}`
+                        }}
+                      >
+                        {event}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{display: 'block', fontSize: 14, fontWeight: 600, color: T.t2, marginBottom: 6}}>Ruxsatnomalar</label>
+                  <div style={{display: 'flex', flexWrap: 'wrap', gap: 8}}>
+                    {['read_data', 'write_data', 'admin', 'execute_tools', 'manage_users'].map(perm => (
+                      <button
+                        key={perm}
+                        type="button"
+                        onClick={() => {
+                          const perms = newAgent.permissions.includes(perm)
+                            ? newAgent.permissions.filter(p => p !== perm)
+                            : [...newAgent.permissions, perm];
+                          setNewAgent({...newAgent, permissions: perms});
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          borderRadius: '16px',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          background: newAgent.permissions.includes(perm) ? T.greenDim : T.card,
+                          color: newAgent.permissions.includes(perm) ? T.green : T.t3,
+                          border: `1px solid ${newAgent.permissions.includes(perm) ? T.green + '44' : T.border}`
+                        }}
+                      >
+                        {perm.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{marginTop: 32, display: 'flex', gap: 12}}>
+                <button 
+                  type="button"
+                  onClick={() => setIsRegisterModalOpen(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: 'transparent',
+                    border: `1px solid ${T.border}`,
+                    borderRadius: T.r2,
+                    color: T.t2,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                  className="hover:bg-white/5 transition-colors"
+                >
+                  Bekor qilish
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isLoading}
+                  style={{
+                    flex: 2,
+                    padding: '12px',
+                    background: T.accent,
+                    border: 'none',
+                    borderRadius: T.r2,
+                    color: T.bg,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8
+                  }}
+                  className="hover:opacity-90 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isLoading ? 'Saqlanmoqda...' : (
+                    <>
+                      <Check size={20} />
+                      Ro'yxatdan o'tkazish
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

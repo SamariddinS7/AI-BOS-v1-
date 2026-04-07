@@ -155,7 +155,7 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
     };
   });
   
-  const mktDataToUse = dynamicMktChannels.length > 0 ? dynamicMktChannels : MKT_CHANNELS;
+  const mktDataToUse = dynamicMktChannels;
 
   // Mock data for sparklines
   const sparklineData = [
@@ -166,7 +166,7 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="space-y-6 p-6 font-sans bg-app-bg min-h-full text-text-primary">
+    <div className="space-y-4 lg:space-y-6 p-4 lg:p-6 font-sans min-h-full text-white">
       <ExpandedChartModal
         isOpen={expandedChart === 'revenue_forecast'}
         onClose={() => setExpandedChart(null)}
@@ -180,7 +180,7 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
               <YAxis stroke="var(--color-text-muted)" fontSize={16} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} />
               <Tooltip 
                 cursor={{ stroke: 'var(--color-brand-500)', strokeWidth: 2 }}
-                contentStyle={{ backgroundColor: 'var(--color-surface-dark)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)', fontSize: '16px', borderRadius: '0.5rem' }}
+                contentStyle={{ backgroundColor: 'var(--color-surface-layer)', borderColor: 'var(--color-border-dark)', color: '#fff', fontSize: '16px', borderRadius: '0.5rem' }}
                 itemStyle={{ color: 'var(--color-brand-400)' }}
                 formatter={(value: number) => [formatCurrency(value), t('revenue')]}
               />
@@ -203,8 +203,8 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
               <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
               <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
               <Tooltip 
-                contentStyle={{backgroundColor: 'var(--color-surface-dark)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px'}}
-                itemStyle={{color: 'var(--color-text-primary)'}}
+                contentStyle={{backgroundColor: 'var(--color-surface-layer)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px', color: '#fff'}}
+                itemStyle={{color: '#fff'}}
               />
               <Legend iconType="circle" wrapperStyle={{fontSize: '16px', paddingTop: '20px'}} />
               <Bar yAxisId="left" dataKey="roas" name="ROAS (x)" radius={[4, 4, 0, 0]} barSize={40}>
@@ -231,8 +231,8 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
               <XAxis type="number" hide />
               <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} width={120} />
               <Tooltip 
-                contentStyle={{backgroundColor: 'var(--color-surface-dark)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px'}}
-                itemStyle={{color: 'var(--color-text-primary)'}}
+                contentStyle={{backgroundColor: 'var(--color-surface-layer)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px', color: '#fff'}}
+                itemStyle={{color: '#fff'}}
                 formatter={(val: any) => [`${val}%`, 'ROI']}
               />
               <Bar dataKey="roi" radius={[0, 4, 4, 0]} barSize={30}>
@@ -246,19 +246,19 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
       </ExpandedChartModal>
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-1 lg:mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary tracking-tight">
+          <h1 className="text-xl lg:text-2xl font-bold text-white tracking-tight">
             {t('executive_dashboard')}
           </h1>
-          <p className="text-base text-text-muted flex items-center gap-2 mt-1 font-medium">
-            <Calendar size={16} /> {currentDate}
+          <p className="text-xs lg:text-base text-text-muted flex items-center gap-1.5 mt-0.5 lg:mt-1 font-bold">
+            <Calendar size={14} className="lg:w-4 lg:h-4" /> {currentDate}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 rounded-full border border-emerald-500/20 shadow-sm">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
-            <span className="text-base font-semibold text-emerald-500">{t('system_operational')}</span>
+        <div className="flex items-center gap-2 lg:gap-3">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20 shadow-sm">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+            <span className="text-xs lg:text-base font-bold text-emerald-500">{t('system_operational')}</span>
           </div>
         </div>
       </div>
@@ -266,7 +266,7 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
       <LiveChat isOpen={liveChatOpen} onClose={() => setLiveChatOpen(false)} />
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
         <KPICard 
           title={t('total_revenue')} 
           value={formatCurrency(totalRevenue)} 
@@ -294,26 +294,26 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
         
         {/* Revenue Forecast Chart */}
         <div 
-          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border-dark glass-panel p-5 cursor-pointer hover:border-brand-500/30 transition-all shadow-sm group"
+          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border-dark enterprise-card p-4 lg:p-5 cursor-pointer hover:border-brand-500/30 transition-all shadow-sm group"
           onClick={() => setExpandedChart('revenue_forecast')}
         >
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4 lg:mb-6">
             <div>
-              <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-                <BarChart2 size={18} className="text-brand-500" />
+              <h3 className="text-sm lg:text-base font-bold text-white flex items-center gap-2">
+                <BarChart2 size={16} className="text-brand-500 lg:w-[18px] lg:h-[18px]" />
                 {t('revenue_forecast')}
               </h3>
-              <p className="text-base text-text-muted mt-1">{t('ai_projection')}</p>
+              <p className="text-xs lg:text-base text-text-muted mt-0.5 lg:mt-1">{t('ai_projection')}</p>
             </div>
             <div className="flex items-center gap-2">
               <button 
-                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-500 text-base font-semibold rounded-lg border border-brand-500/20 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 lg:px-2.5 lg:py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-500 text-xs lg:text-base font-bold rounded-lg border border-brand-500/20 transition-colors"
               >
-                <Sparkles size={16} />
+                <Sparkles size={14} className="lg:w-4 lg:h-4" />
                 {t('ai_analysis')}
               </button>
             </div>
@@ -322,6 +322,8 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
           <div className="h-64 w-full">
             {loading ? (
               <div className="w-full h-full flex items-center justify-center text-text-muted">{t('loading_chart_data')}</div>
+            ) : chartData.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center text-text-muted">{t('no_data_available') || 'No data available'}</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -342,7 +344,7 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
                   />
                   <Tooltip 
                     cursor={{ stroke: 'var(--color-brand-500)', strokeWidth: 2 }}
-                    contentStyle={{ backgroundColor: 'var(--color-surface-dark)', borderColor: 'var(--color-border-dark)', color: 'var(--color-text-primary)', fontSize: '16px', borderRadius: '0.5rem' }}
+                    contentStyle={{ backgroundColor: 'var(--color-surface-layer)', borderColor: 'var(--color-border-dark)', color: '#fff', fontSize: '16px', borderRadius: '0.5rem' }}
                     itemStyle={{ color: 'var(--color-brand-400)' }}
                     formatter={(value: number) => [formatCurrency(value), t('revenue')]}
                   />
@@ -354,15 +356,15 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
         </div>
 
         {/* Department Performance & System Status */}
-        <div className="space-y-4">
+        <div className="space-y-3 lg:space-y-4">
           {/* Dept Performance */}
           <div 
-            className="rounded-2xl border border-border-dark glass-panel p-5 cursor-pointer hover:border-brand-500/30 transition-all shadow-sm"
+            className="rounded-2xl border border-border-dark enterprise-card p-4 lg:p-5 cursor-pointer hover:border-brand-500/30 transition-all shadow-sm"
             onClick={() => setExpandedChart('dept_performance')}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-base font-semibold text-text-primary flex items-center gap-2">
-                <Activity size={18} className="text-purple-500" />
+            <div className="flex justify-between items-center mb-3 lg:mb-4">
+              <h3 className="text-sm lg:text-base font-bold text-white flex items-center gap-2">
+                <Activity size={16} className="text-brand-500 lg:w-[18px] lg:h-[18px]" />
                 {t('performance')}
               </h3>
             </div>
@@ -370,97 +372,109 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
           </div>
 
           {/* System Status Widget */}
-          <div className="rounded-2xl border border-border-dark glass-panel p-5 shadow-sm">
-            <h3 className="text-base font-bold text-text-muted uppercase tracking-wider mb-4">{t('system_health')}</h3>
-            <div className="space-y-3">
+          <div className="rounded-2xl border border-border-dark enterprise-card p-4 lg:p-5 shadow-sm">
+            <h3 className="text-xs lg:text-base font-bold text-text-muted uppercase tracking-wider mb-3 lg:mb-4">{t('system_health')}</h3>
+            <div className="space-y-2 lg:space-y-3">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
-                    <Zap size={16} />
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <div className="p-1.5 lg:p-2 bg-brand-500/10 rounded-xl text-brand-500">
+                    <Zap size={14} className="lg:w-4 lg:h-4" />
                   </div>
-                  <span className="text-base font-medium text-text-secondary">{t('api_latency')}</span>
+                  <span className="text-xs lg:text-base font-bold text-text-muted">{t('api_latency')}</span>
                 </div>
-                <span className="text-base font-mono font-semibold text-emerald-500">45ms</span>
+                <span className="text-xs lg:text-base font-mono font-bold text-emerald-500">45ms</span>
               </div>
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
-                    <Shield size={16} />
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <div className="p-1.5 lg:p-2 bg-brand-500/10 rounded-xl text-brand-500">
+                    <Shield size={14} className="lg:w-4 lg:h-4" />
                   </div>
-                  <span className="text-base font-medium text-text-secondary">{t('security')}</span>
+                  <span className="text-xs lg:text-base font-bold text-text-muted">{t('security')}</span>
                 </div>
-                <span className="text-base font-mono font-semibold text-emerald-500">{t('secure')}</span>
+                <span className="text-xs lg:text-base font-mono font-bold text-emerald-500">{t('secure')}</span>
               </div>
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-500/10 rounded-xl text-amber-500">
-                    <AlertTriangle size={16} />
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <div className="p-1.5 lg:p-2 bg-brand-500/10 rounded-xl text-brand-500">
+                    <AlertTriangle size={14} className="lg:w-4 lg:h-4" />
                   </div>
-                  <span className="text-base font-medium text-text-secondary">{t('anomalies')}</span>
+                  <span className="text-xs lg:text-base font-bold text-text-muted">{t('anomalies')}</span>
                 </div>
-                <span className="text-base font-mono font-semibold text-amber-500">{anomalies.length} {t('detected')}</span>
+                <span className="text-xs lg:text-base font-mono font-bold text-amber-500">{anomalies.length} {t('detected')}</span>
               </div>
             </div>
           </div>
         </div>
         
         {/* New Charts from User Code */}
-        <div className="lg:col-span-2 rounded-2xl border border-border-dark glass-panel p-6 cursor-pointer hover:border-brand-500/30 transition-all shadow-sm" onClick={() => setExpandedChart('roas_cac')}>
-          <div className="flex justify-between items-center mb-6">
+        <div className="lg:col-span-2 rounded-2xl border border-border-dark enterprise-card p-4 lg:p-6 cursor-pointer hover:border-brand-500/30 transition-all shadow-sm" onClick={() => setExpandedChart('roas_cac')}>
+          <div className="flex justify-between items-center mb-4 lg:mb-6">
             <div>
-              <h3 className="text-lg font-bold text-text-primary">{t('channel_efficiency')}</h3>
-              <p className="text-base text-text-muted mt-1">{t('cost_efficiency_ratio')}</p>
+              <h3 className="text-sm lg:text-lg font-bold text-white">{t('channel_efficiency')}</h3>
+              <p className="text-xs lg:text-base text-text-muted mt-0.5 lg:mt-1">{t('cost_efficiency_ratio')}</p>
             </div>
           </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={mktDataToUse}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-dark)" vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
-                <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
-                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
-                <Tooltip 
-                  contentStyle={{backgroundColor: 'var(--color-surface-dark)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px'}}
-                  itemStyle={{color: 'var(--color-text-primary)'}}
-                />
-                <Legend iconType="circle" wrapperStyle={{fontSize: '16px', paddingTop: '20px'}} />
-                <Bar yAxisId="left" dataKey="roas" name="ROAS (x)" radius={[4, 4, 0, 0]} barSize={20}>
-                  {mktDataToUse.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-                <Area yAxisId="right" type="monotone" dataKey="cac" name="CAC" fill="rgba(239, 68, 68, 0.1)" stroke={T.red} strokeWidth={2} />
-                <ReferenceLine yAxisId="left" y={3} label={{value: 'Target ROAS', position: 'insideBottomRight', fill: '#10b981', fontSize: 16}} stroke="#10b981" strokeDasharray="3 3" />
-              </ComposedChart>
-            </ResponsiveContainer>
+          <div className="h-[200px] lg:h-[300px]">
+            {loading ? (
+              <div className="w-full h-full flex items-center justify-center text-text-muted">{t('loading_chart_data')}</div>
+            ) : mktDataToUse.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center text-text-muted">{t('no_data_available') || 'No data available'}</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={mktDataToUse}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-dark)" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
+                  <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
+                  <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
+                  <Tooltip 
+                    contentStyle={{backgroundColor: 'var(--color-surface-layer)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px', color: '#fff'}}
+                    itemStyle={{color: '#fff'}}
+                  />
+                  <Legend iconType="circle" wrapperStyle={{fontSize: '16px', paddingTop: '20px'}} />
+                  <Bar yAxisId="left" dataKey="roas" name="ROAS (x)" radius={[4, 4, 0, 0]} barSize={20}>
+                    {mktDataToUse.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                  <Area yAxisId="right" type="monotone" dataKey="cac" name="CAC" fill="rgba(239, 68, 68, 0.1)" stroke={T.red} strokeWidth={2} />
+                  <ReferenceLine yAxisId="left" y={3} label={{value: 'Target ROAS', position: 'insideBottomRight', fill: '#10b981', fontSize: 16}} stroke="#10b981" strokeDasharray="3 3" />
+                </ComposedChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border-dark glass-panel p-6 cursor-pointer hover:border-brand-500/30 transition-all shadow-sm" onClick={() => setExpandedChart('roi_comparison')}>
-          <div className="flex justify-between items-center mb-6">
+        <div className="rounded-2xl border border-border-dark enterprise-card p-4 lg:p-6 cursor-pointer hover:border-brand-500/30 transition-all shadow-sm" onClick={() => setExpandedChart('roi_comparison')}>
+          <div className="flex justify-between items-center mb-4 lg:mb-6">
             <div>
-              <h3 className="text-lg font-bold text-text-primary">{t('channel_roi_comparison')}</h3>
-              <p className="text-base text-text-muted mt-1">{t('return_on_investment')}</p>
+              <h3 className="text-sm lg:text-lg font-bold text-white">{t('channel_roi_comparison')}</h3>
+              <p className="text-xs lg:text-base text-text-muted mt-0.5 lg:mt-1">{t('return_on_investment')}</p>
             </div>
           </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mktDataToUse} layout="vertical" margin={{left: -20}}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-dark)" horizontal={false} />
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} width={80} />
-                <Tooltip 
-                  contentStyle={{backgroundColor: 'var(--color-surface-dark)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px'}}
-                  itemStyle={{color: 'var(--color-text-primary)'}}
-                  formatter={(val: any) => [`${val}%`, 'ROI']}
-                />
-                <Bar dataKey="roi" radius={[0, 4, 4, 0]} barSize={12}>
-                  {mktDataToUse.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-[200px] lg:h-[300px]">
+            {loading ? (
+              <div className="w-full h-full flex items-center justify-center text-text-muted">{t('loading_chart_data')}</div>
+            ) : mktDataToUse.length === 0 ? (
+              <div className="w-full h-full flex items-center justify-center text-text-muted">{t('no_data_available') || 'No data available'}</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={mktDataToUse} layout="vertical" margin={{left: -20}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-dark)" horizontal={false} />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} width={80} />
+                  <Tooltip 
+                    contentStyle={{backgroundColor: 'var(--color-surface-layer)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '16px', color: '#fff'}}
+                    itemStyle={{color: '#fff'}}
+                    formatter={(val: any) => [`${val}%`, 'ROI']}
+                  />
+                  <Bar dataKey="roi" radius={[0, 4, 4, 0]} barSize={12}>
+                    {mktDataToUse.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
         
@@ -471,7 +485,7 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
       </div>
 
       {/* AI Insights Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
         {anomalies.length > 0 ? (
           anomalies.map((anomaly, idx) => (
             <AIInsightCard 
@@ -517,45 +531,45 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-border-dark glass-panel p-5 shadow-sm">
-          <h4 className="text-base font-bold text-rose-500 mb-4 uppercase tracking-wider flex items-center gap-2">
-            <AlertTriangle size={16} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
+        <div className="rounded-2xl border border-border-dark enterprise-card p-4 lg:p-5 shadow-sm">
+          <h4 className="text-sm lg:text-base font-bold text-rose-500 mb-3 lg:mb-4 uppercase tracking-wider flex items-center gap-2">
+            <AlertTriangle size={14} className="lg:w-4 lg:h-4" />
             {t('critical_issues')}
           </h4>
-          <ul className="space-y-3">
-            <li className="flex items-center justify-between text-base group cursor-pointer">
-              <span className="text-text-secondary font-medium group-hover:text-text-primary transition-colors">{t('high_churn_rate')}</span>
-              <span className="text-rose-500 font-mono font-semibold bg-rose-500/10 px-2 py-1 rounded-lg">-2.40%</span>
+          <ul className="space-y-2 lg:space-y-3">
+            <li className="flex items-center justify-between text-xs lg:text-base group cursor-pointer">
+              <span className="text-text-muted font-bold group-hover:text-white transition-colors">{t('high_churn_rate')}</span>
+              <span className="text-rose-500 font-mono font-bold bg-rose-500/10 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-lg">-2.40%</span>
             </li>
-            <li className="flex items-center justify-between text-base group cursor-pointer">
-              <span className="text-text-secondary font-medium group-hover:text-text-primary transition-colors">{t('server_latency_spike')}</span>
-              <span className="text-rose-500 font-mono font-semibold bg-rose-500/10 px-2 py-1 rounded-lg">+120ms</span>
+            <li className="flex items-center justify-between text-xs lg:text-base group cursor-pointer">
+              <span className="text-text-muted font-bold group-hover:text-white transition-colors">{t('server_latency_spike')}</span>
+              <span className="text-rose-500 font-mono font-bold bg-rose-500/10 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-lg">+120ms</span>
             </li>
-            <li className="flex items-center justify-between text-base group cursor-pointer">
-              <span className="text-text-secondary font-medium group-hover:text-text-primary transition-colors">{t('budget_overrun')}</span>
-              <span className="text-rose-500 font-mono font-semibold bg-rose-500/10 px-2 py-1 rounded-lg">{formatCurrency(12000)}</span>
+            <li className="flex items-center justify-between text-xs lg:text-base group cursor-pointer">
+              <span className="text-text-muted font-bold group-hover:text-white transition-colors">{t('budget_overrun')}</span>
+              <span className="text-rose-500 font-mono font-bold bg-rose-500/10 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-lg">{formatCurrency(12000)}</span>
             </li>
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-border-dark glass-panel p-5 shadow-sm">
-          <h4 className="text-base font-bold text-emerald-500 mb-4 uppercase tracking-wider flex items-center gap-2">
-            <CheckCircle size={16} />
+        <div className="rounded-2xl border border-border-dark enterprise-card p-4 lg:p-5 shadow-sm">
+          <h4 className="text-sm lg:text-base font-bold text-emerald-500 mb-3 lg:mb-4 uppercase tracking-wider flex items-center gap-2">
+            <CheckCircle size={14} className="lg:w-4 lg:h-4" />
             {t('quick_wins')}
           </h4>
-          <ul className="space-y-3">
-            <li className="flex items-center justify-between text-base group cursor-pointer">
-              <span className="text-text-secondary font-medium group-hover:text-text-primary transition-colors">{t('automate_invoice')}</span>
-              <span className="text-emerald-500 font-mono font-semibold bg-emerald-500/10 px-2 py-1 rounded-lg">+15h/wk</span>
+          <ul className="space-y-2 lg:space-y-3">
+            <li className="flex items-center justify-between text-xs lg:text-base group cursor-pointer">
+              <span className="text-text-muted font-bold group-hover:text-white transition-colors">{t('automate_invoice')}</span>
+              <span className="text-emerald-500 font-mono font-bold bg-emerald-500/10 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-lg">+15h/wk</span>
             </li>
-            <li className="flex items-center justify-between text-base group cursor-pointer">
-              <span className="text-text-secondary font-medium group-hover:text-text-primary transition-colors">{t('reactivate_users')}</span>
-              <span className="text-emerald-500 font-mono font-semibold bg-emerald-500/10 px-2 py-1 rounded-lg">{formatCurrency(5000)}</span>
+            <li className="flex items-center justify-between text-xs lg:text-base group cursor-pointer">
+              <span className="text-text-muted font-bold group-hover:text-white transition-colors">{t('reactivate_users')}</span>
+              <span className="text-emerald-500 font-mono font-bold bg-emerald-500/10 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-lg">{formatCurrency(5000)}</span>
             </li>
-            <li className="flex items-center justify-between text-base group cursor-pointer">
-              <span className="text-text-secondary font-medium group-hover:text-text-primary transition-colors">{t('switch_cloud_provider')}</span>
-              <span className="text-emerald-500 font-mono font-semibold bg-emerald-500/10 px-2 py-1 rounded-lg">{t('save_percent')}</span>
+            <li className="flex items-center justify-between text-xs lg:text-base group cursor-pointer">
+              <span className="text-text-muted font-bold group-hover:text-white transition-colors">{t('switch_cloud_provider')}</span>
+              <span className="text-emerald-500 font-mono font-bold bg-emerald-500/10 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-lg">{t('save_percent')}</span>
             </li>
           </ul>
         </div>

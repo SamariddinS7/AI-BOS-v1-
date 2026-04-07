@@ -5,10 +5,10 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 const ActivityItem = memo(({ time, type, message, status }: any) => {
   const statusColors = {
-    success: 'bg-green-500',
-    warning: 'bg-yellow-500',
-    error: 'bg-red-500',
-    info: 'bg-blue-500'
+    success: 'bg-emerald-500',
+    warning: 'bg-amber-500',
+    error: 'bg-rose-500',
+    info: 'bg-brand-500'
   };
 
   return (
@@ -16,13 +16,13 @@ const ActivityItem = memo(({ time, type, message, status }: any) => {
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: "-10px" }}
-      className="flex gap-4 items-start border-l border-border-dark pl-4 py-3 relative group hover:bg-surface-card/50 rounded-r-lg transition-colors"
+      className="flex gap-4 items-start border-l border-border-dark pl-4 py-3 relative group hover:bg-surface-layer/30 rounded-r-lg transition-colors"
     >
-      <div className={`absolute -left-[5px] top-4 w-2.5 h-2.5 rounded-full ${statusColors[status as keyof typeof statusColors]} ring-4 ring-surface-dark group-hover:ring-surface-card transition-all`}></div>
-      <span className="text-base font-mono text-text-muted w-20 flex-shrink-0 pt-1">{time}</span>
+      <div className={`absolute -left-[5px] top-4 w-2.5 h-2.5 rounded-full ${statusColors[status as keyof typeof statusColors]} ring-4 ring-surface-layer group-hover:ring-surface-layer/50 transition-all`}></div>
+      <span className="text-base font-mono text-text-muted w-20 flex-shrink-0 pt-1 font-bold">{time}</span>
       <div>
-        <p className="text-base text-text-secondary font-medium group-hover:text-text-primary transition-colors">{message}</p>
-        <span className="text-base text-text-muted uppercase tracking-wider font-semibold">{type}</span>
+        <p className="text-base text-text-muted font-bold group-hover:text-white transition-colors">{message}</p>
+        <span className="text-base text-text-muted uppercase tracking-wider font-bold">{type}</span>
       </div>
     </motion.div>
   );
@@ -40,15 +40,15 @@ const ActivityTimeline = memo(({ activities }: ActivityTimelineProps) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center mb-6 border-b border-border-dark pb-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2 text-text-primary">
-          <Activity size={20} className="text-blue-500" />
+        <h3 className="text-lg font-bold flex items-center gap-2 text-white">
+          <Activity size={20} className="text-brand-500" />
           {t('live_activity_feed')}
         </h3>
         <div className="flex gap-2">
-          <button className="p-1.5 hover:bg-surface-card rounded text-text-secondary hover:text-text-primary transition-colors border border-transparent hover:border-border-dark">
+          <button className="p-1.5 hover:bg-surface-layer rounded text-text-muted hover:text-white transition-colors border border-transparent hover:border-border-dark">
             <Play size={16} />
           </button>
-          <button className="p-1.5 hover:bg-surface-card rounded text-text-secondary hover:text-text-primary transition-colors border border-transparent hover:border-border-dark">
+          <button className="p-1.5 hover:bg-surface-layer rounded text-text-muted hover:text-white transition-colors border border-transparent hover:border-border-dark">
             <Pause size={16} />
           </button>
         </div>

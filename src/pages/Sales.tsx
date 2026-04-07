@@ -37,7 +37,7 @@ export default function Sales() {
         </div>
         <button 
           onClick={() => info('Yangi savdo oynasi ochilmoqda...')}
-          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors whitespace-nowrap shadow-lg shadow-brand-500/20 font-bold text-base"
+          className="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors whitespace-nowrap shadow-lg shadow-brand-600/20 font-bold text-base"
         >
           <Plus className="w-5 h-5" />
           Yangi Savdo
@@ -148,7 +148,7 @@ export default function Sales() {
                   <td className="px-6 py-4 text-text-secondary">2023-10-2{i}</td>
                   <td className="px-6 py-4 font-medium text-text-primary">{formatCurrency(1200000)}</td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-1 text-base font-medium text-green-400 bg-green-900/30 rounded-full border border-green-900/50">
+                    <span className="px-2 py-1 text-base font-medium text-emerald-400 bg-emerald-500/10 rounded-full border border-emerald-500/20">
                       To'langan
                     </span>
                   </td>

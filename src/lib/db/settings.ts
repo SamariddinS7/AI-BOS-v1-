@@ -157,6 +157,7 @@ try {
         transaction_date DATETIME NOT NULL,
         is_verified INTEGER DEFAULT 0,
         description TEXT,
+        counterparty TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
@@ -360,6 +361,21 @@ try {
       FOREIGN KEY(execution_id) REFERENCES WorkflowExecutions(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS agents (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        platform TEXT NOT NULL,
+        webhook_url TEXT,
+        allowed_events TEXT, -- JSON string
+        permissions TEXT, -- JSON string
+        status TEXT DEFAULT 'active',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+        deleted_at DATETIME
+    );
+
     CREATE TABLE IF NOT EXISTS ApiKeys (
       id TEXT PRIMARY KEY,
       user_id TEXT,
@@ -540,7 +556,34 @@ try {
         webhook_secret TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS TelegramSettings (
+        tenant_id TEXT PRIMARY KEY,
+        bot_token TEXT,
+        system_prompt TEXT,
+        custom_code TEXT,
+        auto_reply INTEGER DEFAULT 0,
+        use_custom_code INTEGER DEFAULT 0,
+        is_active INTEGER DEFAULT 0,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS TelegramMessages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tenant_id TEXT,
+        chat_id TEXT,
+        username TEXT,
+        text TEXT,
+        is_bot INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
+
+  try {
+    db.prepare('ALTER TABLE transactions ADD COLUMN counterparty TEXT').run();
+  } catch (e) {
+    // Column might already exist
+  }
 
   // Indexes
   db.exec(`
@@ -571,6 +614,26 @@ try {
   if (!checkUserSettings) {
       db.prepare('INSERT INTO UserSettings (user_id, tenant_id) VALUES (?, ?)').run('admin-user-id', 'default-tenant-id');
       db.prepare('INSERT INTO IntegrationSettings (user_id, tenant_id) VALUES (?, ?)').run('admin-user-id', 'default-tenant-id');
+  }
+
+  // Seed TelegramSettings
+  const checkTelegramSettings = db.prepare('SELECT tenant_id FROM TelegramSettings WHERE tenant_id = ?').get('default-tenant-id');
+  if (!checkTelegramSettings) {
+      db.prepare('INSERT INTO TelegramSettings (tenant_id, system_prompt, custom_code) VALUES (?, ?, ?)').run(
+        'default-tenant-id',
+        'Sen AI-BOS tizimining aqlli yordamchisisan. Foydalanuvchilarga qisqa va aniq javob ber.',
+        `// msg: Telegram xabari obyekti
+// sysPrompt: AI tizim xabari
+// callAI: AI ga so'rov yuborish funksiyasi (async)
+
+if (msg.text === "/start") {
+  return "Assalomu alaykum! AI-BOS botiga xush kelibsiz.";
+}
+
+// AI orqali javob olish
+const reply = await callAI(msg.text, sysPrompt);
+return reply;`
+      );
   }
 
   // Seed Analytics Data (Transactions, Campaigns, Products, etc.)
@@ -647,6 +710,32 @@ try {
     insertDeal.run('deal-3', tenantId, 'cust-1', 'Consulting', 8000, 'proposal', now.toISOString());
     
     console.log('Analytics data seeded successfully.');
+  }
+
+  // 6. AnalyticsData for Charts
+  const checkAnalytics = db.prepare('SELECT count(*) as count FROM AnalyticsData').get() as { count: number };
+  if (checkAnalytics.count === 0) {
+    console.log('Seeding AnalyticsData...');
+    const insertAnalytics = db.prepare("INSERT INTO AnalyticsData (tenant_id, module, metric, value, date) VALUES (?, ?, ?, ?, ?)");
+    const now = new Date();
+    for (let i = 0; i < 90; i++) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      // Revenue
+      const revValue = Math.floor(Math.random() * 20000) + 10000;
+      insertAnalytics.run('default-tenant-id', 'revenue', 'amount', revValue, dateStr);
+      
+      // Expenses
+      const expValue = Math.floor(Math.random() * 10000) + 5000;
+      insertAnalytics.run('default-tenant-id', 'expenses', 'amount', expValue, dateStr);
+      
+      // Marketing ROI
+      const roiValue = Math.floor(Math.random() * 200) + 100;
+      insertAnalytics.run('default-tenant-id', 'marketing', 'roi', roiValue, dateStr);
+    }
+    console.log('AnalyticsData seeded successfully.');
   }
 
 } catch (error) {

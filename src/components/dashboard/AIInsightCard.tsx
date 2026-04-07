@@ -38,7 +38,7 @@ const AIInsightCard: React.FC<AIInsightCardProps> = memo(({
     <motion.div
       whileHover={{ y: -4, scale: 1.01 }}
       className={`
-        relative overflow-hidden rounded-2xl border border-border-dark glass-panel p-6 transition-all shadow-sm
+        relative overflow-hidden rounded-2xl border border-border-dark enterprise-card p-4 lg:p-6 transition-all shadow-sm
         hover:border-brand-500/30 hover:shadow-md ${glow}
         ${className}
       `}
@@ -46,40 +46,40 @@ const AIInsightCard: React.FC<AIInsightCardProps> = memo(({
       {/* Background Glow */}
       <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full blur-3xl opacity-10 ${isOpportunity ? 'bg-emerald-500' : isRisk ? 'bg-rose-500' : 'bg-brand-500'}`} />
 
-      <div className="relative z-10 flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl ${bg} ${border} border shadow-inner`}>
-            {isOpportunity && <Zap size={20} className={color} />}
-            {isRisk && <AlertTriangle size={20} className={color} />}
-            {isOptimization && <CheckCircle size={20} className={color} />}
+      <div className="relative z-10 flex justify-between items-start mb-3 lg:mb-4">
+        <div className="flex items-center gap-2 lg:gap-3">
+          <div className={`p-2 lg:p-2.5 rounded-xl ${bg} ${border} border shadow-inner`}>
+            {isOpportunity && <Zap size={16} className={`${color} lg:w-5 lg:h-5`} />}
+            {isRisk && <AlertTriangle size={16} className={`${color} lg:w-5 lg:h-5`} />}
+            {isOptimization && <CheckCircle size={16} className={`${color} lg:w-5 lg:h-5`} />}
           </div>
           <div>
-            <h3 className="text-lg font-bold text-text-primary tracking-tight">{title}</h3>
-            <div className="flex items-center gap-1.5 mt-1">
-              <Sparkles size={16} className="text-purple-500" />
-              <span className="text-base font-semibold text-purple-500">{t('ai_confidence')}: {confidence}%</span>
+            <h3 className="text-sm lg:text-lg font-bold text-white tracking-tight">{title}</h3>
+            <div className="flex items-center gap-1 mt-0.5 lg:mt-1">
+              <Sparkles size={14} className="text-brand-500 lg:w-4 lg:h-4" />
+              <span className="text-xs lg:text-base font-bold text-brand-500">{t('ai_confidence')}: {confidence}%</span>
             </div>
           </div>
         </div>
       </div>
 
-      <p className="relative z-10 text-base text-text-secondary mb-6 leading-relaxed">{description}</p>
+      <p className="relative z-10 text-xs lg:text-base text-text-muted mb-4 lg:mb-6 leading-relaxed">{description}</p>
 
-      <div className="relative z-10 flex items-center justify-between pt-4 border-t border-border-dark">
+      <div className="relative z-10 flex items-center justify-between pt-3 lg:pt-4 border-t border-border-dark">
         <div className="flex flex-col">
-          <span className="text-base font-semibold text-text-muted uppercase tracking-wider">{t('impact')}</span>
-          <span className={`text-base font-bold ${color}`}>{impact}</span>
+          <span className="text-[10px] lg:text-base font-bold text-text-muted uppercase tracking-wider">{t('impact')}</span>
+          <span className={`text-xs lg:text-base font-bold ${color}`}>{impact}</span>
         </div>
 
         <button 
           onClick={onAction}
           className={`
-          flex items-center gap-2 px-4 py-2 rounded-xl text-base font-semibold transition-all
-          bg-surface-dark hover:bg-surface-card border border-border-dark hover:border-brand-500/30 text-text-primary
+          flex items-center gap-1.5 lg:gap-2 px-3 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-base font-bold transition-all
+          bg-surface-layer/30 hover:bg-surface-layer border border-border-dark hover:border-brand-500/30 text-text-muted hover:text-white
           hover:pr-3 group shadow-sm
         `}>
           {action} 
-          <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+          <ArrowRight size={14} className="transition-transform group-hover:translate-x-1 lg:w-4 lg:h-4" />
         </button>
       </div>
     </motion.div>

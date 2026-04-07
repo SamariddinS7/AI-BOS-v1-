@@ -108,10 +108,10 @@ const VoiceControl = memo(({ onAction }: VoiceControlProps) => {
         onClick={isRecording ? stopRecording : startRecording}
         className={`p-3 rounded-full transition-all shadow-lg flex items-center justify-center ${
           isRecording 
-            ? 'bg-red-500 text-white animate-pulse ring-4 ring-red-500/20' 
+            ? 'bg-rose-500 text-white animate-pulse ring-4 ring-rose-500/20' 
             : isProcessing 
               ? 'bg-brand-500/10 text-brand-500 cursor-wait'
-              : 'bg-surface-card hover:bg-surface-dark text-text-primary border border-border-dark'
+              : 'bg-surface-layer/30 hover:bg-surface-layer text-white border border-border-dark'
         }`}
       >
         {isProcessing ? (
@@ -129,7 +129,7 @@ const VoiceControl = memo(({ onAction }: VoiceControlProps) => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute top-14 right-0 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-surface-card border border-border-dark rounded-xl shadow-xl p-4 z-50 backdrop-blur-md"
+            className="absolute top-14 right-0 w-72 sm:w-80 max-w-[calc(100vw-2rem)] bg-surface-layer border border-border-dark rounded-xl shadow-xl p-4 z-50 backdrop-blur-md enterprise-card"
           >
             <div className="flex flex-col gap-2">
               {transcript && (
@@ -137,16 +137,16 @@ const VoiceControl = memo(({ onAction }: VoiceControlProps) => {
                   <div className="p-1.5 bg-brand-500/10 rounded-lg text-brand-500 mt-0.5">
                     <Mic size={14} />
                   </div>
-                  <p className="text-base text-text-secondary italic">"{transcript}"</p>
+                  <p className="text-base text-text-muted italic font-bold">"{transcript}"</p>
                 </div>
               )}
               
               {responseMessage && (
                 <div className="flex items-start gap-2 border-t border-border-dark pt-2 mt-1">
-                  <div className="p-1.5 bg-purple-500/10 rounded-lg text-purple-500 mt-0.5">
+                  <div className="p-1.5 bg-brand-500/10 rounded-lg text-brand-500 mt-0.5">
                     <Volume2 size={14} />
                   </div>
-                  <p className="text-base text-text-primary font-medium">{responseMessage}</p>
+                  <p className="text-base text-white font-bold">{responseMessage}</p>
                 </div>
               )}
             </div>

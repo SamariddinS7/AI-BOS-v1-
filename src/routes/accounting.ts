@@ -1,5 +1,6 @@
 import express from 'express';
 import db from '../lib/db/settings';
+import { TransactionService } from '../services/TransactionService';
 
 const router = express.Router();
 
@@ -38,26 +39,33 @@ router.get('/kpis', (req, res) => {
   }
 });
 
-router.get('/transactions', (req, res) => {
+router.get('/transactions', async (req, res) => {
   try {
-    const transactions = db.prepare(`
-      SELECT 
-        t.id, 
-        t.transaction_date as date, 
-        t.description, 
-        c.name as category, 
-        t.amount, 
-        CASE WHEN t.is_verified = 1 THEN 'Muvaffaqiyatli' ELSE 'Jarayonda' END as status,
-        t.type
-      FROM transactions t
-      LEFT JOIN transaction_categories c ON t.category_id = c.id
-      ORDER BY t.transaction_date DESC
-      LIMIT 50
-    `).all();
+    const tenantId = 'default-tenant-id'; // In a real app, this would come from auth
+    const transactions = await TransactionService.getTransactions(tenantId);
     res.json(transactions);
-  } catch (error) {
-    console.error('Error fetching transactions:', error);
+  } catch (error: any) {
+    console.error('Error fetching transactions:', error.message);
     res.status(500).json({ error: 'Failed to fetch transactions' });
+  }
+});
+
+router.post('/transactions', async (req, res) => {
+  try {
+    const tenantId = 'default-tenant-id'; // In a real app, this would come from auth
+    const userId = 'admin-user-id'; // In a real app, this would come from auth
+    
+    const transactionData = {
+      ...req.body,
+      tenant_id: tenantId,
+      created_by: userId
+    };
+
+    const newTransaction = await TransactionService.createTransaction(transactionData);
+    res.status(201).json(newTransaction);
+  } catch (error: any) {
+    console.error('Error creating transaction:', error.message);
+    res.status(400).json({ error: error.message });
   }
 });
 

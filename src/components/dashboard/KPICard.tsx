@@ -39,7 +39,7 @@ const KPICard: React.FC<KPICardProps> = memo(({
       whileHover={{ y: -4, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       className={`
-        relative overflow-hidden rounded-2xl border border-border-dark glass-panel p-6 transition-all shadow-sm
+        relative overflow-hidden rounded-2xl border border-border-dark enterprise-card p-4 lg:p-6 transition-all shadow-sm
         hover:border-brand-500/30 hover:shadow-lg group
         ${className}
         ${onClick ? 'cursor-pointer' : ''}
@@ -49,25 +49,25 @@ const KPICard: React.FC<KPICardProps> = memo(({
       {/* Background Gradient Blob */}
       <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full blur-3xl opacity-10 ${isPositive ? 'bg-emerald-500' : isNegative ? 'bg-rose-500' : 'bg-brand-500'}`} />
 
-      <div className="relative z-10 flex justify-between items-start mb-4">
+      <div className="relative z-10 flex justify-between items-start mb-3 lg:mb-4">
         <div>
-          <p className="text-base font-bold text-text-muted mb-1 tracking-wider uppercase">{title}</p>
-          <h3 className="text-3xl font-bold text-text-primary tracking-tight">{value}</h3>
+          <p className="text-xs lg:text-base font-bold text-text-muted mb-0.5 lg:mb-1 tracking-wider uppercase">{title}</p>
+          <h3 className="text-xl lg:text-3xl font-bold text-white tracking-tight">{value}</h3>
         </div>
         {Icon && (
-          <div className={`p-2.5 rounded-xl ${trendBg} ${trendColor} border border-border-dark shadow-inner backdrop-blur-md`}>
-            <Icon size={22} />
+          <div className={`p-2 lg:p-2.5 rounded-xl ${trendBg} ${trendColor} border border-border-dark shadow-inner backdrop-blur-md`}>
+            <Icon className="w-4 h-4 lg:w-[22px] lg:h-[22px]" />
           </div>
         )}
       </div>
 
-      <div className="relative z-10 flex items-end justify-between mt-4">
-        <div className="flex flex-col gap-1">
-          <div className={`flex items-center gap-1.5 text-base font-bold px-2.5 py-1 rounded-lg w-fit ${trendBg} ${trendColor} border border-white/5`}>
-            <TrendIcon size={16} />
+      <div className="relative z-10 flex items-end justify-between mt-3 lg:mt-4">
+        <div className="flex flex-col gap-0.5 lg:gap-1">
+          <div className={`flex items-center gap-1 text-xs lg:text-base font-bold px-2 py-0.5 lg:px-2.5 lg:py-1 rounded-lg w-fit ${trendBg} ${trendColor} border border-white/5`}>
+            <TrendIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
             {change}
           </div>
-          <span className="text-base text-text-muted font-bold uppercase tracking-tight ml-1">{t('vs_last_period')}</span>
+          <span className="text-[10px] lg:text-base text-text-muted font-bold uppercase tracking-tight ml-1">{t('vs_last_period')}</span>
         </div>
         
         {data.length > 0 && (

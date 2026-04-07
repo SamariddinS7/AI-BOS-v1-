@@ -68,11 +68,11 @@ export default function AgentLogsViewer() {
                   </td>
                   <td className="py-3 px-4">
                     {log.status === 'success' ? (
-                      <div className="flex items-center gap-1.5 text-green-600 text-base font-medium">
+                      <div className="flex items-center gap-1.5 text-green-500 text-base font-medium">
                         <CheckCircle2 className="w-4 h-4" /> Success
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-red-600 text-base font-medium" title={log.error}>
+                      <div className="flex items-center gap-1.5 text-red-500 text-base font-medium" title={log.error}>
                         <XCircle className="w-4 h-4" /> Failed
                       </div>
                     )}

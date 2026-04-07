@@ -93,7 +93,7 @@ export default function TokenManager() {
                   <td className="py-4 px-6 text-right">
                     <button 
                       onClick={() => handleDelete(token.id)}
-                      className="p-2 text-text-muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      className="p-2 text-text-muted hover:text-red-500 hover:bg-red-500/5 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       title="Revoke Token"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -113,10 +113,10 @@ export default function TokenManager() {
         </div>
       </Card>
 
-      <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-5 flex gap-3">
-        <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-500 flex-shrink-0 mt-0.5" />
+      <div className="bg-red-500/5 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-5 flex gap-3">
+        <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-500 flex-shrink-0 mt-0.5" />
         <div>
-          <h5 className="text-base font-bold text-red-800 dark:text-red-400 mb-1">Security Warning</h5>
+          <h5 className="text-base font-bold text-red-800 text-red-400 mb-1">Security Warning</h5>
           <p className="text-base text-red-700 dark:text-red-500/80 leading-relaxed">
             Tokens provide full access to the AI-BOS integration API based on their configured permissions. 
             Treat them like passwords. Never commit tokens to version control or share them in insecure channels.

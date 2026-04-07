@@ -47,7 +47,7 @@ export default function CRM() {
         </div>
         <button 
           onClick={() => setIsAddCustomerModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/20 font-bold text-base"
+          className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20 font-bold text-base"
         >
           <Plus className="w-5 h-5" />
           Mijoz Qo'shish

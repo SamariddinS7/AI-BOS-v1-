@@ -45,34 +45,34 @@ export default function Dashboard() {
       className="flex-1 font-sans"
     >
       {/* Dashboard Header with Mode Toggle */}
-      <div className="sticky top-0 z-20 glass-panel border-b border-border-dark px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="sticky top-0 z-20 glass-panel border-b border-border-dark px-4 py-3 lg:px-6 lg:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 lg:gap-4">
         <div>
-          <h1 className="text-xl font-bold text-text-primary tracking-tight">{t('dashboard')}</h1>
-          <div className="flex items-center gap-2 mt-0.5">
-            <p className="text-base text-text-secondary">
+          <h1 className="text-lg lg:text-xl font-bold text-white tracking-tight">{t('dashboard')}</h1>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <p className="text-xs lg:text-base text-text-muted">
               {mode === 'ceo' ? t('ai_recommendations') : t('automation')}
             </p>
             {isConnected && (
-              <span className="flex items-center gap-1 text-base text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              <span className="flex items-center gap-1 text-[10px] lg:text-base text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                <span className="w-1 h-1 lg:w-1.5 lg:h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 LIVE
               </span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 lg:gap-3">
           <VoiceControl onAction={handleVoiceAction} />
           
-          <div className="flex items-center bg-surface-card p-1 rounded-xl border border-border-dark">
+          <div className="flex items-center bg-surface-layer/30 p-1 rounded-xl border border-border-dark">
             <button
               onClick={() => {
                 setMode('ceo');
               }}
-              className={`px-4 py-2 rounded-lg text-base font-medium transition-all ${
+              className={`px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-base font-bold transition-all ${
                 mode === 'ceo' 
-                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' 
-                  : 'text-text-muted hover:text-text-primary hover:bg-surface-dark'
+                  ? 'bg-brand-600 text-black shadow-lg shadow-brand-600/20' 
+                  : 'text-text-muted hover:text-white hover:bg-surface-layer'
               }`}
             >
               {t('ceo_mode')}
@@ -81,10 +81,10 @@ export default function Dashboard() {
               onClick={() => {
                 setMode('operator');
               }}
-              className={`px-4 py-2 rounded-lg text-base font-medium transition-all ${
+              className={`px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-base font-bold transition-all ${
                 mode === 'operator' 
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' 
-                  : 'text-text-muted hover:text-text-primary hover:bg-surface-dark'
+                  ? 'bg-emerald-600 text-black shadow-lg shadow-emerald-600/20' 
+                  : 'text-text-muted hover:text-white hover:bg-surface-layer'
               }`}
             >
               {t('operator_mode')}

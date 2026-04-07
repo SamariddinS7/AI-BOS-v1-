@@ -33,7 +33,7 @@ export const Card = memo(({
 Card.displayName = 'Card';
 
 export const CardHeader = memo(({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`p-6 pb-3 border-b border-border-dark/50 ${className}`}>
+  <div className={`p-4 lg:p-6 pb-2 lg:pb-3 border-b border-border-dark/50 ${className}`}>
     {children}
   </div>
 ));
@@ -49,7 +49,7 @@ export const CardTitle = memo(({ children, className = '' }: { children: React.R
 CardTitle.displayName = 'CardTitle';
 
 export const CardContent = memo(({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <div className={`p-6 ${className}`}>
+  <div className={`p-4 lg:p-6 ${className}`}>
     {children}
   </div>
 ));

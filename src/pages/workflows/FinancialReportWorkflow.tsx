@@ -4,39 +4,7 @@ import Card from '../../components/ui/Card';
 import { callGeminiWithRetry } from '../../lib/gemini';
 
 // Mock financial data for the last month
-const mockFinancialData = {
-  month: "February 2026",
-  revenue: {
-    total: 1250000,
-    breakdown: {
-      softwareSales: 850000,
-      consulting: 300000,
-      support: 100000
-    }
-  },
-  cogs: {
-    total: 350000,
-    breakdown: {
-      cloudHosting: 150000,
-      softwareLicenses: 50000,
-      contractors: 150000
-    }
-  },
-  operatingExpenses: {
-    total: 600000,
-    breakdown: {
-      salaries: 400000,
-      marketing: 120000,
-      rent: 50000,
-      utilities: 30000
-    }
-  },
-  previousMonthComparison: {
-    revenueGrowth: 5.2, // percentage
-    cogsGrowth: 2.1,
-    opexGrowth: 8.5
-  }
-};
+const mockFinancialData = null;
 
 export default function FinancialReportWorkflow() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -44,6 +12,10 @@ export default function FinancialReportWorkflow() {
   const [error, setError] = useState<string | null>(null);
 
   const generateReport = async () => {
+    if (!mockFinancialData) {
+      setError("No financial data available to analyze.");
+      return;
+    }
     setIsGenerating(true);
     setError(null);
     try {
@@ -115,15 +87,17 @@ export default function FinancialReportWorkflow() {
           </div>
           <h4 className="text-xl font-bold text-text-primary mb-2">Ready to Analyze Financial Data</h4>
           <p className="text-text-secondary mb-6 max-w-md mx-auto text-base">
-            The AI agent will process revenue, COGS, and operating expenses for {mockFinancialData.month} to generate a detailed P&L report.
+            {mockFinancialData ? `The AI agent will process revenue, COGS, and operating expenses for ${mockFinancialData.month} to generate a detailed P&L report.` : "No financial data available to analyze."}
           </p>
-          <button
-            onClick={generateReport}
-            className="px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors inline-flex items-center gap-2 font-medium shadow-lg shadow-brand-500/20 text-base"
-          >
-            <Sparkles className="w-5 h-5" />
-            Generate P&L Report
-          </button>
+          {mockFinancialData && (
+            <button
+              onClick={generateReport}
+              className="px-6 py-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-colors inline-flex items-center gap-2 font-medium shadow-lg shadow-brand-500/20 text-base"
+            >
+              <Sparkles className="w-5 h-5" />
+              Generate P&L Report
+            </button>
+          )}
         </Card>
       )}
 
@@ -138,12 +112,12 @@ export default function FinancialReportWorkflow() {
       )}
 
       {error && (
-        <Card className="p-6 bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/30">
+        <Card className="p-6 bg-red-500/5 dark:bg-red-900/10 border-red-200 dark:border-red-900/30">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <AlertCircle className="w-6 h-6 text-red-500 text-red-400 shrink-0 mt-0.5" />
             <div>
               <h4 className="font-bold text-red-900 dark:text-red-300">Analysis Failed</h4>
-              <p className="text-base text-red-700 dark:text-red-400 mt-1">{error}</p>
+              <p className="text-base text-red-700 text-red-400 mt-1">{error}</p>
               <button 
                 onClick={generateReport}
                 className="mt-4 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-base font-medium"
@@ -176,7 +150,7 @@ export default function FinancialReportWorkflow() {
               <p className="text-base font-medium text-text-muted mb-1">Gross Profit</p>
               <div className="flex items-end gap-2">
                 <h5 className="text-2xl font-bold text-text-primary">${report.summary.grossProfit?.toLocaleString()}</h5>
-                <span className="text-base font-medium text-green-600 dark:text-green-400 mb-1">
+                <span className="text-base font-medium text-green-500 text-green-400 mb-1">
                   {report.summary.grossMarginPercentage?.toFixed(1)}% Margin
                 </span>
               </div>

@@ -1,7 +1,9 @@
 import express from 'express';
 import { ExecutionEngine } from './src/lib/workflow-engine/ExecutionEngine';
 import { Workflow } from './src/lib/workflow-engine/types';
-import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
+import { startTelegramBot, stopTelegramBot, getTelegramBotStatus } from './src/lib/telegram/bot';
+import { processAICommand } from './src/lib/ai/agent';
+import { GoogleGenAI } from '@google/genai';
 import db from './src/lib/db/settings';
 import archiver from 'archiver';
 import path from 'path';
@@ -16,6 +18,7 @@ import workflowsRouter from './src/routes/workflows';
 import adminRouter from './src/routes/admin';
 import integrationsRouter from './src/routes/integrations';
 import accountingRouter from './src/routes/accounting';
+import agentsRouter from './src/routes/agents';
 import { apiGatewayMiddleware } from './src/middleware/gateway';
 
 const app = express();
@@ -44,6 +47,221 @@ function getAiClient(): GoogleGenAI {
   }
   return aiClient;
 }
+
+// Finance API
+app.get('/api/finance/accounts', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    const accounts = db.prepare('SELECT * FROM accounts WHERE tenant_id = ? AND deleted_at IS NULL').all(tenantId);
+    res.json(accounts);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch accounts' });
+  }
+});
+
+app.post('/api/finance/accounts', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  const { name, currency = 'UZS', balance = 0 } = req.body;
+  const id = `acc-${Date.now()}`;
+  try {
+    db.prepare('INSERT INTO accounts (id, tenant_id, name, currency, balance) VALUES (?, ?, ?, ?, ?)').run(id, tenantId, name, currency, balance);
+    res.json({ success: true, id });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create account' });
+  }
+});
+
+app.get('/api/finance/categories', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    const categories = db.prepare('SELECT * FROM transaction_categories WHERE tenant_id = ? AND deleted_at IS NULL').all(tenantId);
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+app.get('/api/finance/transactions', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    const transactions = db.prepare(`
+      SELECT t.*, a.name as account_name, c.name as category_name 
+      FROM transactions t
+      LEFT JOIN accounts a ON t.account_id = a.id
+      LEFT JOIN transaction_categories c ON t.category_id = c.id
+      WHERE t.tenant_id = ? AND t.deleted_at IS NULL
+      ORDER BY t.transaction_date DESC
+      LIMIT 100
+    `).all(tenantId);
+    res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch transactions' });
+  }
+});
+
+app.post('/api/finance/transactions', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  const { account_id, category_id, type, amount, transaction_date, description, counterparty } = req.body;
+  const id = `txn-${Date.now()}`;
+  try {
+    db.transaction(() => {
+      db.prepare(`
+        INSERT INTO transactions (id, tenant_id, account_id, category_id, type, amount, transaction_date, description, counterparty) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(id, tenantId, account_id, category_id, type, amount, transaction_date, description, counterparty);
+      
+      // Update account balance
+      if (type === 'income') {
+        db.prepare('UPDATE accounts SET balance = balance + ? WHERE id = ?').run(amount, account_id);
+      } else if (type === 'expense') {
+        db.prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?').run(amount, account_id);
+      }
+    })();
+    res.json({ success: true, id });
+  } catch (error) {
+    console.error('Failed to create transaction:', error);
+    res.status(500).json({ error: 'Failed to create transaction' });
+  }
+});
+
+app.get('/api/finance/summary', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    const income = db.prepare("SELECT SUM(amount) as total FROM transactions WHERE tenant_id = ? AND type = 'income' AND deleted_at IS NULL").get(tenantId) as any;
+    const expense = db.prepare("SELECT SUM(amount) as total FROM transactions WHERE tenant_id = ? AND type = 'expense' AND deleted_at IS NULL").get(tenantId) as any;
+    
+    const totalIncome = income?.total || 0;
+    const totalExpense = expense?.total || 0;
+    const netProfit = totalIncome - totalExpense;
+    
+    res.json({
+      totalIncome,
+      totalExpense,
+      netProfit,
+      ebitda: totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(1) : 0
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch summary' });
+  }
+});
+
+// Telegram Settings API
+app.get('/api/telegram/settings', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    const settings = db.prepare('SELECT * FROM TelegramSettings WHERE tenant_id = ?').get(tenantId);
+    res.json(settings || {});
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+app.post('/api/telegram/settings', async (req, res) => {
+  const tenantId = 'default-tenant-id';
+  const { bot_token, system_prompt, custom_code, auto_reply, use_custom_code, is_active } = req.body;
+  
+  try {
+    const existing = db.prepare('SELECT tenant_id FROM TelegramSettings WHERE tenant_id = ?').get(tenantId);
+    if (existing) {
+      db.prepare(`
+        UPDATE TelegramSettings 
+        SET bot_token = ?, system_prompt = ?, custom_code = ?, auto_reply = ?, use_custom_code = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE tenant_id = ?
+      `).run(bot_token, system_prompt, custom_code, auto_reply ? 1 : 0, use_custom_code ? 1 : 0, is_active ? 1 : 0, tenantId);
+    } else {
+      db.prepare(`
+        INSERT INTO TelegramSettings (tenant_id, bot_token, system_prompt, custom_code, auto_reply, use_custom_code, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(tenantId, bot_token, system_prompt, custom_code, auto_reply ? 1 : 0, use_custom_code ? 1 : 0, is_active ? 1 : 0);
+    }
+
+    if (is_active) {
+      await startTelegramBot(tenantId);
+    } else {
+      await stopTelegramBot();
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to update telegram settings:', error);
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+app.get('/api/telegram/status', (req, res) => {
+  res.json({ isPolling: getTelegramBotStatus() });
+});
+
+app.post('/api/telegram/start', async (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    db.prepare('UPDATE TelegramSettings SET is_active = 1 WHERE tenant_id = ?').run(tenantId);
+    const success = await startTelegramBot(tenantId);
+    res.json({ success });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to start bot' });
+  }
+});
+
+app.post('/api/telegram/stop', async (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    db.prepare('UPDATE TelegramSettings SET is_active = 0 WHERE tenant_id = ?').run(tenantId);
+    await stopTelegramBot();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to stop bot' });
+  }
+});
+
+app.get('/api/telegram/messages', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    const messages = db.prepare('SELECT * FROM TelegramMessages WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50').all(tenantId);
+    res.json(messages.reverse());
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+app.post('/api/telegram/messages', async (req, res) => {
+  const tenantId = 'default-tenant-id';
+  const { chat_id, text } = req.body;
+  try {
+    const settings = db.prepare('SELECT bot_token FROM TelegramSettings WHERE tenant_id = ?').get(tenantId) as any;
+    if (!settings || !settings.bot_token) {
+      return res.status(400).json({ error: 'Bot token not found' });
+    }
+    
+    // Send message using the proxy logic or direct fetch
+    const response = await fetch(`https://api.telegram.org/bot${settings.bot_token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id, text })
+    });
+    
+    if (response.ok) {
+      db.prepare('INSERT INTO TelegramMessages (tenant_id, chat_id, username, text, is_bot) VALUES (?, ?, ?, ?, 1)').run(
+        tenantId, chat_id, 'AI-BOS Bot (Manual)', text
+      );
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: 'Failed to send message to Telegram' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+app.delete('/api/telegram/messages', (req, res) => {
+  const tenantId = 'default-tenant-id';
+  try {
+    db.prepare('DELETE FROM TelegramMessages WHERE tenant_id = ?').run(tenantId);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to clear messages' });
+  }
+});
 
 // Telegram API Proxy
 app.post('/api/telegram/proxy', async (req, res) => {
@@ -94,6 +312,9 @@ app.use('/api/crm', crmRouter);
 
 // Accounting
 app.use('/api/accounting', accountingRouter);
+
+// Agents
+app.use('/api/agents', agentsRouter);
 
 // Workflows
 app.use('/api/workflows', workflowsRouter);
@@ -158,131 +379,8 @@ app.post('/voice/process', async (req, res) => {
     });
     const transcript = sttResponse.text || '';
 
-    // Define tools for analytics, CRM, and HR
-    const queryAnalyticsTool: FunctionDeclaration = {
-      name: "queryAnalytics",
-      description: "Query analytics data from the database. Use this to answer questions about revenue, expenses, or transactions.",
-      parameters: {
-        type: Type.OBJECT,
-        properties: {
-          metric: { type: Type.STRING, description: "The metric to query (e.g., 'revenue', 'expenses')" },
-          level: { type: Type.STRING, description: "The time level (e.g., 'month', 'week', 'day')" },
-          period_key: { type: Type.STRING, description: "Optional specific period (e.g., 'Yan', 'Hafta 1')" }
-        },
-        required: ["metric"]
-      }
-    };
-
-    const queryCRMTool: FunctionDeclaration = {
-      name: "queryCRM",
-      description: "Query CRM data. Use this to find customer details, deals, or interactions.",
-      parameters: {
-        type: Type.OBJECT,
-        properties: {
-          type: { type: Type.STRING, enum: ["customers", "deals", "interactions"], description: "The type of data to query" },
-          id: { type: Type.STRING, description: "Optional ID (customer_id for interactions)" }
-        },
-        required: ["type"]
-      }
-    };
-
-    const queryHRTool: FunctionDeclaration = {
-      name: "queryHR",
-      description: "Query HR data. Use this to find employee details, attendance, or KPIs.",
-      parameters: {
-        type: Type.OBJECT,
-        properties: {
-          type: { type: Type.STRING, enum: ["employees", "attendance", "kpi"], description: "The type of data to query" },
-          id: { type: Type.STRING, description: "Optional ID (employee_id for attendance/kpi)" }
-        },
-        required: ["type"]
-      }
-    };
-
     // 2. Intent Parsing & Action Execution
-    const llmResponse = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
-      contents: `User said: "${transcript}". If they ask for data, call the appropriate tool. If not, return a JSON object with "message" (response text) and "action" (optional action name).`,
-      config: {
-        tools: [{ functionDeclarations: [queryAnalyticsTool, queryCRMTool, queryHRTool] }],
-      }
-    });
-    
-    let resultMessage = '';
-    const functionCalls = llmResponse.functionCalls;
-
-    if (functionCalls && functionCalls.length > 0) {
-       const call = functionCalls[0];
-       if (call.name === 'queryAnalytics') {
-          const args = call.args as any;
-          const { metric, level, period_key } = args;
-          
-          let query = 'SELECT * FROM AnalyticsMetrics WHERE metric = ?';
-          const params: any[] = [metric];
-          if (level) { query += ' AND level = ?'; params.push(level); }
-          if (period_key) { query += ' AND period_key = ?'; params.push(period_key); }
-          
-          try {
-            const data = db.prepare(query).all(...params);
-            const finalResponse = await ai.models.generateContent({
-               model: 'gemini-3.1-pro-preview',
-               contents: `Context: User asked "${transcript}". Data retrieved: ${JSON.stringify(data)}. Provide a natural language summary in ${lang}.`
-            });
-            resultMessage = finalResponse.text || 'Ma\'lumotlar olindi.';
-          } catch (dbError: any) {
-            console.error('DB Query Error:', dbError);
-            resultMessage = 'Ma\'lumotlar bazasidan o\'qishda xatolik yuz berdi.';
-          }
-       } else if (call.name === 'queryCRM') {
-          const { type, id } = call.args as any;
-          let query = '';
-          let params: any[] = [];
-
-          if (type === 'customers') {
-            query = 'SELECT * FROM Customers';
-            if (id) { query += ' WHERE id = ?'; params.push(id); }
-          } else if (type === 'deals') {
-            query = 'SELECT * FROM Deals';
-            if (id) { query += ' WHERE customer_id = ?'; params.push(id); }
-          } else if (type === 'interactions') {
-            query = 'SELECT * FROM Interactions';
-            if (id) { query += ' WHERE customer_id = ?'; params.push(id); }
-          }
-
-          try {
-            const data = db.prepare(query).all(...params);
-            const finalResponse = await ai.models.generateContent({
-               model: 'gemini-3.1-pro-preview',
-               contents: `Context: User asked "${transcript}". CRM Data retrieved: ${JSON.stringify(data)}. Provide a natural language summary in ${lang}.`
-            });
-            resultMessage = finalResponse.text || 'CRM ma\'lumotlari olindi.';
-          } catch (dbError: any) {
-            resultMessage = 'CRM ma\'lumotlarini olishda xatolik.';
-          }
-       } else if (call.name === 'queryHR') {
-          // Note: HR data is in Firestore, but for the voice agent we might want to query SQLite if it's there, 
-          // or just explain we're looking it up. 
-          // Actually, let's assume we have some HR data in SQLite for the agent too, or just handle it gracefully.
-          // In this project, HR data was moved to Firestore in the previous steps.
-          // However, the voice agent is running server-side and doesn't have direct access to Firestore easily without setup.
-          // Let's check if there's any HR table in SQLite.
-          resultMessage = `HR ma'lumotlarini (xodimlar, davomat) tekshirmoqdaman. Hozircha bu ma'lumotlar faqat HR panelida mavjud.`;
-       }
-       // Handle normal response
-       try {
-         // Try to parse as JSON first, if it fails, use the raw text
-         const text = llmResponse.text || '{}';
-         const match = text.match(/\{[\s\S]*\}/);
-         if (match) {
-           const json = JSON.parse(match[0]);
-           resultMessage = json.message || text;
-         } else {
-           resultMessage = text;
-         }
-       } catch (e) {
-         resultMessage = llmResponse.text || 'Tushunmadim.';
-       }
-    }
+    const resultMessage = await processAICommand(transcript, undefined, lang);
 
     // 3. TTS (using Gemini TTS)
     const ttsResponse = await ai.models.generateContent({

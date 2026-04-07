@@ -28,9 +28,9 @@ interface Project {
 
 const priorityConfig = {
   low: { color: 'text-text-muted', bg: 'bg-surface-ground', border: 'border-border-dark', icon: ArrowDown, label: 'Low', weight: 1 },
-  medium: { color: 'text-blue-400', bg: 'bg-blue-900/20', border: 'border-blue-900/30', icon: ArrowRight, label: 'Medium', weight: 2 },
-  high: { color: 'text-orange-400', bg: 'bg-orange-900/20', border: 'border-orange-900/30', icon: ArrowUp, label: 'High', weight: 3 },
-  critical: { color: 'text-rose-400', bg: 'bg-rose-900/20', border: 'border-rose-900/30', icon: AlertCircle, label: 'Critical', weight: 4 },
+  medium: { color: 'text-brand-400', bg: 'bg-brand-500/10', border: 'border-brand-500/20', icon: ArrowRight, label: 'Medium', weight: 2 },
+  high: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', icon: ArrowUp, label: 'High', weight: 3 },
+  critical: { color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20', icon: AlertCircle, label: 'Critical', weight: 4 },
 };
 
 export default function Tasks() {
@@ -135,7 +135,7 @@ export default function Tasks() {
               setIsModalOpen(true);
               info("Yangi vazifa qo'shish oynasi ochilmoqda...");
             }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl transition-all shadow-lg shadow-brand-500/20 active:scale-95 font-bold text-base"
+            className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl transition-all shadow-lg shadow-brand-600/20 active:scale-95 font-bold text-base"
           >
             <Plus size={20} />
             <span className="font-medium">Yangi Vazifa</span>
@@ -374,7 +374,7 @@ export default function Tasks() {
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 px-4 py-2.5 bg-brand-600 text-white rounded-xl font-bold text-base hover:bg-brand-700 transition-all shadow-lg shadow-brand-500/20"
+                  className="flex-1 px-4 py-2.5 bg-brand-600 text-white rounded-xl font-bold text-base hover:bg-brand-700 transition-all shadow-lg shadow-brand-600/20"
                 >
                   Saqlash
                 </button>

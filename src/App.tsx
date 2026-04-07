@@ -176,20 +176,20 @@ export default function App() {
         setMobileMenuOpen(false);
       }}
       title={(!sidebarOpen && !mobileMenuOpen) ? item.label : undefined}
-      className={`sidebar-item relative flex items-center px-6 py-2 lg:py-3 cursor-pointer transition-all duration-200 group overflow-hidden ${
+      className={`sidebar-item relative flex items-center px-4 py-2 lg:px-6 lg:py-3 cursor-pointer transition-all duration-200 group overflow-hidden ${
         activePage === item.id
-          ? (darkMode ? 'bg-brand-500/15 text-brand-400 font-semibold' : 'bg-blue-50 text-blue-600 font-semibold') 
-          : (darkMode ? 'text-text-secondary hover:bg-surface-layer hover:text-text-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
-      } ${isChild ? 'pl-12' : ''}`}
+          ? 'bg-brand-500/15 text-brand-500 font-bold' 
+          : 'text-text-secondary hover:bg-surface-layer hover:text-white'
+      } ${isChild ? 'pl-10 lg:pl-12' : ''}`}
     >
       {activePage === item.id && (
         <motion.div 
           layoutId="activeSidebar"
-          className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 shadow-[0_0_10px_rgba(20,184,166,0.5)]"
+          className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 shadow-[0_0_15px_rgba(0,212,255,0.6)]"
         />
       )}
-      <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${(sidebarOpen || mobileMenuOpen) ? 'mr-3' : 'mx-auto'} ${activePage === item.id ? 'drop-shadow-[0_0_5px_rgba(20,184,166,0.5)]' : ''}`} />
-      {(sidebarOpen || mobileMenuOpen) && <span className="text-sm lg:text-base font-medium">{item.label}</span>}
+      <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${(sidebarOpen || mobileMenuOpen) ? 'mr-3' : 'mx-auto'} ${activePage === item.id ? 'text-brand-500 drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]' : ''}`} />
+      {(sidebarOpen || mobileMenuOpen) && <span className="text-sm lg:text-base font-bold">{item.label}</span>}
     </div>
   );
 
@@ -222,7 +222,7 @@ export default function App() {
 
 
   return (
-    <div className={`flex h-screen font-sans overflow-hidden relative transition-colors duration-500 ${darkMode ? 'dark bg-app-bg text-text-primary' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`flex h-screen font-sans overflow-hidden relative transition-colors duration-500 dark text-text-primary`}>
       <FilterProvider>
         <BackgroundEffects />
         <ToastContainer />
@@ -246,19 +246,19 @@ export default function App() {
             fixed lg:static inset-y-0 left-0 z-50
             ${mobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'}
             ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}
-            ${darkMode ? 'bg-sidebar-bg border-r border-sidebar-border shadow-[1px_0_20px_rgba(0,0,0,0.3)]' : 'bg-slate-50 border-r border-slate-200'} 
+            bg-sidebar-bg/10 backdrop-blur-md border-r border-sidebar-border/20 shadow-[1px_0_20px_rgba(0,0,0,0.1)]
             transition-all duration-500 flex flex-col flex-shrink-0
           `}
         >
           {/* Logo */}
-          <div className={`h-16 flex items-center px-6 border-b ${darkMode ? 'border-border-glow' : 'border-slate-200'}`}>
-            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0 mr-3 shadow-lg shadow-brand-500/20">
-              <Bot className="text-white w-5 h-5" />
+          <div className={`h-14 lg:h-16 flex items-center px-4 lg:px-6 border-b border-border-glow`}>
+            <div className="w-7 h-7 lg:w-8 lg:h-8 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0 mr-3 shadow-lg shadow-brand-500/20">
+              <Bot className="text-white w-4 h-4 lg:w-5 lg:h-5" />
             </div>
             {(sidebarOpen || mobileMenuOpen) && (
               <div>
-                <h1 className={`font-bold text-base lg:text-lg leading-none ${darkMode ? 'text-white' : 'text-slate-900'}`}>AI-BOS</h1>
-                <span className="text-[10px] lg:text-base text-text-muted font-medium tracking-wider uppercase">Business OS</span>
+                <h1 className={`font-bold text-sm lg:text-lg leading-none text-white`}>AI-BOS</h1>
+                <span className="text-[9px] lg:text-base text-text-muted font-medium tracking-wider uppercase">Business OS</span>
               </div>
             )}
           </div>
@@ -266,7 +266,7 @@ export default function App() {
           {/* Toggle Button (Desktop Only) */}
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`hidden lg:block absolute -right-3 top-20 rounded-full p-1 shadow-xl transition-colors z-50 ${darkMode ? 'bg-surface-card text-text-secondary hover:bg-surface-layer border border-border-glow' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
+            className={`hidden lg:block absolute -right-3 top-20 rounded-full p-1 shadow-xl transition-colors z-50 bg-surface-card text-text-secondary hover:bg-surface-layer border border-border-glow`}
           >
             <ChevronLeft className={`w-4 h-4 transition-transform ${!sidebarOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -290,7 +290,7 @@ export default function App() {
           </div>
 
           {/* Bottom Menu */}
-          <div className={`py-4 border-t space-y-1 ${darkMode ? 'border-border-glow' : 'border-slate-200'}`}>
+          <div className={`py-4 border-t space-y-1 border-border-glow`}>
             {bottomMenuItems.map((item) => (
               <div 
                 key={item.id}
@@ -299,33 +299,33 @@ export default function App() {
                   setMobileMenuOpen(false);
                 }}
                 title={(!sidebarOpen && !mobileMenuOpen) ? item.label : undefined}
-                className={`sidebar-item relative flex items-center px-6 py-2 lg:py-3 cursor-pointer transition-all duration-200 group overflow-hidden ${
+                className={`sidebar-item relative flex items-center px-4 py-2 lg:px-6 lg:py-3 cursor-pointer transition-all duration-200 group overflow-hidden ${
                   activePage === item.id
-                    ? (darkMode ? 'bg-brand-500/15 text-brand-400 font-semibold' : 'bg-blue-50 text-blue-600 font-semibold') 
-                    : (darkMode ? 'text-text-secondary hover:bg-surface-layer hover:text-text-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')
+                    ? 'bg-brand-500/15 text-brand-500 font-bold' 
+                    : 'text-text-secondary hover:bg-surface-layer hover:text-white'
                 }`}
               >
                 {activePage === item.id && (
                   <motion.div 
                     layoutId="activeSidebar"
-                    className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 shadow-[0_0_10px_rgba(20,184,166,0.5)]"
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 shadow-[0_0_15px_rgba(0,212,255,0.6)]"
                   />
                 )}
-                <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${(sidebarOpen || mobileMenuOpen) ? 'mr-3' : 'mx-auto'} ${activePage === item.id ? 'drop-shadow-[0_0_5px_rgba(20,184,166,0.5)]' : ''}`} />
-                {(sidebarOpen || mobileMenuOpen) && <span className="text-sm lg:text-base font-medium">{item.label}</span>}
+                <item.icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${(sidebarOpen || mobileMenuOpen) ? 'mr-3' : 'mx-auto'} ${activePage === item.id ? 'text-brand-500 drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]' : ''}`} />
+                {(sidebarOpen || mobileMenuOpen) && <span className="text-sm lg:text-base font-bold">{item.label}</span>}
               </div>
             ))}
           </div>
         </aside>
 
           {/* Main Content */}
-        <main className={`flex-1 flex flex-col min-w-0 relative transition-colors duration-500 bg-app-bg/60 backdrop-blur-[12px] border border-white/[0.05]`}>
+        <main className={`flex-1 flex flex-col min-w-0 relative transition-colors duration-500`}>
           {/* Top Header */}
-          <header className={`h-16 border-b flex items-center justify-between px-4 lg:px-6 flex-shrink-0 z-30 relative transition-colors duration-500 ${activePage === 'ai' ? 'bg-transparent border-white/10 backdrop-blur-sm' : (darkMode ? 'bg-app-bg/80 backdrop-blur-md border-border-glow' : 'bg-white border-slate-200')}`}>
+          <header className={`h-14 lg:h-16 border-b flex items-center justify-between px-3 lg:px-6 flex-shrink-0 z-30 relative transition-colors duration-500 ${activePage === 'ai' ? 'bg-transparent border-white/10 backdrop-blur-sm' : 'bg-app-bg/10 backdrop-blur-md'}`}>
             
             {/* Mobile Menu Button */}
             <button 
-              className={`lg:hidden p-2 -ml-2 mr-2 rounded-lg transition-colors ${darkMode ? 'text-text-secondary hover:bg-surface-card' : 'text-slate-600 hover:bg-slate-100'}`}
+              className={`lg:hidden p-2 -ml-2 mr-2 rounded-lg transition-colors text-text-secondary hover:bg-surface-card`}
               onClick={() => setMobileMenuOpen(true)}
             >
               <Menu className="w-6 h-6" />
@@ -344,14 +344,12 @@ export default function App() {
                   className={`w-full pl-10 pr-4 py-2 border rounded-lg text-base transition-all flex items-center justify-between ${
                     activePage === 'ai'
                       ? 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/70'
-                      : (darkMode 
-                        ? 'bg-surface-card border-border-dark text-text-muted hover:border-brand-500 hover:text-text-primary' 
-                        : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-blue-500 hover:bg-white hover:text-slate-900')
+                      : 'bg-surface-card border-border-dark text-text-muted hover:border-brand-500 hover:text-text-primary'
                   }`}
                 >
                   <span>Qidirish... (mahsulot, mijoz, xodim)</span>
                   <div className="flex items-center gap-1">
-                    <kbd className={`hidden sm:inline-flex items-center justify-center h-5 px-1.5 text-base font-mono font-medium rounded border ${activePage === 'ai' ? 'border-white/20 text-white/50 bg-white/5' : (darkMode ? 'border-border-dark text-text-muted bg-surface-ground' : 'border-slate-300 text-slate-500 bg-slate-100')}`}>
+                    <kbd className={`hidden sm:inline-flex items-center justify-center h-5 px-1.5 text-base font-mono font-medium rounded border ${activePage === 'ai' ? 'border-white/20 text-white/50 bg-white/5' : 'border-border-dark text-text-muted bg-surface-ground'}`}>
                       ⌘K
                     </kbd>
                   </div>
@@ -359,7 +357,7 @@ export default function App() {
               </div>
               <button 
                 onClick={() => setCommandPaletteOpen(true)}
-                className={`md:hidden p-2 rounded-lg transition-colors ${activePage === 'ai' ? 'text-white/70 hover:bg-white/10' : (darkMode ? 'text-text-secondary hover:bg-surface-card' : 'text-slate-500 hover:bg-slate-100')}`}
+                className={`md:hidden p-2 rounded-lg transition-colors ${activePage === 'ai' ? 'text-white/70 hover:bg-white/10' : 'text-text-secondary hover:bg-surface-card'}`}
               >
                 <Search className="w-5 h-5" />
               </button>
@@ -369,16 +367,16 @@ export default function App() {
             <div className="flex items-center gap-2 lg:gap-4 ml-4">
               <button 
                 onClick={() => setActivePage('add-expense')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-base font-bold transition-all duration-300 ${activePage === 'ai' ? 'bg-white/5 text-white hover:bg-white/10 border border-white/10' : (darkMode ? 'bg-rose-600 text-white hover:bg-rose-700' : 'bg-rose-600 text-white hover:bg-rose-700')}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-base font-bold transition-all duration-300 ${activePage === 'ai' ? 'bg-white/5 text-white hover:bg-white/10 border border-white/10' : 'bg-rose-600 text-white hover:bg-rose-700'}`}
                 title="Yangi xarajat qo'shish"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5 lg:w-4 h-4" />
                 <span className="hidden sm:inline">Yangi Xarajat</span>
               </button>
 
               <button 
                 onClick={() => window.location.href = '/api/system/download'}
-                className={`p-2 rounded-lg transition-all duration-300 ${activePage === 'ai' ? 'bg-white/5 text-white hover:bg-white/10 border border-white/10' : (darkMode ? 'bg-surface-card text-text-secondary hover:bg-surface-dark border border-border-dark' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}`}
+                className={`p-2 rounded-lg transition-all duration-300 ${activePage === 'ai' ? 'bg-white/5 text-white hover:bg-white/10 border border-white/10' : 'bg-surface-card text-text-secondary hover:bg-surface-dark border border-border-dark'}`}
                 title="Dasturni yuklab olish"
               >
                 <Download className="w-5 h-5" />
@@ -386,7 +384,7 @@ export default function App() {
 
               <button 
                 onClick={() => setDarkMode(!darkMode)}
-                className={`p-2 rounded-lg transition-all duration-300 ${activePage === 'ai' ? 'bg-white/5 text-yellow-400 hover:bg-white/10 border border-white/10' : (darkMode ? 'bg-surface-card text-yellow-400 hover:bg-surface-dark border border-border-dark' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}`}
+                className={`p-2 rounded-lg transition-all duration-300 ${activePage === 'ai' ? 'bg-white/5 text-yellow-400 hover:bg-white/10 border border-white/10' : 'bg-surface-card text-yellow-400 hover:bg-surface-dark border border-border-dark'}`}
                 title={darkMode ? "Yorug' rejim" : "Qorong'u rejim"}
               >
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -394,22 +392,22 @@ export default function App() {
 
               <button 
                 onClick={() => setAiOpen(!aiOpen)}
-                className={`flex items-center gap-2 px-3 py-2 lg:px-4 rounded-lg text-base font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-base font-medium transition-all duration-300 ${
                   aiOpen 
                     ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30' 
                     : (activePage === 'ai' 
                         ? 'bg-white/5 text-enterprise-teal hover:bg-white/10 border border-enterprise-teal/30' 
-                        : (darkMode ? 'bg-brand-900/30 text-brand-400 hover:bg-brand-900/50 border border-brand-900/50' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'))
+                        : 'bg-brand-900/30 text-brand-400 hover:bg-brand-900/50 border border-brand-900/50')
                 }`}
               >
-                <Bot className="w-4 h-4" />
+                <Bot className="w-3.5 h-3.5 lg:w-4 h-4" />
                 <span className="hidden sm:inline">AI Yordamchi</span>
               </button>
               
               <div className="relative">
                 <button 
                   onClick={() => setNotifOpen(!notifOpen)}
-                  className={`relative p-1 rounded-full transition-colors ${activePage === 'ai' ? 'hover:bg-white/10' : (darkMode ? 'hover:bg-surface-card' : 'hover:bg-slate-100')}`}
+                  className={`relative p-1 rounded-full transition-colors ${activePage === 'ai' ? 'hover:bg-white/10' : 'hover:bg-surface-card'}`}
                 >
                   <Bell className={`w-6 h-6 ${notifOpen ? 'text-brand-500' : (activePage === 'ai' ? 'text-white/70' : (darkMode ? 'text-text-secondary' : 'text-slate-500'))}`} />
                   <span className="absolute top-0 right-0 w-4 h-4 bg-brand-600 text-white text-base font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-surface-dark">
@@ -424,13 +422,13 @@ export default function App() {
               <div className="relative">
                 <button 
                   onClick={() => setProfileOpen(!profileOpen)}
-                  className={`flex items-center gap-2 lg:gap-3 cursor-pointer p-1 rounded-lg transition-colors ${activePage === 'ai' ? 'hover:bg-white/10' : (darkMode ? 'hover:bg-surface-card' : 'hover:bg-slate-50')}`}
+                  className={`flex items-center gap-2 lg:gap-3 cursor-pointer p-1 rounded-lg transition-colors ${activePage === 'ai' ? 'hover:bg-white/10' : 'hover:bg-surface-card'}`}
                 >
                   <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-base shadow-md">
                     AB
                   </div>
                   <div className="hidden md:block text-left">
-                    <p className={`text-base font-bold leading-tight ${activePage === 'ai' ? 'text-white' : (darkMode ? 'text-text-primary' : 'text-slate-900')}`}>Admin</p>
+                    <p className={`text-base font-bold leading-tight ${activePage === 'ai' ? 'text-white' : 'text-text-primary'}`}>Admin</p>
                     <p className={`text-base ${activePage === 'ai' ? 'text-white/50' : 'text-text-muted'}`}>Bosh hisobchi</p>
                   </div>
                 </button>
@@ -462,31 +460,30 @@ export default function App() {
               )
             ))}
           </div>
-
-
-          {/* AI Assistant Sidebar */}
-          <AIAssistant 
-            isOpen={aiOpen} 
-            onClose={() => setAiOpen(false)} 
-            activePage={activePage}
-          />
-
-          {/* Floating Action Buttons */}
-          <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
-            <button
-              onClick={() => setAiOpen(!aiOpen)}
-              className={`p-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center ${
-                aiOpen 
-                  ? 'bg-brand-700 text-white scale-90' 
-                  : 'bg-brand-600 text-white hover:bg-brand-500 hover:scale-110 hover:shadow-brand-500/50'
-              }`}
-              title="AI Yordamchi"
-            >
-              <Bot className="w-6 h-6" />
-            </button>
-            <AIChat />
-          </div>
         </main>
+
+        {/* AI Assistant Sidebar */}
+        <AIAssistant 
+          isOpen={aiOpen} 
+          onClose={() => setAiOpen(false)} 
+          activePage={activePage}
+        />
+
+        {/* Floating Action Buttons */}
+        <div className="fixed bottom-6 right-6 z-[9000] flex flex-col gap-3">
+          <button
+            onClick={() => setAiOpen(!aiOpen)}
+            className={`p-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center ${
+              aiOpen 
+                ? 'bg-brand-700 text-white scale-90' 
+                : 'bg-brand-600 text-white hover:bg-brand-500 hover:scale-110 hover:shadow-brand-500/50'
+            }`}
+            title="AI Yordamchi"
+          >
+            <Bot className="w-6 h-6" />
+          </button>
+          <AIChat />
+        </div>
       </FilterProvider>
     </div>
   );

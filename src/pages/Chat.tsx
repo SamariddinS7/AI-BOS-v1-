@@ -86,16 +86,16 @@ const Chat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0B0F19] text-[#F0F4FF] font-sans">
+    <div className="flex flex-col h-full bg-app-bg text-text-primary font-sans">
       {/* Header */}
-      <header className="px-6 py-4 border-b border-[#2A3655] bg-[#111827]/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-20">
+      <header className="px-6 py-4 border-b border-border-dark bg-surface-card/80 backdrop-blur-md flex justify-between items-center sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#00D4FF] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,212,255,0.3)]">
-            <Bot className="w-6 h-6 text-[#0B0F19]" />
+          <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,212,255,0.3)]">
+            <Bot className="w-6 h-6 text-app-bg" />
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">AI-BOS Chat</h1>
-            <p className="text-base text-[#8B9EC4] flex items-center gap-1">
+            <p className="text-base text-text-secondary flex items-center gap-1">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
               Gemini 3.1 Pro Online
             </p>
@@ -103,7 +103,7 @@ const Chat: React.FC = () => {
         </div>
         <button 
           onClick={clearChat}
-          className="p-2 hover:bg-white/5 rounded-lg text-[#4D618A] hover:text-rose-400 transition-colors"
+          className="p-2 hover:bg-white/5 rounded-lg text-text-muted hover:text-rose-400 transition-colors"
           title={language === 'uz' ? "Chatni tozalash" : "Clear Chat"}
         >
           <Trash2 size={20} />
@@ -114,14 +114,14 @@ const Chat: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-6 opacity-60">
-            <div className="w-20 h-20 bg-[#1A2236] rounded-3xl flex items-center justify-center border border-[#2A3655]">
-              <MessageSquare size={40} className="text-[#00D4FF]" />
+            <div className="w-20 h-20 bg-surface-card rounded-3xl flex items-center justify-center border border-border-dark">
+              <MessageSquare size={40} className="text-brand-500" />
             </div>
             <div>
               <h2 className="text-xl font-bold mb-2">
                 {language === 'uz' ? "Qanday yordam bera olaman?" : "How can I help you today?"}
               </h2>
-              <p className="text-base text-[#8B9EC4]">
+              <p className="text-base text-text-secondary">
                 {language === 'uz' 
                   ? "Biznes tahlili, moliya, marketing yoki tizimdan foydalanish bo'yicha savollaringizni bering." 
                   : "Ask questions about business analysis, finance, marketing, or using the system."}
@@ -136,7 +136,7 @@ const Chat: React.FC = () => {
                 <button 
                   key={i}
                   onClick={() => setInput(suggestion)}
-                  className="p-3 bg-[#1A2236] hover:bg-[#1E2840] border border-[#2A3655] rounded-xl text-base text-left transition-colors"
+                  className="p-3 bg-surface-card hover:bg-surface-layer border border-border-dark rounded-xl text-base text-left transition-colors"
                 >
                   {suggestion}
                 </button>
@@ -153,14 +153,14 @@ const Chat: React.FC = () => {
             >
               <div className={`flex gap-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center ${
-                  msg.role === 'user' ? 'bg-[#3D4F78]' : 'bg-[#00D4FF]/20 text-[#00D4FF]'
+                  msg.role === 'user' ? 'bg-border-glow' : 'bg-brand-500/20 text-brand-500'
                 }`}>
                   {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
                 </div>
                 <div className={`p-4 rounded-2xl ${
                   msg.role === 'user' 
-                    ? 'bg-[#00D4FF] text-[#0B0F19] rounded-tr-none' 
-                    : 'bg-[#1A2236] border border-[#2A3655] text-[#F0F4FF] rounded-tl-none'
+                    ? 'bg-brand-500 text-app-bg rounded-tr-none' 
+                    : 'bg-surface-card border border-border-dark text-text-primary rounded-tl-none'
                 }`}>
                   <p className="text-base leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                   <span className={`text-base mt-2 block opacity-50 ${msg.role === 'user' ? 'text-right' : ''}`}>
@@ -174,12 +174,12 @@ const Chat: React.FC = () => {
         {isLoading && (
           <div className="flex justify-start">
             <div className="flex gap-3 max-w-[85%]">
-              <div className="w-8 h-8 rounded-lg bg-[#00D4FF]/20 text-[#00D4FF] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-500 flex items-center justify-center">
                 <Bot size={16} />
               </div>
-              <div className="p-4 rounded-2xl bg-[#1A2236] border border-[#2A3655] rounded-tl-none flex items-center gap-3">
-                <Loader2 className="w-4 h-4 animate-spin text-[#00D4FF]" />
-                <span className="text-base text-[#8B9EC4]">{language === 'uz' ? "O'ylamoqda..." : "Thinking..."}</span>
+              <div className="p-4 rounded-2xl bg-surface-card border border-border-dark rounded-tl-none flex items-center gap-3">
+                <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
+                <span className="text-base text-text-secondary">{language === 'uz' ? "O'ylamoqda..." : "Thinking..."}</span>
               </div>
             </div>
           </div>
@@ -188,7 +188,7 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 md:p-6 border-t border-[#2A3655] bg-[#111827]/50">
+      <div className="p-4 md:p-6 border-t border-border-dark bg-surface-card/50">
         <div className="max-w-4xl mx-auto relative">
           <textarea
             value={input}
@@ -200,7 +200,7 @@ const Chat: React.FC = () => {
               }
             }}
             placeholder={language === 'uz' ? "Savolingizni yozing..." : "Type your message..."}
-            className="w-full bg-[#1A2236] border border-[#2A3655] rounded-2xl px-4 py-4 pr-14 text-base focus:outline-none focus:border-[#00D4FF] focus:ring-1 focus:ring-[#00D4FF] transition-all resize-none custom-scrollbar"
+            className="w-full bg-surface-card border border-border-dark rounded-2xl px-4 py-4 pr-14 text-base focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all resize-none custom-scrollbar"
             rows={1}
             style={{ minHeight: '56px', maxHeight: '200px' }}
           />
@@ -209,14 +209,14 @@ const Chat: React.FC = () => {
             disabled={!input.trim() || isLoading}
             className={`absolute right-3 bottom-3 p-2 rounded-xl transition-all ${
               input.trim() && !isLoading 
-                ? 'bg-[#00D4FF] text-[#0B0F19] shadow-[0_0_15px_rgba(0,212,255,0.4)]' 
-                : 'bg-[#2A3655] text-[#4D618A] cursor-not-allowed'
+                ? 'bg-brand-500 text-app-bg shadow-[0_0_15px_rgba(0,212,255,0.4)]' 
+                : 'bg-border-dark text-text-muted cursor-not-allowed'
             }`}
           >
             <Send size={20} />
           </button>
         </div>
-        <p className="text-base text-center text-[#4D618A] mt-3">
+        <p className="text-base text-center text-text-muted mt-3">
           AI-BOS Chat Gemini 3.1 Pro modeli asosida ishlaydi.
         </p>
       </div>

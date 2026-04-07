@@ -66,8 +66,8 @@ export default function AuditLogs() {
                   <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{new Date(log.timestamp).toLocaleString('uz-UZ')}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium ${
-                      log.status === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                      log.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
+                      log.status === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 text-green-400' :
+                      log.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 text-red-400' :
                       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                     }`}>
                       {log.status === 'success' ? 'Muvaffaqiyatli' : log.status === 'failed' ? 'Xatolik' : 'Ogohlantirish'}

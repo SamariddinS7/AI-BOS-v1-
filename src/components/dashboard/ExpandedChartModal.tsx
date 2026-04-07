@@ -27,22 +27,22 @@ const ExpandedChartModal = memo(({ isOpen, onClose, title, children }: ExpandedC
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="relative w-full max-w-5xl bg-surface-dark rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-border-dark glass-panel"
+            className="relative w-full max-w-5xl bg-surface-layer rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-border-dark enterprise-card"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border-dark bg-surface-card">
-              <h2 className="text-2xl font-bold text-text-primary">{title}</h2>
+            <div className="flex items-center justify-between p-6 border-b border-border-dark bg-surface-layer/50">
+              <h2 className="text-2xl font-bold text-white">{title}</h2>
               <button 
                 onClick={onClose}
-                className="p-2 text-text-muted hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors"
+                className="p-2 text-text-muted hover:text-white hover:bg-surface-layer rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[80vh]">
+            <div className="p-6 overflow-y-auto max-h-[80vh] text-white">
               {children}
             </div>
           </motion.div>

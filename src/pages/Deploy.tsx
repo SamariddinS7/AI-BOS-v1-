@@ -2,25 +2,25 @@ import React, { useState, memo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const T = {
-  bg:       "#0B0F19",
-  surface:  "#111827",
-  card:     "#1A2236",
-  cardHov:  "#1E2840",
-  border:   "#2A3655",
-  borderHi: "#3D4F78",
-  accent:   "#00D4FF",
-  accentDim:"rgba(0,212,255,0.10)",
-  accentStr:"rgba(0,212,255,0.28)",
+  bg:       "var(--color-app-bg)",
+  surface:  "rgba(9, 9, 11, 0.2)",
+  card:     "rgba(24, 24, 27, 0.4)",
+  cardHov:  "var(--color-surface-layer)",
+  border:   "var(--color-border-dark)",
+  borderHi: "var(--color-border-glow)",
+  accent:   "var(--color-brand-500)",
+  accentDim: "rgba(0, 212, 255, 0.1)",
+  accentStr: "rgba(0, 212, 255, 0.3)",
   green:    "#22C55E",  greenDim: "rgba(34,197,94,0.12)",
   amber:    "#F59E0B",  amberDim: "rgba(245,158,11,0.12)", amberStr: "rgba(245,158,11,0.28)",
   red:      "#EF4444",  redDim:   "rgba(239,68,68,0.11)",
   violet:   "#A78BFA",  violetDim:"rgba(167,139,250,0.12)",
   teal:     "#2DD4BF",  tealDim:  "rgba(45,212,191,0.11)",
   sky:      "#38BDF8",  skyDim:   "rgba(56,189,248,0.11)",
-  t1: "#F0F4FF",
-  t2: "#8B9EC4",
-  t3: "#4D618A",
-  t4: "#283350",
+  t1: "var(--color-text-primary)",
+  t2: "var(--color-text-secondary)",
+  t3: "var(--color-text-muted)",
+  t4: "var(--color-border-dark)",
   sans: "'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif",
   mono: "'JetBrains Mono', 'Fira Code', monospace",
   r1: "6px", r2: "10px", r3: "14px", r4: "20px",
@@ -63,7 +63,7 @@ export default function DeployPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8 font-sans transition-all duration-500 space-y-8 animate-slide-in" style={{background: T.bg, color: T.t1}}>
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 font-sans transition-all duration-500 space-y-8 animate-slide-in" style={{background: 'transparent', color: T.t1}}>
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-text-primary tracking-tight">Joylashtirish & n8n</h1>
         <p className="text-base text-text-muted">Tizimni serverga joylashtirish va n8n avtomatlashtirish jarayonlarini boshqarish</p>

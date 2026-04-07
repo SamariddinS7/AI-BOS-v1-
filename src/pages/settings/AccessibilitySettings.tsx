@@ -48,7 +48,7 @@ export default function AccessibilitySettings() {
       </div>
 
       {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-green-200 dark:border-green-800">
+        <div className="mb-6 p-4 bg-green-500/10 text-green-700 text-green-400 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-2 border border-green-200 dark:border-green-800">
           <Check className="w-5 h-5" />
           {successMessage}
         </div>
@@ -58,7 +58,7 @@ export default function AccessibilitySettings() {
         {/* Font Size Control */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-6">
-            <Type className="w-6 h-6 text-blue-600" />
+            <Type className="w-6 h-6 text-brand-500" />
             <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">Shrift O'lchami</h4>
           </div>
 
@@ -74,7 +74,7 @@ export default function AccessibilitySettings() {
                 onClick={() => updateSettings({ font_size: option.id })}
                 className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center justify-center gap-2 ${
                   settings.font_size === option.id || (settings.font_size === option.size && !['small','medium','large','extra_large'].includes(settings.font_size))
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                    ? 'border-blue-600 bg-brand-500/10 text-blue-700 dark:text-blue-400'
                     : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-800 text-gray-700 dark:text-gray-300'
                 }`}
               >

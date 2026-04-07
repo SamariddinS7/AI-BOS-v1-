@@ -13,13 +13,13 @@ import DrillDownModal from '../components/analytics/DrillDownModal';
 import { useToast } from '../hooks/useToast';
 
 const T = {
-  accent: "#3b82f6",
-  violet: "#8b5cf6",
-  teal: "#0d9488",
-  amber: "#f59e0b",
-  green: "#10b981",
-  sky: "#0ea5e9",
-  red: "#ef4444",
+  accent: "var(--color-brand-500)",
+  violet: "var(--color-violet-500)",
+  teal: "var(--color-enterprise-teal)",
+  amber: "var(--color-amber-500)",
+  green: "var(--color-emerald-500)",
+  sky: "var(--color-brand-400)",
+  red: "var(--color-rose-500)",
 };
 
 const FIN_DATA = [
@@ -85,12 +85,12 @@ export default function Expenses() {
         <div className="h-[500px]">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={FIN_DATA}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#8B9EC4', fontSize: 16}} />
-              <YAxis axisLine={false} tickLine={false} tick={{fill: '#8B9EC4', fontSize: 16}} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-dark)" vertical={false} />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
+              <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
               <Tooltip 
-                contentStyle={{backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '12px'}}
-                itemStyle={{color: '#F0F4FF'}}
+                contentStyle={{backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '12px'}}
+                itemStyle={{color: 'var(--color-text-primary)'}}
               />
               <Legend iconType="circle" wrapperStyle={{fontSize: '12px', paddingTop: '20px'}} />
               <Bar dataKey="rev" name="Daromad ($)" fill={T.accent} radius={[4, 4, 0, 0]} barSize={40} />
@@ -121,8 +121,8 @@ export default function Expenses() {
                 ))}
               </Pie>
               <Tooltip 
-                contentStyle={{backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '12px'}}
-                itemStyle={{color: '#F0F4FF'}}
+                contentStyle={{backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '12px'}}
+                itemStyle={{color: 'var(--color-text-primary)'}}
                 formatter={(val: any) => [`${val}%`, 'Ulush']}
               />
               <Legend layout="vertical" align="right" verticalAlign="middle" iconType="circle" wrapperStyle={{fontSize: '12px', paddingLeft: '20px'}} />
@@ -235,12 +235,12 @@ export default function Expenses() {
               <div className="h-[350px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={FIN_DATA}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#8B9EC4', fontSize: 16}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#8B9EC4', fontSize: 16}} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-dark)" vertical={false} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: 'var(--color-text-muted)', fontSize: 16}} />
                     <Tooltip 
-                      contentStyle={{backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '12px'}}
-                      itemStyle={{color: '#F0F4FF'}}
+                      contentStyle={{backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '12px'}}
+                      itemStyle={{color: 'var(--color-text-primary)'}}
                     />
                     <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '20px'}} />
                     <Bar dataKey="rev" name="Daromad ($)" fill={T.accent} radius={[4, 4, 0, 0]} barSize={20} />
@@ -268,8 +268,8 @@ export default function Expenses() {
                       ))}
                     </Pie>
                     <Tooltip 
-                      contentStyle={{backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px', fontSize: '10px'}}
-                      itemStyle={{color: '#F0F4FF'}}
+                      contentStyle={{backgroundColor: 'var(--color-surface-card)', border: '1px solid var(--color-border-dark)', borderRadius: '8px', fontSize: '10px'}}
+                      itemStyle={{color: 'var(--color-text-primary)'}}
                       formatter={(val: any) => [`${val}%`, 'Ulush']}
                     />
                     <Legend layout="vertical" align="right" verticalAlign="middle" iconType="circle" wrapperStyle={{fontSize: '10px', paddingLeft: '20px'}} />

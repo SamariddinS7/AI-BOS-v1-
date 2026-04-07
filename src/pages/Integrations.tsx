@@ -87,11 +87,11 @@ export const Marketplace = () => {
         {plugins.map((plugin, index) => (
           <Card key={plugin.id || `plugin-${index}`} className="p-6 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                <Puzzle className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-brand-500/10 rounded-xl">
+                <Puzzle className="w-6 h-6 text-brand-500" />
               </div>
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${plugin.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                <div className={`w-2 h-2 rounded-full ${plugin.status === 'active' ? 'bg-emerald-500' : 'bg-text-muted'}`} />
                 <span className="text-base font-medium text-text-secondary">
                   {plugin.status === 'active' ? 'Active' : 'Inactive'}
                 </span>
@@ -110,7 +110,7 @@ export const Marketplace = () => {
               <button
                 onClick={() => togglePlugin(plugin.id, plugin.status)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  plugin.status === 'active' ? 'bg-green-600' : 'bg-gray-300'
+                  plugin.status === 'active' ? 'bg-emerald-600' : 'bg-surface-ground border border-border-dark'
                 }`}
               >
                 <span
@@ -187,13 +187,13 @@ export const Webhooks = () => {
             {webhooks.map((webhook, index) => (
               <tr key={webhook.id || `webhook-${index}`} className="hover:bg-surface-ground/50 transition-colors">
                 <td className="px-6 py-4">
-                  <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded text-base font-mono">
+                  <span className="px-2 py-1 bg-brand-500/10 text-brand-500 rounded text-base font-mono">
                     {webhook.event_type}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-base text-text-secondary truncate max-w-xs">{webhook.target_url}</td>
                 <td className="px-6 py-4">
-                  <span className="flex items-center gap-1.5 text-base text-green-600">
+                  <span className="flex items-center gap-1.5 text-base text-emerald-500">
                     <CheckCircle className="w-3 h-3" />
                     Active
                   </span>
@@ -265,20 +265,20 @@ export const GatewayMonitoring = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <Activity className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-brand-500/10 rounded-lg">
+              <Activity className="w-5 h-5 text-brand-500" />
             </div>
             <span className="text-base text-text-muted">Total Requests</span>
           </div>
           <p className="text-3xl font-bold text-text-primary">{stats?.total_requests || 0}</p>
-          <p className="text-base text-green-600 mt-2 flex items-center gap-1">
+          <p className="text-base text-emerald-500 mt-2 flex items-center gap-1">
             <Zap className="w-3 h-3" />
             Live monitoring active
           </p>
         </Card>
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+            <div className="p-2 bg-purple-500/10 rounded-lg">
               <RefreshCw className="w-5 h-5 text-purple-600" />
             </div>
             <span className="text-base text-text-muted">Avg. Latency</span>
@@ -288,13 +288,13 @@ export const GatewayMonitoring = () => {
         </Card>
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+            <div className="p-2 bg-rose-500/10 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-rose-500" />
             </div>
             <span className="text-base text-text-muted">Failed Requests</span>
           </div>
           <p className="text-3xl font-bold text-text-primary">{stats?.error_count || 0}</p>
-          <p className="text-base text-red-600 mt-2">0.5% error rate</p>
+          <p className="text-base text-rose-500 mt-2">0.5% error rate</p>
         </Card>
       </div>
 
@@ -314,7 +314,7 @@ export const GatewayMonitoring = () => {
         </div>
         
         {showNewKey && (
-          <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 border-b border-border-dark">
+          <div className="p-6 bg-brand-500/5/50 bg-brand-500/5 border-b border-border-dark">
             {!generatedKey ? (
               <div className="flex gap-4">
                 <input 
@@ -322,11 +322,11 @@ export const GatewayMonitoring = () => {
                   value={newKeyName}
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder="Key Name (e.g. Mobile App)"
-                  className="flex-1 px-4 py-2 bg-surface-ground border border-border-dark rounded-lg text-base text-text-primary"
+                  className="flex-1 px-4 py-2 bg-surface-ground border border-border-dark rounded-lg text-base text-text-primary outline-none focus:ring-2 focus:ring-brand-500"
                 />
                 <button 
                   onClick={createApiKey}
-                  className="px-6 py-2 bg-brand-600 text-white rounded-lg text-base font-medium hover:bg-brand-700"
+                  className="px-6 py-2 bg-brand-600 text-white rounded-lg text-base font-medium hover:bg-brand-700 shadow-lg shadow-brand-600/20"
                 >
                   Generate
                 </button>
@@ -339,11 +339,11 @@ export const GatewayMonitoring = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-lg">
-                  <p className="text-base text-green-800 dark:text-green-400 mb-2 font-bold uppercase">Key Generated Successfully</p>
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                  <p className="text-base text-emerald-400 mb-2 font-bold uppercase">Key Generated Successfully</p>
                   <p className="text-base text-text-secondary mb-4">Copy this key now. You won't be able to see it again.</p>
                   <div className="flex gap-2">
-                    <code className="flex-1 p-2 bg-white dark:bg-black rounded border border-green-200 dark:border-green-900 font-mono text-base break-all text-text-primary">
+                    <code className="flex-1 p-2 bg-surface-ground rounded border border-border-dark font-mono text-base break-all text-text-primary">
                       {generatedKey}
                     </code>
                     <button 
@@ -351,7 +351,7 @@ export const GatewayMonitoring = () => {
                         navigator.clipboard.writeText(generatedKey);
                         success('Key copied to clipboard');
                       }}
-                      className="px-3 py-1 bg-green-600 text-white rounded text-base hover:bg-green-700"
+                      className="px-3 py-1 bg-emerald-600 text-white rounded text-base hover:bg-emerald-700"
                     >
                       Copy
                     </button>
@@ -394,7 +394,7 @@ export const GatewayMonitoring = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="px-2 py-0.5 bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 rounded-full text-base font-bold uppercase">
+                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full text-base font-bold uppercase">
                       {key.status}
                     </span>
                   </td>
@@ -451,7 +451,7 @@ export const GatewayMonitoring = () => {
                   <td className="px-6 py-3 text-text-muted">{log.response_time}ms</td>
                   <td className="px-6 py-3">
                     <span className={`px-1.5 py-0.5 rounded-full text-base font-bold uppercase ${
-                      log.status === 'success' ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                      log.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
                     }`}>
                       {log.status}
                     </span>
@@ -471,7 +471,7 @@ export const ApiDocumentation = () => {
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div className="lg:col-span-1 space-y-2">
         <h4 className="text-base font-bold text-text-muted uppercase mb-4 px-3">Documentation</h4>
-        <button className="w-full text-left px-3 py-2 text-base bg-brand-50 dark:bg-brand-900/20 text-brand-600 rounded-lg font-medium">Introduction</button>
+        <button className="w-full text-left px-3 py-2 text-base bg-brand-500/10 text-brand-600 rounded-lg font-medium">Introduction</button>
         <button className="w-full text-left px-3 py-2 text-base text-text-secondary hover:bg-surface-ground rounded-lg transition-colors">Authentication</button>
         <button className="w-full text-left px-3 py-2 text-base text-text-secondary hover:bg-surface-ground rounded-lg transition-colors">Rate Limiting</button>
         <button className="w-full text-left px-3 py-2 text-base text-text-secondary hover:bg-surface-ground rounded-lg transition-colors">Webhooks</button>
@@ -529,7 +529,7 @@ export const DataMapping = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+            <div className="p-2 bg-orange-500/10 rounded-lg">
               <ArrowRightLeft className="w-5 h-5 text-orange-600" />
             </div>
             <h4 className="font-bold text-text-primary">Salesforce CRM &rarr; AI-BOS</h4>
