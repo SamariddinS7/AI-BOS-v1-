@@ -3,7 +3,7 @@ import { collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp 
 import { db, auth } from '../../lib/firebase';
 import { Send } from 'lucide-react';
 import { handleFirestoreError, OperationType } from '../../lib/firestore-utils';
-import { useAuth } from '../FirebaseProvider';
+import { useAuth } from '../../contexts/FirebaseProvider';
 
 interface Comment {
   id: string;

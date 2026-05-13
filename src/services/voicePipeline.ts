@@ -1,6 +1,6 @@
+import { getAi } from '../lib/gemini';
 /**
  * SentenceQueue: Matnlarni gapma-gap navbatga qo'yib o'qiydi.
- * Bu streaming AI javoblarini "gapirayotgan" vaqtda uzilishlarsiz eshitish imkonini beradi.
  */
 export class SentenceQueue {
   private queue: string[] = [];
@@ -76,15 +76,21 @@ export async function callAIStream(
   });
   */
 
-  // Demo simulyatsiya (chunki API kalitimiz yo'q):
-  const demoText = "Salom! Men AI-BOS yordamchisiman. Bugungi biznes ko'rsatkichlaringiz juda yaxshi. Daromad 15% ga oshgan, lekin marketing xarajatlarini biroz optimallashtirish kerak. Likvidlik xavfi past darajada.";
-  const tokens = demoText.split(" ");
-  let full = "";
+  // Haqiqiy AI chaqiruvi (Gemini):
+  const ai = getAi();
   
-  for (const token of tokens) {
-    await new Promise(r => setTimeout(r, 100));
-    full += token + " ";
-    onToken(token + " ", full);
+  const result = await ai.models.generateContentStream({
+    model: "gemini-1.5-flash",
+    contents: [
+      { role: "user", parts: [{ text: system + "\n" + messages.map(m => m.content).join("\n") }] }
+    ]
+  });
+  
+  let full = "";
+  for await (const chunk of result.stream) {
+    const text = chunk.text();
+    full += text;
+    onToken(text, full);
   }
   
   return full;

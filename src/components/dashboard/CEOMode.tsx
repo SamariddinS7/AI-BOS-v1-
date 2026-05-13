@@ -11,8 +11,8 @@ import ExpandedChartModal from './ExpandedChartModal';
 import DeptPerformanceChart from './DeptPerformanceChart';
 import AIRecommendations from './AIRecommendations';
 import ProactiveGrowthSuggestions from './ProactiveGrowthSuggestions';
-import LiveChat from '../LiveChat';
-import CountUp from '../CountUp';
+import LiveChat from '../ai/LiveChat';
+import CountUp from '../ui/CountUp';
 import KPICard from './KPICard';
 import AIInsightCard from './AIInsightCard';
 import { 
@@ -31,14 +31,7 @@ const T = {
   red: "#ef4444",
 };
 
-const MKT_CHANNELS = [
-  {name:"Google Ads", spend:4200 * 12800, rev:18500 * 12800, roi:340, roas:4.4, cac:12.5 * 12800, color:T.accent},
-  {name:"Meta Ads",   spend:3800 * 12800, rev:14200 * 12800, roi:273, roas:3.7, cac:14.2 * 12800, color:T.violet},
-  {name:"TV / Media", spend:8500 * 12800, rev:22000 * 12800, roi:158, roas:2.6, cac:45.0 * 12800, color:T.amber},
-  {name:"Influencer", spend:2200 * 12800, rev:9800 * 12800,  roi:345, roas:4.5, cac:8.8 * 12800,  color:T.teal},
-  {name:"Outdoor",    spend:3000 * 12800, rev:5500 * 12800,  roi:83,  roas:1.8, cac:62.5 * 12800, color:T.sky},
-  {name:"Radio",      spend:1200 * 12800, rev:2100 * 12800,  roi:75,  roas:1.7, cac:38.2 * 12800, color:T.violet},
-];
+// No mock data constant
 
 interface CEOModeProps {
   realTimeUpdates?: any[];
@@ -67,14 +60,63 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
   ];
 
   useEffect(() => {
-    // Check for anomalies in real-time updates
-    const newAnomalies = realTimeUpdates.filter(u => u.type === 'anomaly_detected');
-    if (newAnomalies.length > 0) {
-      setAnomalies(prev => [...newAnomalies.map(a => ({
-        type: 'risk',
-        title: a.data.message,
-        impact: a.data.impact
-      })), ...prev]);
+    // Check for anomalies and analytics updates in real-time updates
+    if (realTimeUpdates.length > 0) {
+      const latest = realTimeUpdates[0];
+      
+      if (latest.type === 'anomaly_detected') {
+        setAnomalies(prev => [{
+          type: 'risk',
+          title: latest.data.message,
+          impact: latest.data.impact
+        }, ...prev].slice(0, 5));
+      } else if (latest.type === 'analytics_update') {
+        // Update local state based on module
+        const newValue = latest.data.value;
+        
+        if (latest.module === 'revenue') {
+          setRevenueData((prev: any) => {
+            if (!prev) return prev;
+            const updatedSummary = { ...prev.summary, total: prev.summary.total + newValue };
+            // Also update the last data point in the chart for visual effect
+            const updatedData = [...prev.data];
+            if (updatedData.length > 0) {
+              updatedData[updatedData.length - 1] = { 
+                ...updatedData[updatedData.length - 1], 
+                value: updatedData[updatedData.length - 1].value + newValue 
+              };
+            }
+            return { ...prev, summary: updatedSummary, data: updatedData };
+          });
+        } else if (latest.module === 'expenses') {
+          setExpensesData((prev: any) => {
+            if (!prev) return prev;
+            const updatedSummary = { ...prev.summary, total: prev.summary.total + newValue };
+            const updatedData = [...prev.data];
+            if (updatedData.length > 0) {
+              updatedData[updatedData.length - 1] = { 
+                ...updatedData[updatedData.length - 1], 
+                value: updatedData[updatedData.length - 1].value + newValue 
+              };
+            }
+            return { ...prev, summary: updatedSummary, data: updatedData };
+          });
+        } else if (latest.module === 'marketing') {
+          setMarketingData((prev: any) => {
+            if (!prev) return prev;
+            // Update the first channel's ROI/ROAS slightly
+            const updatedData = [...prev.data];
+            if (updatedData.length > 0) {
+              updatedData[0] = { 
+                ...updatedData[0], 
+                roi: updatedData[0].roi + (newValue % 10),
+                roas: updatedData[0].roas + (newValue / 1000)
+              };
+            }
+            return { ...prev, data: updatedData };
+          });
+        }
+      }
     }
   }, [realTimeUpdates]);
 
@@ -107,6 +149,8 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
         const exp = await expRes.json();
         const mkt = await mktRes.json();
         
+        console.log('API Response:', { rev, exp, mkt });
+        
         setRevenueData(rev);
         setExpensesData(exp);
         setMarketingData(mkt);
@@ -120,21 +164,31 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
     fetchData();
   }, []);
 
-  const totalRevenue = revenueData?.summary?.total || 0;
-  const totalExpenses = expensesData?.summary?.total || 0;
+  const totalRevenue = (revenueData?.summary?.total) 
+    ? revenueData.summary.total 
+    : (Array.isArray(revenueData) ? revenueData.reduce((acc, d) => acc + (d.value || 0), 0) : 0);
+  const totalExpenses = (expensesData?.summary?.total) 
+    ? expensesData.summary.total 
+    : (Array.isArray(expensesData) ? expensesData.reduce((acc, d) => acc + (d.value || 0), 0) : 0);
   const netProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
   // Prepare chart data for Recharts
-  const chartData = (revenueData?.data || []).map((d: any) => ({
-    name: d.name,
-    value: d.value,
-  }));
+  const data = Array.isArray(revenueData) ? revenueData : (revenueData?.data || []);
+  const chartData = data.length > 0 
+    ? data.map((d: any) => ({
+        name: d.name,
+        value: d.value,
+      }))
+    : [];
 
-  const expensesChartData = (expensesData?.data || []).map((d: any) => ({
-    name: d.name,
-    value: d.value,
-  }));
+  const expData = Array.isArray(expensesData) ? expensesData : (expensesData?.data || []);
+  const expensesChartData = expData.length > 0
+    ? expData.map((d: any) => ({
+        name: d.name,
+        value: d.value,
+      }))
+    : [];
 
   const netProfitChartData = chartData.map((d: any, index: number) => ({
     name: d.name,
@@ -157,11 +211,7 @@ const CEOMode = memo(({ realTimeUpdates = [] }: CEOModeProps) => {
   
   const mktDataToUse = dynamicMktChannels;
 
-  // Mock data for sparklines
-  const sparklineData = [
-    { value: 4000 }, { value: 3000 }, { value: 2000 }, { value: 2780 },
-    { value: 1890 }, { value: 2390 }, { value: 3490 }
-  ];
+  // No mock data constant
 
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 

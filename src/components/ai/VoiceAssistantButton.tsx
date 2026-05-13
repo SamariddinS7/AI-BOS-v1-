@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, Loader2, X, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { VoicePipeline } from '../lib/voice-agent/VoicePipeline';
+import { VoicePipeline } from '../../lib/voice-agent/VoicePipeline';
 
 export default function VoiceAssistantButton() {
   const [isListening, setIsListening] = useState(false);

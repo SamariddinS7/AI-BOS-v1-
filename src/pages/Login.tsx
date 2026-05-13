@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Bot, Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Bot, Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck, UserPlus } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface LoginProps {
   onLogin: () => void;
@@ -12,20 +13,40 @@ export default function Login({ onLogin }: LoginProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    // Mock authentication delay
-    setTimeout(() => {
-      if (email === 'admin@ai-bos.uz' && password === 'admin123') {
-        onLogin();
+    try {
+      if (isSignUp) {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (signUpError) throw signUpError;
+        
+        if (data.session) {
+          // Email confirmation is disabled, logged in automatically
+          onLogin();
+        } else {
+          setError('Ro\'yxatdan o\'tdingiz! Iltimos email pochtangizni (Spam papkasini ham) tekshiring va tasdiqlang. Agar xat kelmasa Supabase sozlamalaridan "Confirm email" funksiyasini o\'chirib qo\'ying.');
+        }
       } else {
-        setError("Email yoki parol noto'g'ri");
-        setIsLoading(false);
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) throw signInError;
       }
-    }, 1000);
+    } catch (err: any) {
+      console.error('Auth error:', err);
+      setError(err.message || 'Xatolik yuz berdi');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -105,31 +126,25 @@ export default function Login({ onLogin }: LoginProps) {
                 <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  Kirish <ArrowRight className="w-5 h-5" />
+                  {isSignUp ? "Ro'yxatdan o'tish" : "Kirish"} <ArrowRight className="w-5 h-5" />
                 </>
               )}
             </button>
 
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-gray-200 border-border-dark"></div>
-              <span className="flex-shrink-0 mx-4 text-gray-400 text-base">yoki</span>
-              <div className="flex-grow border-t border-gray-200 border-border-dark"></div>
-            </div>
-
-            <button 
-              type="button"
-              onClick={onLogin}
-              className="w-full bg-surface-card text-text-primary border border-border-dark py-3 rounded-xl font-bold text-base hover:bg-surface-dark hover:border-border-glow focus:ring-4 focus:ring-border-dark transition-all flex items-center justify-center gap-2"
-            >
-              Sinov davri uchun kirish
-            </button>
           </form>
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-surface-ground/50 border-t border-gray-100 border-border-dark text-center">
+        <div className="p-6 bg-surface-ground/50 border-t border-border-dark text-center">
           <p className="text-base text-text-muted">
-            Hisobingiz yo'qmi? <a href="#" className="text-brand-500 dark:text-blue-400 font-bold hover:underline">Ro'yxatdan o'tish</a>
+            {isSignUp ? "Hisobingiz bormi?" : "Hisobingiz yo'qmi?"} {' '}
+            <button 
+              type="button"
+              onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
+              className="text-brand-500 dark:text-blue-400 font-bold hover:underline"
+            >
+              {isSignUp ? "Kirish" : "Ro'yxatdan o'tish"}
+            </button>
           </p>
         </div>
       </div>

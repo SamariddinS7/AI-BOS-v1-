@@ -26,7 +26,7 @@ def calculate_health_score(kpis: Dict[str, float]) -> float:
     """
     Health Score = (ROAS weight 25%) + (LTV/CAC weight 20%) + (Conversion stability 15%) + (Retention 15%) + (Growth trend 15%) + (Risk factor 10%)
     """
-    # Normalize values to 0-100 scale (simplified logic for demonstration)
+    # Health score calculation formulation
     roas_score = min(max(kpis.get('roas', 0) / 5.0 * 100, 0), 100) * 0.25
     
     ltv_cac_ratio = kpis.get('ltv', 0) / max(kpis.get('cac', 1), 1)

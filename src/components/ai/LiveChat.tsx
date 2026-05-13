@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff, Bot, X, Sparkles } from 'lucide-react';
-import { ai } from '../lib/gemini';
+import { getAi } from '../../lib/gemini';
 import { LiveServerMessage, Modality, Type } from '@google/genai';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const BUSINESS_TOOLS = [
   {
@@ -76,7 +76,7 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
 
   const connectLive = async () => {
     try {
-      const sessionPromise = ai.live.connect({
+      const sessionPromise = getAi().live.connect({
         model: "gemini-2.5-flash-native-audio-preview-09-2025",
         callbacks: {
           onopen: () => {

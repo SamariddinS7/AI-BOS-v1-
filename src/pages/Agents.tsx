@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Plus, X, Check, AlertCircle, Bot, Globe, Shield, Zap, Trash2, Edit2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { safeJson } from '../lib/utils';
 
 const T = {
   bg:       "var(--color-app-bg)",
@@ -383,7 +384,7 @@ export default function AgentsPage() {
     try {
       const response = await fetch('/api/agents');
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson<any>(response);
         setRegisteredAgents(data);
       }
     } catch (error) {
@@ -445,7 +446,7 @@ export default function AgentsPage() {
         });
         fetchAgents();
       } else {
-        const error = await response.json();
+        const error = await safeJson<any>(response);
         toast.error(error.error || 'Xatolik yuz berdi');
       }
     } catch (error) {

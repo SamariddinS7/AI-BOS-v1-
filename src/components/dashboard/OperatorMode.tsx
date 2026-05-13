@@ -7,7 +7,7 @@ import {
 import { useToast } from '../../hooks/useToast';
 import { motion } from 'motion/react';
 import { useRealTimeAnalytics } from '../../hooks/useRealTimeAnalytics';
-import CountUp from '../CountUp';
+import CountUp from '../ui/CountUp';
 import StatusCard from './StatusCard';
 import Card from '../ui/Card';
 import ExpandedChartModal from './ExpandedChartModal';
@@ -24,16 +24,7 @@ const OperatorMode = memo(({ realTimeUpdates = [] }: OperatorModeProps) => {
   const { t } = useLanguage();
   const [activeFilter, setActiveFilter] = useState('All');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const [activities, setActivities] = useState<any[]>([
-    { time: "11:14:55", type: "System", message: "Database backup completed successfully.", status: "success" },
-    { time: "11:12:30", type: "Marketing", message: "Campaign 'Spring Sale' budget increased by 10% (AI Auto-Action).", status: "info" },
-    { time: "11:05:12", type: "Workflow", message: "Workflow #492 failed at step 'Send Email'.", status: "error" },
-    { time: "10:58:45", type: "Sales", message: "New enterprise lead detected: Acme Corp.", status: "success" },
-    { time: "10:45:22", type: "Inventory", message: "Low stock alert: SKU-992 (Wireless Mouse).", status: "warning" },
-    { time: "10:30:10", type: "Finance", message: "Daily revenue report generated.", status: "info" },
-    { time: "10:15:00", type: "HR", message: "New employee onboarding workflow started.", status: "info" },
-    { time: "09:55:30", type: "Security", message: "Unusual login attempt blocked from IP 192.168.1.105.", status: "warning" },
-  ]);
+  const [activities, setActivities] = useState<any[]>([]);
 
   useEffect(() => {
     if (realTimeUpdates.length > 0) {
@@ -71,7 +62,7 @@ const OperatorMode = memo(({ realTimeUpdates = [] }: OperatorModeProps) => {
       </ExpandedChartModal>
 
       {/* Global Filter Bar */}
-      <div className="flex flex-wrap items-center gap-2 lg:gap-4 enterprise-card p-2 lg:p-3 rounded-2xl sticky top-0 z-10 border border-border-dark/20 shadow-sm backdrop-blur-md bg-transparent">
+      <div className="flex flex-wrap items-center gap-2 lg:gap-4 enterprise-card p-2 lg:p-3 rounded-2xl sticky top-0 z-20 border border-border-dark/20 shadow-sm backdrop-blur-md bg-transparent">
         <div className="flex items-center gap-1.5 lg:gap-2 text-text-muted border-r border-border-dark/20 pr-3 lg:pr-4">
           <Filter size={16} className="lg:w-[18px] lg:h-[18px]" />
           <span className="text-xs lg:text-base font-bold uppercase tracking-wider">{t('filters')}</span>

@@ -58,6 +58,65 @@ router.post('/webhooks', (req, res) => {
   res.json({ id, event_type, target_url });
 });
 
+router.post('/webhooks/:id/test', async (req, res) => {
+  const { id } = req.params;
+  const webhook = db.prepare('SELECT * FROM WebhookSubscriptions WHERE id = ?').get(id) as any;
+  if (!webhook) {
+    return res.status(404).json({ error: 'Webhook not found' });
+  }
+
+  // Generate a test payload based on event_type or just a generic test message
+  const payload = req.body.payload || {
+    event: webhook.event_type || 'team.message',
+    payload: {
+      message: 'Test message from AI-BOS',
+    }
+  };
+
+  try {
+    const crypto = require('crypto');
+    const signatureHex = webhook.secret 
+      ? crypto.createHmac('sha256', webhook.secret).update(JSON.stringify(payload)).digest('hex')
+      : null;
+
+    const fetch = require('node-fetch');
+    const response = await fetch(webhook.target_url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-AI-BOS-Event': webhook.event_type,
+        'X-AI-BOS-Signature': signatureHex || '',
+        'X-Webhook-Signature': signatureHex ? `sha256=${signatureHex}` : '',
+      },
+      body: JSON.stringify(payload),
+      timeout: 5000
+    });
+
+    const responseText = await response.text();
+
+    db.prepare(`
+      INSERT INTO IntegrationLogs (tenant_id, integration_id, type, action, status, response_time, payload)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      webhook.tenant_id,
+      webhook.id,
+      'webhook',
+      webhook.event_type,
+      response.ok ? 'success' : 'error',
+      0,
+      JSON.stringify({
+        url: webhook.target_url,
+        status: response.status,
+        payload
+      })
+    );
+
+    res.json({ success: true, status: response.status, response: responseText });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // API Keys
 router.get('/api-keys', (req, res) => {
   const keys = db.prepare('SELECT id, name, scopes, status, created_at, expires_at FROM ApiKeys').all();

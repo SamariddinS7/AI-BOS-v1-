@@ -15,8 +15,7 @@ import BackupSettings from './settings/BackupSettings';
 import TelegramBotSettings from './settings/TelegramBotSettings';
 import UserAndRolesManagement from './settings/UserAndRolesManagement';
 
-// Imported from Admin and Integrations pages for merging
-import { TenantManagement } from './Admin';
+// Imported from Integrations pages for merging
 import { Marketplace, Webhooks, GatewayMonitoring, DataMapping, ApiDocumentation } from './Integrations';
 import { Send } from 'lucide-react';
 

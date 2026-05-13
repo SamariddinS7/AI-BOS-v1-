@@ -19,15 +19,25 @@ import adminRouter from './src/routes/admin';
 import integrationsRouter from './src/routes/integrations';
 import accountingRouter from './src/routes/accounting';
 import agentsRouter from './src/routes/agents';
+import skillsRouter from './src/routes/skills';
 import { apiGatewayMiddleware } from './src/middleware/gateway';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+console.log('APP_AUTH_TOKEN:', process.env.APP_AUTH_TOKEN ? 'DEFINED' : 'UNDEFINED');
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
+
+// Request Logger
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    if (req.path.startsWith('/api')) {
+      console.log(`[API] ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
+    }
+  });
   next();
 });
 
@@ -316,6 +326,16 @@ app.use('/api/accounting', accountingRouter);
 // Agents
 app.use('/api/agents', agentsRouter);
 
+// Skills
+app.use('/api/skills/execute', (req, res) => {
+  return res.json({ MAGIC: "THIS IS SERVER.TS ROOT" });
+});
+
+app.use('/api/skills', (req, res, next) => {
+  console.log(`[API] Routing to Skills: ${req.method} ${req.url}`);
+  next();
+}, skillsRouter);
+
 // Workflows
 app.use('/api/workflows', workflowsRouter);
 
@@ -428,14 +448,21 @@ app.post('/voice/process', async (req, res) => {
 
 app.use(apiGatewayMiddleware);
 
+// API Catch-all (to prevent falling through to SPA fallback)
+app.use('/api/*', (req, res) => {
+  console.warn(`[API] 404 Not Found: ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ error: 'API endpoint not found', path: req.originalUrl });
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'AI-BOS Automation Engine' });
+  res.json({ status: 'ok', service: 'AI-BOS Automation Engine', env: process.env.NODE_ENV });
 });
 
 // --- Vite Integration ---
 
 async function startServer() {
+  console.log(`Starting server in ${process.env.NODE_ENV || 'development'} mode...`);
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
@@ -451,13 +478,27 @@ async function startServer() {
     });
   }
 
-  const server = app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`AI-BOS Engine initialized.`);
+
+    // Start Telegram Bot if active (with a delay to ensure server is ready)
+    setTimeout(async () => {
+      try {
+        console.log('Starting Telegram bot on startup...');
+        await startTelegramBot('default-tenant-id');
+      } catch (error) {
+        console.error('Failed to start Telegram bot on startup:', error);
+      }
+    }, 5000);
   });
 
   // WebSocket Server for Real-time Analytics
   const wss = new WebSocketServer({ server });
+  
+  wss.on('error', (err) => {
+    console.error('WebSocket server error:', err);
+  });
 
   wss.on('connection', (ws) => {
     console.log('Client connected to Real-time Analytics');
@@ -471,14 +512,26 @@ async function startServer() {
 
   // Simulate real-time data updates
   setInterval(() => {
-    const modules = ['revenue', 'sales', 'marketing', 'hr', 'inventory'];
+    const modules = ['revenue', 'sales', 'marketing', 'hr', 'inventory', 'expenses', 'finance'];
     const randomModule = modules[Math.floor(Math.random() * modules.length)];
     
-    const update = {
+    // Occasionally send an anomaly
+    const isAnomaly = Math.random() > 0.9;
+    
+    const update = isAnomaly ? {
+      type: 'anomaly_detected',
+      module: randomModule,
+      data: {
+        message: `Unusual ${randomModule} activity detected`,
+        impact: `${(Math.random() * 5).toFixed(2)}% impact`,
+        timestamp: new Date().toISOString()
+      }
+    } : {
       type: 'analytics_update',
       module: randomModule,
       data: {
-        value: Math.floor(Math.random() * 1000) + 100,
+        value: Math.floor(Math.random() * 10000) + 1000,
+        message: `New ${randomModule} data received`,
         timestamp: new Date().toISOString()
       }
     };
@@ -488,7 +541,7 @@ async function startServer() {
         client.send(JSON.stringify(update));
       }
     });
-  }, 5000); // Broadcast every 5 seconds
+  }, 3000); // Broadcast every 3 seconds for better visual effect
 }
 
 startServer();

@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from './button';
 
 interface Props {
   children: ReactNode;
@@ -32,18 +32,17 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      let errorMessage = "Kutilmagan xatolik yuz berdi.";
+      let errorMessage = this.state.error?.message || "Kutilmagan xatolik yuz berdi.";
       
-      try {
-        // Check if it's a Firestore permission error (JSON string)
-        const parsedError = JSON.parse(this.state.error?.message || "");
-        if (parsedError.error && parsedError.error.includes("Missing or insufficient permissions")) {
-          errorMessage = "Sizda ushbu amalni bajarish uchun ruxsat yo'q.";
-        }
-      } catch (e) {
-        // Not a JSON error, use default or error message
-        if (this.state.error?.message) {
-          errorMessage = this.state.error.message;
+      // Check for Firestore permission error (JSON string)
+      if (errorMessage.startsWith('{')) {
+        try {
+          const parsedError = JSON.parse(errorMessage);
+          if (parsedError.error && parsedError.error.includes("Missing or insufficient permissions")) {
+            errorMessage = "Sizda ushbu amalni bajarish uchun ruxsat yo'q.";
+          }
+        } catch (e) {
+          // Not a JSON error, use original message
         }
       }
 

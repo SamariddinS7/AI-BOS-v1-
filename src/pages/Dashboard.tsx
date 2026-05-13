@@ -45,7 +45,7 @@ export default function Dashboard() {
       className="flex-1 font-sans"
     >
       {/* Dashboard Header with Mode Toggle */}
-      <div className="sticky top-0 z-20 glass-panel border-b border-border-dark px-4 py-3 lg:px-6 lg:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 lg:gap-4">
+      <div className="sticky top-0 z-30 glass-panel border-b border-border-dark px-4 py-3 lg:px-6 lg:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 lg:gap-4">
         <div>
           <h1 className="text-lg lg:text-xl font-bold text-white tracking-tight">{t('dashboard')}</h1>
           <div className="flex items-center gap-1.5 mt-0.5">

@@ -40,15 +40,16 @@ import {
 
 // Import Components
 import AIChat from './components/ai/AIChat';
-import AIAssistant from './components/AIAssistant';
-import BackgroundEffects from './components/BackgroundEffects';
-import ToastContainer from './components/ToastContainer';
-import Notifications from './components/Notifications';
-import ProfileMenu from './components/ProfileMenu';
+import AIAssistant from './components/ai/AIAssistant';
+import BackgroundEffects from './components/layout/BackgroundEffects';
+import ToastContainer from './components/ui/ToastContainer';
+import Notifications from './components/layout/Notifications';
+import ProfileMenu from './components/layout/ProfileMenu';
 import GlobalFilterBar from './components/layout/GlobalFilterBar';
-import { CommandPalette } from './components/CommandPalette';
-import { FilterProvider } from './context/FilterContext';
+import { CommandPalette } from './components/layout/CommandPalette';
+import { FilterProvider } from './contexts/FilterContext';
 import { useLanguage } from './contexts/LanguageContext';
+import { useAuth } from './contexts/AuthContext';
 import { T, NAV_GROUPS } from './constants';
 
 import { AnimatePresence, motion } from 'motion/react';
@@ -73,12 +74,12 @@ const Login = lazy(() => import('./pages/Login'));
 const Cameras = lazy(() => import('./pages/Cameras'));
 const HR = lazy(() => import('./pages/HR'));
 const Workflows = lazy(() => import('./pages/Workflows'));
-const Agents = lazy(() => import('./pages/Agents'));
+const Automation = lazy(() => import('./pages/Automation'));
 const Deploy = lazy(() => import('./pages/Deploy'));
 
 export default function App() {
   const { t } = useLanguage();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user, isLoading, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
   const [visitedPages, setVisitedPages] = useState<Set<string>>(new Set(['dashboard']));
@@ -128,17 +129,21 @@ export default function App() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    await signOut();
     setProfileOpen(false);
   };
 
-  if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-app-bg flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-brand-500" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login onLogin={() => {}} />;
   }
 
   const menuItems = [
@@ -156,16 +161,6 @@ export default function App() {
     { id: 'reports', icon: FileBarChart, label: t('reports') },
     { id: 'analysis', icon: BarChart2, label: t('analysis') },
     { id: 'ai', icon: Sparkles, label: t('ai_recommendations') },
-    { 
-      id: 'automation', 
-      label: 'Avtomatlashtirish', 
-      isCategory: true,
-      children: [
-        { id: 'agents', icon: Bot, label: 'AI Agentlar' },
-        { id: 'workflows', icon: Network, label: t('automation') },
-        { id: 'deploy', icon: Server, label: 'Joylashtirish' },
-      ]
-    },
   ];
 
   const renderMenuItem = (item: any, isChild = false) => (
@@ -194,6 +189,7 @@ export default function App() {
   );
 
   const bottomMenuItems = [
+    { id: 'automation', icon: Bot, label: 'Avtomatlashtirish' },
     { id: 'settings', icon: Settings, label: t('settings') },
   ];
 
@@ -212,8 +208,7 @@ export default function App() {
     { id: 'reports', component: <Reports /> },
     { id: 'analysis', component: <Analysis /> },
     { id: 'ai', component: <AIRecommendations /> },
-    { id: 'agents', component: <Agents /> },
-    { id: 'workflows', component: <Workflows /> },
+    { id: 'automation', component: <Automation /> },
     { id: 'deploy', component: <Deploy /> },
     { id: 'integrations', component: <Integrations /> },
     { id: 'settings', component: <SettingsPage /> },
@@ -273,7 +268,7 @@ export default function App() {
 
           {/* Menu Items */}
           <div className="flex-1 overflow-y-auto py-4 space-y-1 custom-scrollbar">
-            {menuItems.map((item) => (
+            {menuItems.map((item: any) => (
               item.isCategory ? (
                 <div key={item.id}>
                   {(sidebarOpen || mobileMenuOpen) && (
@@ -321,7 +316,7 @@ export default function App() {
           {/* Main Content */}
         <main className={`flex-1 flex flex-col min-w-0 relative transition-colors duration-500`}>
           {/* Top Header */}
-          <header className={`h-14 lg:h-16 border-b flex items-center justify-between px-3 lg:px-6 flex-shrink-0 z-30 relative transition-colors duration-500 ${activePage === 'ai' ? 'bg-transparent border-white/10 backdrop-blur-sm' : 'bg-app-bg/10 backdrop-blur-md'}`}>
+          <header className={`h-14 lg:h-16 border-b flex items-center justify-between px-3 lg:px-6 flex-shrink-0 z-40 relative transition-colors duration-500 ${activePage === 'ai' ? 'bg-transparent border-white/10 backdrop-blur-sm' : 'bg-app-bg/10 backdrop-blur-md'}`}>
             
             {/* Mobile Menu Button */}
             <button 
@@ -366,12 +361,12 @@ export default function App() {
             {/* Right Actions */}
             <div className="flex items-center gap-2 lg:gap-4 ml-4">
               <button 
-                onClick={() => setActivePage('add-expense')}
+                onClick={() => setActivePage('finance')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg text-xs lg:text-base font-bold transition-all duration-300 ${activePage === 'ai' ? 'bg-white/5 text-white hover:bg-white/10 border border-white/10' : 'bg-rose-600 text-white hover:bg-rose-700'}`}
-                title="Yangi xarajat qo'shish"
+                title="Moliya bo'limiga o'tish"
               >
                 <Plus className="w-3.5 h-3.5 lg:w-4 h-4" />
-                <span className="hidden sm:inline">Yangi Xarajat</span>
+                <span className="hidden sm:inline">Moliya Bo'limi</span>
               </button>
 
               <button 
@@ -470,7 +465,7 @@ export default function App() {
         />
 
         {/* Floating Action Buttons */}
-        <div className="fixed bottom-6 right-6 z-[9000] flex flex-col gap-3">
+        <div className="fixed bottom-6 right-6 z-[99999999] flex flex-col gap-3">
           <button
             onClick={() => setAiOpen(!aiOpen)}
             className={`p-3 rounded-full shadow-lg transition-all duration-300 flex items-center justify-center ${

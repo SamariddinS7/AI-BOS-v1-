@@ -7,7 +7,7 @@ import Card from '../components/ui/Card';
 import AIInsightCard from '../components/dashboard/AIInsightCard';
 import Comments from '../components/tasks/Comments';
 import { useToast } from '../hooks/useToast';
-import { useAuth } from '../components/FirebaseProvider';
+import { useAuth } from '../contexts/FirebaseProvider';
 import { handleFirestoreError, OperationType } from '../lib/firestore-utils';
 
 interface Task {

@@ -5,7 +5,7 @@ import {
   ReferenceLine, Cell,
 } from "recharts";
 import { fmt, uzs, useWindowSize, detectAnomalies, exportCSV, exportJSON } from '../../lib/utils';
-import { useFilters } from '../../context/FilterContext';
+import { useFilters } from '../../contexts/FilterContext';
 import DrillDownModal from '../analytics/DrillDownModal';
 
 export const ChartTip = memo(({active, payload, label}: any) => {

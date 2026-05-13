@@ -30,10 +30,21 @@ export class AnalyticsService {
   
   static async getAnalytics(module: string, metric: string, params: AnalyticsParams) {
     const aggFunc = ['roi', 'cac', 'ctr', 'cpc', 'cpm', 'roas', 'performance'].includes(metric) ? 'avg' : 'sum';
-    let query = `SELECT date, ${aggFunc}(value) as value FROM AnalyticsData WHERE module = ? AND metric = ?`;
-    const queryParams: any[] = [module, metric];
+    
+    let query = '';
+    let queryParams: any[] = [];
+    
+    if (module === 'revenue' || module === 'expenses') {
+        const type = module === 'revenue' ? 'income' : 'expense';
+        query = `SELECT date(transaction_date) as date, sum(amount) as value FROM transactions WHERE type = ?`;
+        queryParams.push(type);
+    } else {
+        query = `SELECT date, ${aggFunc}(value) as value FROM AnalyticsData WHERE module = ? AND metric = ?`;
+        queryParams.push(module, metric);
+    }
 
     // Time Range Filter
+    const dateColumn = (module === 'revenue' || module === 'expenses') ? 'transaction_date' : 'date';
     if (params.time_range) {
       const date = new Date();
       if (params.time_range === '7d') date.setDate(date.getDate() - 7);
@@ -42,26 +53,30 @@ export class AnalyticsService {
       else if (params.time_range === '1y') date.setFullYear(date.getFullYear() - 1);
       
       if (params.time_range !== 'all') {
-        query += ` AND date >= ?`;
+        query += ` AND ${dateColumn} >= ?`;
         queryParams.push(date.toISOString().split('T')[0]);
       }
     }
-
-    // Other Filters
-    if (params.department) {
-      query += ` AND department = ?`;
-      queryParams.push(params.department);
+    
+    // Grouping
+    if (module === 'revenue' || module === 'expenses') {
+        query += ` GROUP BY date(transaction_date) ORDER BY date(transaction_date) ASC`;
+    } else {
+        // Other Filters
+        if (params.department) {
+          query += ` AND department = ?`;
+          queryParams.push(params.department);
+        }
+        if (params.region) {
+          query += ` AND region = ?`;
+          queryParams.push(params.region);
+        }
+        if (params.product) {
+          query += ` AND product = ?`;
+          queryParams.push(params.product);
+        }
+        query += ` GROUP BY date ORDER BY date ASC`;
     }
-    if (params.region) {
-      query += ` AND region = ?`;
-      queryParams.push(params.region);
-    }
-    if (params.product) {
-      query += ` AND product = ?`;
-      queryParams.push(params.product);
-    }
-
-    query += ` GROUP BY date ORDER BY date ASC`;
 
     const data: DataPoint[] = db.prepare(query).all(...queryParams) as DataPoint[];
 
@@ -328,8 +343,14 @@ export class AnalyticsService {
       if (dimension === 'month') {
         selectClause = `strftime('%Y-%m', transaction_date) as name, sum(amount) as value`;
         groupByClause = `GROUP BY name`;
+      } else if (dimension === 'week') {
+        selectClause = `strftime('%Y-%W', transaction_date) as name, sum(amount) as value`;
+        groupByClause = `GROUP BY name`;
+      } else if (dimension === 'day') {
+        selectClause = `strftime('%Y-%m-%d', transaction_date) as name, sum(amount) as value`;
+        groupByClause = `GROUP BY name`;
       } else if (dimension === 'transactions') {
-        selectClause = `id, strftime('%H:%M', transaction_date) as time, amount, description as client, 'completed' as status`;
+        selectClause = `id, strftime('%H:%M', transaction_date) as time, amount as value, description as client, 'completed' as status`;
         groupByClause = ``;
       } else {
         selectClause = `${dimension} as name, sum(amount) as value`;
@@ -340,6 +361,15 @@ export class AnalyticsService {
       if (dimension === 'month') {
         selectClause = `strftime('%Y-%m', transaction_date) as name, sum(amount) as value`;
         groupByClause = `GROUP BY name`;
+      } else if (dimension === 'week') {
+        selectClause = `strftime('%Y-%W', transaction_date) as name, sum(amount) as value`;
+        groupByClause = `GROUP BY name`;
+      } else if (dimension === 'day') {
+        selectClause = `strftime('%Y-%m-%d', transaction_date) as name, sum(amount) as value`;
+        groupByClause = `GROUP BY name`;
+      } else if (dimension === 'transactions') {
+        selectClause = `id, strftime('%H:%M', transaction_date) as time, amount as value, description as client, 'completed' as status`;
+        groupByClause = ``;
       } else {
         selectClause = `${dimension} as name, sum(amount) as value`;
         groupByClause = `GROUP BY name`;
@@ -363,23 +393,45 @@ export class AnalyticsService {
         `;
         groupByClause = `GROUP BY mc.name`;
       } else {
-        selectClause = `${dimension} as name, ${aggFunc}(value) as value`;
+        if (dimension === 'month') {
+          selectClause = `strftime('%Y-%m', date) as name, ${aggFunc}(value) as value`;
+        } else if (dimension === 'week') {
+          selectClause = `strftime('%Y-%W', date) as name, ${aggFunc}(value) as value`;
+        } else if (dimension === 'day') {
+          selectClause = `date as name, ${aggFunc}(value) as value`;
+        } else if (dimension === 'transactions') {
+          selectClause = `id, date as time, value as value`;
+          groupByClause = ``;
+        } else {
+          selectClause = `${dimension} as name, ${aggFunc}(value) as value`;
+        }
         query = `SELECT ${selectClause} FROM AnalyticsData WHERE module = ? AND metric = ?`;
         queryParams.push(module, metric);
-        groupByClause = `GROUP BY name`;
+        if (dimension !== 'transactions') groupByClause = `GROUP BY name`;
       }
     } else {
-      selectClause = `${dimension} as name, ${aggFunc}(value) as value`;
+      if (dimension === 'month') {
+        selectClause = `strftime('%Y-%m', date) as name, ${aggFunc}(value) as value`;
+      } else if (dimension === 'week') {
+        selectClause = `strftime('%Y-%W', date) as name, ${aggFunc}(value) as value`;
+      } else if (dimension === 'day') {
+        selectClause = `date as name, ${aggFunc}(value) as value`;
+      } else if (dimension === 'transactions') {
+        selectClause = `id, date as time, value as value`;
+        groupByClause = ``;
+      } else {
+        selectClause = `${dimension} as name, ${aggFunc}(value) as value`;
+      }
       query = `SELECT ${selectClause} FROM AnalyticsData WHERE module = ? AND metric = ?`;
       queryParams.push(module, metric);
-      groupByClause = `GROUP BY name`;
+      if (dimension !== 'transactions') groupByClause = `GROUP BY name`;
     }
 
     // 2. Apply Filters
     const now = new Date();
     let dateColumn = 'date';
     if (module === 'revenue' || module === 'sales' || module === 'expenses') dateColumn = 'transaction_date';
-    if (module === 'marketing') dateColumn = 'metric_date';
+    if (module === 'marketing' && (dimension === 'campaign' || dimension === 'channel')) dateColumn = 'metric_date';
 
     if (params.period === 'YTD') {
       const startOfYear = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0];
@@ -411,13 +463,23 @@ export class AnalyticsService {
       query += ` AND strftime('%Y-%m', ${dateColumn}) = ?`;
       queryParams.push(params.month);
     }
+    
+    if (params.week) {
+      query += ` AND strftime('%Y-%W', ${dateColumn}) = ?`;
+      queryParams.push(params.week);
+    }
+    
+    if (params.date) {
+      query += ` AND ${dateColumn} = ?`;
+      queryParams.push(params.date);
+    }
 
     if (groupByClause) {
       query += ` ${groupByClause}`;
     }
     
     if (dimension !== 'transactions') {
-      if (module === 'marketing') {
+      if (module === 'marketing' && (dimension === 'campaign' || dimension === 'channel')) {
         query += ` ORDER BY roi DESC LIMIT 50`;
       } else {
         query += ` ORDER BY value DESC LIMIT 50`;

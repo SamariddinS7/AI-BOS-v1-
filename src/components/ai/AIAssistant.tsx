@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
 import { Bot, Send, X, Sparkles, ShieldCheck, Activity, Mic, MicOff, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { executeAICommand } from '../lib/aiExecutionEngine';
-import { VoicePipeline } from '../lib/voice-agent/VoicePipeline';
-import { useLanguage } from '../contexts/LanguageContext';
+import { executeAICommand } from '../../lib/aiExecutionEngine';
+import { VoicePipeline } from '../../lib/voice-agent/VoicePipeline';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Message {
   id: number;
@@ -254,10 +254,10 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
   return (
     <>
       <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]" 
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[999999999998]" 
         onClick={onClose}
       />
-      <div className="fixed inset-y-0 right-0 w-full sm:w-96 glass-panel shadow-2xl z-[9999] flex flex-col border-l border-border-dark transform transition-transform duration-300 ease-in-out font-sans">
+      <div className="fixed inset-y-0 right-0 w-full sm:w-96 glass-panel shadow-2xl z-[999999999999] flex flex-col border-l border-border-dark transform transition-transform duration-300 ease-in-out font-sans">
         {/* Header */}
       <div className="p-4 border-b border-border-dark flex justify-between items-center bg-surface-card/50 backdrop-blur-md text-text-primary transition-colors">
         <div className="flex items-center gap-3">

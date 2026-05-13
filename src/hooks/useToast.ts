@@ -32,7 +32,11 @@ export const useToastStore = create<ToastStore>((set) => ({
         newToasts[existingIndex] = { ...newToasts[existingIndex], ...toast, id };
         return { toasts: newToasts };
       }
-      return { toasts: [...state.toasts, { ...toast, id }] };
+      const newToasts = [...state.toasts, { ...toast, id }];
+      if (newToasts.length > 3) {
+        return { toasts: newToasts.slice(newToasts.length - 3) };
+      }
+      return { toasts: newToasts };
     });
     return id;
   },

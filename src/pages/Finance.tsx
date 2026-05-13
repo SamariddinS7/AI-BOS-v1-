@@ -5,6 +5,7 @@ import {
   Cell, PieChart as RePieChart, Pie, Legend, ComposedChart, Area 
 } from 'recharts';
 import { useCurrencyFormatter } from '../hooks/useCurrencyFormatter';
+import { safeJson } from '../lib/utils';
 import KPICard from '../components/dashboard/KPICard';
 import Card from '../components/ui/Card';
 import AIInsightCard from '../components/dashboard/AIInsightCard';
@@ -73,10 +74,10 @@ export default function Finance() {
         fetch('/api/finance/summary')
       ]);
       
-      if (txRes.ok) setTransactions(await txRes.json());
-      if (accRes.ok) setAccounts(await accRes.json());
-      if (catRes.ok) setCategories(await catRes.json());
-      if (sumRes.ok) setSummary(await sumRes.json());
+      if (txRes.ok) setTransactions(await safeJson<any>(txRes) || []);
+      if (accRes.ok) setAccounts(await safeJson<any>(accRes) || []);
+      if (catRes.ok) setCategories(await safeJson<any>(catRes) || []);
+      if (sumRes.ok) setSummary(await safeJson<any>(sumRes) || { totalIncome: 0, totalExpense: 0, netProfit: 0, ebitda: 0 });
     } catch (e) {
       console.error('Failed to fetch finance data', e);
       error("Ma'lumotlarni yuklashda xatolik");

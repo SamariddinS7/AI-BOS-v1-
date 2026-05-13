@@ -1,6 +1,7 @@
 import { IExecutionEngine, Workflow, WorkflowNode, ExecutionContext, NodeExecutionResult } from './types';
 import { PluginSandbox } from './PluginSandbox';
 import { GovernanceEngine } from './GovernanceEngine';
+import { callGeminiWithRetry } from '../gemini';
 import db from '../db/settings.js';
 
 /**
@@ -52,7 +53,13 @@ export class ExecutionEngine implements IExecutionEngine {
       executionId,
       triggerPayload: payload,
       steps: {},
-      variables: {},
+      variables: {
+        startTime: new Date().toISOString(),
+        currentDate: new Date().toISOString().split('T')[0],
+        currentTime: new Date().toISOString().split('T')[1].split('.')[0],
+        environment: process.env.NODE_ENV || 'development',
+        systemName: 'AI-BOS Core',
+      },
     };
 
     this.executions.set(executionId, context);
@@ -121,7 +128,7 @@ export class ExecutionEngine implements IExecutionEngine {
 
     try {
       const inputs = this.resolveInputs(node, context);
-      const output = await this.runNodeLogic(node, inputs);
+      const output = await this.runNodeLogic(node, inputs, context, workflow);
 
       result = {
         nodeId: node.id,
@@ -157,11 +164,41 @@ export class ExecutionEngine implements IExecutionEngine {
   }
 
   private resolveInputs(node: WorkflowNode, context: ExecutionContext): any {
-    // Placeholder for input resolution logic (e.g., {{steps.trigger.body.id}})
-    return { ...context.triggerPayload, ...node.config };
+    const resolved: any = { ...node.config };
+    
+    // Simple template resolution: {{payload.key}}, {{steps.nodeId.output}}, {{vars.key}}
+    const resolveValue = (val: any): any => {
+      if (typeof val !== 'string') return val;
+      
+      return val.replace(/\{\{([^{}]+)\}\}/g, (_, path) => {
+        const parts = path.trim().split('.');
+        const root = parts[0];
+        let current: any;
+
+        if (root === 'payload') current = context.triggerPayload;
+        else if (root === 'steps') current = context.steps;
+        else if (root === 'vars') current = context.variables;
+        else return `{{${path}}}`;
+
+        for (let i = 1; i < parts.length; i++) {
+          if (current && typeof current === 'object' && parts[i] in current) {
+            current = current[parts[i]];
+          } else {
+            return `{{${path}}}`;
+          }
+        }
+        return current;
+      });
+    };
+
+    Object.keys(resolved).forEach(key => {
+      resolved[key] = resolveValue(resolved[key]);
+    });
+
+    return resolved;
   }
 
-  private async runNodeLogic(node: WorkflowNode, inputs: any): Promise<any> {
+  private async runNodeLogic(node: WorkflowNode, inputs: any, context: ExecutionContext, workflow: Workflow): Promise<any> {
     // In a real system, this delegates to PluginSandbox or specific handlers
     switch (node.type) {
       case 'trigger': return inputs;
@@ -173,8 +210,71 @@ export class ExecutionEngine implements IExecutionEngine {
           fetch: fetch,
         });
       case 'condition': return inputs.value > 10; // Mock condition
-      case 'ai': return { text: "AI Generated Response based on " + JSON.stringify(inputs) };
+      case 'ai': 
+        return this.executeAINode(node, inputs, context, workflow);
       default: return {};
+    }
+  }
+
+  private async executeAINode(node: WorkflowNode, inputs: any, context: ExecutionContext, workflow: Workflow): Promise<any> {
+    const contextInfo = {
+      workflowId: context.workflowId,
+      executionId: context.executionId,
+      currentNode: {
+        id: node.id,
+        label: node.label,
+        type: node.type,
+      },
+      systemVariables: context.variables,
+      triggerPayload: context.triggerPayload,
+      previousSteps: Object.keys(context.steps).reduce((acc, nodeId) => {
+        acc[nodeId] = {
+          label: workflow.nodes.find(n => n.id === nodeId)?.label || nodeId,
+          output: context.steps[nodeId].output,
+          status: context.steps[nodeId].status
+        };
+        return acc;
+      }, {} as any)
+    };
+
+    const prompt = `
+      You are an AI Workflow Node in an enterprise BOS (Business Operating System).
+      
+      ### CURRENT STEP CONTEXT
+      Node ID: ${node.id}
+      Node Label: ${node.label}
+      Node Configuration: ${JSON.stringify(node.config)}
+      
+      ### WORKFLOW STATE
+      Trigger Payload: ${JSON.stringify(context.triggerPayload)}
+      Previous Nodes Outputs: ${JSON.stringify(contextInfo.previousSteps)}
+      System Variables: ${JSON.stringify(context.variables)}
+      
+      ### RESOLVED INPUTS
+      ${JSON.stringify(inputs)}
+
+      ### TASK
+      ${node.config.prompt || "Analyze the current context and provide a relevant, structured response that helps the workflow proceed."}
+      
+      Respond in a professional business tone. If structured output is requested in the config, provide it.
+    `;
+
+    try {
+      const response = await callGeminiWithRetry("gemini-1.5-flash", {
+        contents: prompt,
+        config: {
+          systemInstruction: "You are the AI Intelligence Layer of AI-BOS. Your goal is to process workflow context and generate high-value, accurate business logic outputs."
+        }
+      });
+
+      return {
+        text: response.text,
+        tokens: response.usageMetadata,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error: any) {
+      console.error("[Engine][AI] Node failed:", error.message);
+      throw new Error(`AI Node Execution Failed: ${error.message}`);
     }
   }
 

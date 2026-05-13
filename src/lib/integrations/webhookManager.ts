@@ -14,7 +14,7 @@ export class WebhookManager {
 
   private static async deliver(subscription: any, payload: any) {
     const startTime = Date.now();
-    const signature = subscription.secret 
+    const signatureHex = subscription.secret 
       ? crypto.createHmac('sha256', subscription.secret).update(JSON.stringify(payload)).digest('hex')
       : null;
 
@@ -24,7 +24,8 @@ export class WebhookManager {
         headers: {
           'Content-Type': 'application/json',
           'X-AI-BOS-Event': subscription.event_type,
-          'X-AI-BOS-Signature': signature || '',
+          'X-AI-BOS-Signature': signatureHex || '',
+          'X-Webhook-Signature': signatureHex ? `sha256=${signatureHex}` : '',
         },
         body: JSON.stringify(payload),
         timeout: 5000

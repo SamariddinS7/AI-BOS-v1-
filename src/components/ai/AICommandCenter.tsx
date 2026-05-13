@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Terminal, Play, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
-import { executeAICommand } from '../lib/aiExecutionEngine';
+import { executeAICommand } from '../../lib/aiExecutionEngine';
 
 export default function AICommandCenter() {
   const [command, setCommand] = useState('');

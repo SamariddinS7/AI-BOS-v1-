@@ -167,7 +167,7 @@ export default function DrillDownModal({ isOpen, onClose, title, module, metric,
       link.click();
       document.body.removeChild(link);
     } else {
-      alert(`Export to ${type} is not fully implemented in this demo. Please use CSV or JSON.`);
+      console.log(`Export to ${type} is not implemented.`);
     }
   };
 

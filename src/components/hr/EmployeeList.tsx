@@ -4,7 +4,7 @@ import { Plus, Search, Phone, Mail, FileText, Calendar, TrendingUp, UserCircle }
 import { db } from "../../lib/firebase";
 import { collection, onSnapshot, addDoc, query, where, orderBy, limit, serverTimestamp } from "firebase/firestore";
 import { useToast } from "../../hooks/useToast";
-import { useAuth } from "../FirebaseProvider";
+import { useAuth } from "../../contexts/FirebaseProvider";
 import { handleFirestoreError, OperationType } from "../../lib/firestore-utils";
 
 interface Employee {

@@ -3,7 +3,7 @@ import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import Card from '../ui/Card';
 import { Search } from 'lucide-react';
-import { useAuth } from '../FirebaseProvider';
+import { useAuth } from '../../contexts/FirebaseProvider';
 import { handleFirestoreError, OperationType } from '../../lib/firestore-utils';
 
 interface Employee {

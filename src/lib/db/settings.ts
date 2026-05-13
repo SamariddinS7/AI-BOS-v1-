@@ -67,6 +67,7 @@ try {
         tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         industry TEXT,
+        type TEXT,
         ltv REAL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -95,6 +96,7 @@ try {
         customer_id TEXT NOT NULL REFERENCES customers(id) ON DELETE RESTRICT,
         assigned_to TEXT REFERENCES users(id) ON DELETE SET NULL,
         name TEXT NOT NULL,
+        title TEXT,
         value REAL NOT NULL DEFAULT 0,
         stage TEXT NOT NULL,
         probability INTEGER CHECK (probability >= 0 AND probability <= 100),
@@ -127,6 +129,7 @@ try {
         id TEXT PRIMARY KEY,
         tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
+        type TEXT,
         currency TEXT NOT NULL DEFAULT 'UZS',
         balance REAL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -185,6 +188,7 @@ try {
         id TEXT PRIMARY KEY,
         tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
+        type TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         deleted_at DATETIME
@@ -252,6 +256,7 @@ try {
         tenant_id TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         address TEXT,
+        location TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         deleted_at DATETIME
@@ -526,6 +531,40 @@ try {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     
+    CREATE TABLE IF NOT EXISTS MarketingSkillExecution (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT,
+      skill_type TEXT,
+      status TEXT,
+      input_parameters TEXT,
+      output_result TEXT,
+      confidence_score REAL,
+      user_id TEXT,
+      approval_workflow_id TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS ApprovalWorkflow (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT,
+      skill_type TEXT,
+      requester_id TEXT,
+      status TEXT,
+      approvals TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS SkillRecommendation (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT,
+      skill_type TEXT,
+      recommendation TEXT,
+      confidence REAL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    
     -- Legacy tables for compatibility with existing code
     CREATE TABLE IF NOT EXISTS UserSettings (
         user_id TEXT PRIMARY KEY,
@@ -577,6 +616,19 @@ try {
         is_bot INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS api_test_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      endpoint TEXT,
+      method TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status_code INTEGER,
+      response_time_ms REAL,
+      passed BOOLEAN,
+      error_type TEXT,
+      requires_auth BOOLEAN,
+      notes TEXT
+    );
   `);
 
   try {
@@ -584,6 +636,26 @@ try {
   } catch (e) {
     // Column might already exist
   }
+
+  try {
+    db.prepare('ALTER TABLE accounts ADD COLUMN type TEXT').run();
+  } catch (e) {}
+
+  try {
+    db.prepare('ALTER TABLE marketing_channels ADD COLUMN type TEXT').run();
+  } catch (e) {}
+
+  try {
+    db.prepare('ALTER TABLE warehouses ADD COLUMN location TEXT').run();
+  } catch (e) {}
+
+  try {
+    db.prepare('ALTER TABLE customers ADD COLUMN type TEXT').run();
+  } catch (e) {}
+
+  try {
+    db.prepare('ALTER TABLE deals ADD COLUMN title TEXT').run();
+  } catch (e) {}
 
   // Indexes
   db.exec(`
@@ -743,7 +815,7 @@ return reply;`
   db = {
     exec: () => {},
     prepare: () => ({
-      run: () => {},
+      run: () => ({ changes: 0, lastInsertRowid: 0n }),
       get: () => null,
       all: () => [],
     }),

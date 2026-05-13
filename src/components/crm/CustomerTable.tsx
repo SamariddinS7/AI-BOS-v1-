@@ -59,7 +59,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
                 </td>
                 <td className="px-6 py-4 text-text-secondary">{customer.company}</td>
                 <td className="px-6 py-4 text-text-muted">{customer.industry}</td>
-                <td className="px-6 py-4 text-text-primary">${customer.account_value.toLocaleString()}</td>
+                <td className="px-6 py-4 text-text-primary">${customer.account_value?.toLocaleString() || '0'}</td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 text-base font-medium text-blue-400 bg-blue-900/30 rounded-full border border-blue-900/50">
                     {customer.status}
@@ -110,7 +110,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({ customers }) => {
                     <div className="text-base text-text-muted">{deal.stage}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-mono font-bold text-emerald-400">${deal.value.toLocaleString()}</div>
+                    <div className="font-mono font-bold text-emerald-400">${deal.value?.toLocaleString() || '0'}</div>
                     <div className="text-base text-text-muted">Prob: {deal.probability}%</div>
                   </div>
                 </div>

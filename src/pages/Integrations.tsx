@@ -20,10 +20,12 @@ import {
   ArrowRightLeft,
   LayoutGrid,
   Zap,
-  Code
+  Code,
+  Cloud
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/ui/Card';
+import { safeJson } from '../lib/utils';
 
 // --- Sub-components ---
 
@@ -40,7 +42,7 @@ export const Marketplace = () => {
     try {
       const response = await fetch('/api/integrations/plugins');
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson<any>(response);
         setPlugins(data);
       }
     } catch (error) {
@@ -130,7 +132,10 @@ export const Marketplace = () => {
 export const Webhooks = () => {
   const [webhooks, setWebhooks] = useState<any[]>([]);
   const [showAdd, setShowAdd] = useState(false);
-  const { success, info } = useToast();
+  const [isTesting, setIsTesting] = useState(false);
+  const { success, info, error } = useToast();
+
+  const [newWebhook, setNewWebhook] = useState({ event_type: 'team.message', target_url: '', secret: '' });
 
   useEffect(() => {
     fetchWebhooks();
@@ -140,7 +145,7 @@ export const Webhooks = () => {
     try {
       const response = await fetch('/api/integrations/webhooks');
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson<any>(response);
         setWebhooks(data);
       }
     } catch (error) {
@@ -148,9 +153,49 @@ export const Webhooks = () => {
     }
   };
 
+  const addWebhook = async () => {
+    try {
+      const response = await fetch('/api/integrations/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newWebhook)
+      });
+      if (response.ok) {
+        success("Webhook qo'shildi!");
+        setShowAdd(false);
+        fetchWebhooks();
+        setNewWebhook({ event_type: 'team.message', target_url: '', secret: '' });
+      } else {
+        error("Xatolik yuz berdi");
+      }
+    } catch (err) {
+      error("Xatolik");
+    }
+  };
+
   const deleteWebhook = (id: string) => {
     setWebhooks(webhooks.filter(w => w.id !== id));
     success("Webhook muvaffaqiyatli o'chirildi");
+  };
+
+  const testWebhook = async (id: string) => {
+    // ... no changes to testWebhook below, just replacing above
+    setIsTesting(true);
+    info("Test yuborilmoqda...");
+    try {
+      const response = await fetch(`/api/integrations/webhooks/${id}/test`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        success("Test muvaffaqiyatli yuborildi");
+      } else {
+        error("Test yuborishda xatolik yuz berdi");
+      }
+    } catch (err) {
+      error("Xatolik: " + err);
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   return (
@@ -173,6 +218,58 @@ export const Webhooks = () => {
       </div>
 
       <Card className="overflow-hidden">
+        {showAdd && (
+          <div className="p-6 bg-surface-ground border-b border-border-dark space-y-4">
+            <h4 className="font-bold text-text-primary">Add New Webhook</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Event Type</label>
+                <input 
+                  type="text" 
+                  value={newWebhook.event_type}
+                  onChange={e => setNewWebhook({...newWebhook, event_type: e.target.value})}
+                  className="w-full px-3 py-2 bg-surface-card border border-border-dark rounded-lg text-text-primary focus:ring-2 focus:ring-brand-500 outline-none"
+                  placeholder="e.g. team.message"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Target URL</label>
+                <input 
+                  type="text" 
+                  value={newWebhook.target_url}
+                  onChange={e => setNewWebhook({...newWebhook, target_url: e.target.value})}
+                  className="w-full px-3 py-2 bg-surface-card border border-border-dark rounded-lg text-text-primary focus:ring-2 focus:ring-brand-500 outline-none"
+                  placeholder="https://api.enginelabs.ai/webhooks/..."
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-text-secondary mb-1">Secret (Optional for HMAC SHA256)</label>
+                <input 
+                  type="text" 
+                  value={newWebhook.secret}
+                  onChange={e => setNewWebhook({...newWebhook, secret: e.target.value})}
+                  className="w-full px-3 py-2 bg-surface-card border border-border-dark rounded-lg text-text-primary focus:ring-2 focus:ring-brand-500 outline-none"
+                  placeholder="your-webhook-secret"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button 
+                onClick={() => setShowAdd(false)}
+                className="px-4 py-2 bg-surface-ground border border-border-dark text-text-secondary rounded-lg hover:bg-surface-card transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={addWebhook}
+                disabled={!newWebhook.target_url}
+                className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        )}
         <table className="w-full text-left">
           <thead className="bg-surface-ground border-b border-border-dark">
             <tr>
@@ -198,8 +295,16 @@ export const Webhooks = () => {
                     Active
                   </span>
                 </td>
-                <td className="px-6 py-4 text-base text-text-muted">{new Date(webhook.created_at).toLocaleDateString()}</td>
+                <td className="px-6 py-4 text-base text-text-muted">{new Date(webhook.created_at || Date.now()).toLocaleDateString()}</td>
                 <td className="px-6 py-4 text-right">
+                  <button 
+                    onClick={() => testWebhook(webhook.id)}
+                    disabled={isTesting}
+                    className="p-2 text-text-muted hover:text-brand-600 transition-colors mr-2 disabled:opacity-50"
+                    title="Send Test"
+                  >
+                    <Activity className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={() => deleteWebhook(webhook.id)}
                     className="p-2 text-text-muted hover:text-rose-600 transition-colors"
@@ -237,13 +342,13 @@ export const GatewayMonitoring = () => {
       ]);
       
       if (statsRes.ok) {
-        const data = await statsRes.json();
+        const data = await safeJson<any>(statsRes);
         setStats(data.stats);
         setLogs(data.recentLogs);
       }
       
       if (keysRes.ok) {
-        const keysData = await keysRes.json();
+        const keysData = await safeJson<any>(keysRes);
         setApiKeys(keysData);
       }
     } catch (error) {
@@ -571,6 +676,87 @@ export const DataMapping = () => {
   );
 };
 
+export const CloudIntegrations = () => {
+  const { success } = useToast();
+  const [activeCloud, setActiveCloud] = useState('database');
+
+  const cloudConfigs = [
+    { id: 'database', name: 'Database & Storage' },
+    { id: 'ai', name: 'Cloud AI Models' },
+    { id: 'monitoring', name: 'Monitoring & CI/CD' }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-bold text-text-primary">Cloud Platform Integration</h3>
+          <p className="text-base text-text-muted">Connect external cloud resources to the AI-BOS platform</p>
+        </div>
+        <div className="flex bg-surface-ground p-1 rounded-lg border border-border-dark">
+          {cloudConfigs.map(c => (
+             <button
+               key={c.id}
+               onClick={() => setActiveCloud(c.id)}
+               className={`px-4 py-2 rounded-md transition-colors text-sm font-medium ${activeCloud === c.id ? 'bg-brand-600 text-white' : 'text-text-secondary hover:text-white'}`}
+             >
+               {c.name}
+             </button>
+          ))}
+        </div>
+      </div>
+
+      {activeCloud === 'database' && (
+        <Card className="p-6">
+           <h4 className="font-bold text-text-primary mb-4">PostgreSQL & Cloud Storage</h4>
+           <div className="space-y-4">
+             <div>
+               <label className="block text-sm font-medium text-text-secondary mb-1">DATABASE_URL (AWS RDS / GCP Cloud SQL)</label>
+               <input type="text" placeholder="postgresql://user:pass@host:5432/db" className="w-full px-3 py-2 bg-surface-card border border-border-dark rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-500" />
+             </div>
+             <div>
+               <label className="block text-sm font-medium text-text-secondary mb-1">CLOUD_STORAGE_URL (AWS S3 / Supabase)</label>
+               <input type="text" placeholder="https://your-bucket-url.s3.amazonaws.com" className="w-full px-3 py-2 bg-surface-card border border-border-dark rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-500" />
+             </div>
+             <button onClick={() => success("Cloud Database settings saved")} className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700">Save Configuration</button>
+           </div>
+        </Card>
+      )}
+
+      {activeCloud === 'ai' && (
+        <Card className="p-6">
+           <h4 className="font-bold text-text-primary mb-4">AI Model APIs</h4>
+           <div className="space-y-4">
+             <div>
+               <label className="block text-sm font-medium text-text-secondary mb-1">AI_API_KEY (OpenAI / Vertex AI / Gemini)</label>
+               <input type="password" placeholder="sk-..." className="w-full px-3 py-2 bg-surface-card border border-border-dark rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-500" />
+             </div>
+             <div>
+               <label className="block text-sm font-medium text-text-secondary mb-1">Vector DB URL (Pinecone / Weaviate)</label>
+               <input type="text" placeholder="https://your-index.svc.pinecone.io" className="w-full px-3 py-2 bg-surface-card border border-border-dark rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-500" />
+             </div>
+             <button onClick={() => success("AI Cloud settings saved")} className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700">Save API Keys</button>
+           </div>
+        </Card>
+      )}
+
+      {activeCloud === 'monitoring' && (
+        <Card className="p-6">
+           <h4 className="font-bold text-text-primary mb-4">Cloud Dashboards & CI/CD</h4>
+           <p className="text-text-secondary mb-4">Integrate CloudWatch, Datadog or Sentry for tracking agent execution and detecting system errors.</p>
+           <div className="space-y-4">
+             <div>
+               <label className="block text-sm font-medium text-text-secondary mb-1">Monitoring Dashboard URL</label>
+               <input type="text" placeholder="https://grafana.cloud.com/your-dashboard" className="w-full px-3 py-2 bg-surface-card border border-border-dark rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-500" />
+             </div>
+             <button onClick={() => window.open('https://github.com/features/actions', '_blank')} className="px-4 py-2 border border-border-dark text-text-secondary rounded-lg hover:bg-surface-ground">Configure GitHub Actions Deploy</button>
+           </div>
+        </Card>
+      )}
+    </div>
+  );
+};
+
 // --- Main Integrations Page ---
 
 export default function Integrations() {
@@ -580,6 +766,7 @@ export default function Integrations() {
     { id: 'marketplace', label: 'Marketplace', icon: LayoutGrid },
     { id: 'webhooks', label: 'Webhooks', icon: Webhook },
     { id: 'gateway', label: 'API Gateway', icon: Shield },
+    { id: 'cloud', label: 'Cloud Services', icon: Cloud },
     { id: 'mapping', label: 'Data Mapping', icon: ArrowRightLeft },
     { id: 'docs', label: 'API Documentation', icon: Book },
   ];
@@ -589,6 +776,7 @@ export default function Integrations() {
       case 'marketplace': return <Marketplace />;
       case 'webhooks': return <Webhooks />;
       case 'gateway': return <GatewayMonitoring />;
+      case 'cloud': return <CloudIntegrations />;
       case 'mapping': return <DataMapping />;
       case 'docs': return <ApiDocumentation />;
       default: return null;

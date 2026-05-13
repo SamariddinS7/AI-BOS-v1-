@@ -24,6 +24,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/ui/Card';
 import { useToast } from '../hooks/useToast';
+import { safeJson } from '../lib/utils';
 
 // --- Components ---
 
@@ -39,13 +40,15 @@ const AdminDashboard = () => {
     try {
       const response = await fetch('/api/admin/dashboard-metrics');
       if (response.ok) {
-        const data = await response.json();
-        setMetrics({
-          activeUsers: data.activeUsers,
-          systemHealth: data.systemHealth,
-          recentActivity: data.recentActivity,
-          totalWorkflows: data.totalWorkflows
-        });
+        const data = await safeJson<any>(response);
+        if (data) {
+          setMetrics({
+            activeUsers: data.activeUsers,
+            systemHealth: data.systemHealth,
+            recentActivity: data.recentActivity,
+            totalWorkflows: data.totalWorkflows
+          });
+        }
       } else {
         throw new Error('Failed to fetch metrics');
       }
@@ -149,7 +152,7 @@ export const UserManagement = () => {
     try {
       const response = await fetch('/api/admin/users');
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson<any>(response);
         setUsers(data);
       } else {
         throw new Error('Failed to fetch users');
@@ -271,7 +274,7 @@ const AuditLogs = () => {
     try {
       const response = await fetch('/api/admin/audit-logs');
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson<any>(response);
         setLogs(data);
       }
     } catch (error) {
@@ -453,10 +456,10 @@ export const RolesManagement = () => {
         fetch('/api/admin/permissions')
       ]);
       if (rolesRes.ok) {
-        setRoles(await rolesRes.json());
+        setRoles(await safeJson<any>(rolesRes));
       }
       if (permsRes.ok) {
-        setPermissions(await permsRes.json());
+        setPermissions(await safeJson<any>(permsRes));
       }
     } catch (error) {
       console.error('Error fetching roles/permissions:', error);
@@ -548,7 +551,7 @@ const ApiKeyManagement = () => {
     try {
       const response = await fetch('/api/admin/api-keys');
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson<any>(response);
         setKeys(data);
       }
     } catch (error) {
@@ -643,7 +646,7 @@ const BackupManagement = () => {
     try {
       const response = await fetch('/api/admin/backups');
       if (response.ok) {
-        const data = await response.json();
+        const data = await safeJson<any>(response);
         setBackups(data);
       }
     } catch (error) {

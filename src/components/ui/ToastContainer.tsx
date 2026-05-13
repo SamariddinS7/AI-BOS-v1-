@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, AlertTriangle, Info, XCircle, X, Loader2 } from 'lucide-react';
-import { useToastStore, Toast } from '../hooks/useToast';
+import { useToastStore, Toast } from '../../hooks/useToast';
 
 const ToastItem = ({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) => {
   const duration = toast.duration || 5000;

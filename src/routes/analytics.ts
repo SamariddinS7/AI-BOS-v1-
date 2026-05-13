@@ -21,9 +21,9 @@ router.get('/:module/:metric/drilldown/:dimension', async (req, res) => {
     });
 
     res.json(result);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Drill-Down Error:', error);
-    res.status(500).json({ error: 'Failed to fetch drill-down data' });
+    res.status(500).json({ error: 'Failed to fetch drill-down data', details: error.message });
   }
 });
 

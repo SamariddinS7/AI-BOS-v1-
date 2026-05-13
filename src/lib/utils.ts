@@ -5,6 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export async function safeJson<T>(res: Response): Promise<T | null> {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text) as T;
+  } catch (error) {
+    console.error('Failed to parse JSON response:', text.substring(0, 50) + '...');
+    return null;
+  }
+}
+
 import { T } from '../constants';
 
 export const fmt = (n: any) => { if(n==null) return "—"; const a=Math.abs(n); return a>=1e9?`${(n/1e9).toFixed(1)}B`:a>=1e6?`${(n/1e6).toFixed(1)}M`:a>=1e3?`${(n/1e3).toFixed(0)}K`:`${n}`; };
@@ -40,6 +51,22 @@ export function exportJSON(data: any[], name: string) {
   const a=document.createElement("a"); a.href=url; a.download=`${name}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+export function forecastNext(arr: any[], key: string, steps = 3): number[] {
+  const ys = arr.map(d => d[key] || 0);
+  const n = ys.length;
+  if (n < 2) return Array(steps).fill(0);
+
+  const sx = (n * (n - 1)) / 2;
+  const sy = ys.reduce((a, b) => a + b, 0);
+  const sxy = ys.reduce((a, v, i) => a + i * v, 0);
+  const sx2 = (n * (n - 1) * (2 * n - 1)) / 6;
+
+  const m = (n * sxy - sx * sy) / (n * sx2 - sx * sx || 1);
+  const b = (sy - m * sx) / n;
+
+  return Array.from({ length: steps }, (_, i) => Math.round(m * (n + i) + b));
+}
+
 /**
  * Calculates tax based on income and a specific rate.
  * @param income The total income figure.
@@ -52,6 +79,6 @@ export function calculateTax(income: number, rate: number = 0.12): number {
 }
 
 import { useState, useEffect } from 'react';
-import { useFilters as useFiltersContext } from '../context/FilterContext';
+import { useFilters as useFiltersContext } from '../contexts/FilterContext';
 
 export function useFilters() { return useFiltersContext(); }

@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
-import { fmt } from '../../utils/analytics';
+import { fmt } from '../../lib/utils';
 
 interface KPICardProps {
   label: string;

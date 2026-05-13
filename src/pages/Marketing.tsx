@@ -14,6 +14,7 @@ import KPICard from '../components/dashboard/KPICard';
 import Card from '../components/ui/Card';
 import AIInsightCard from '../components/dashboard/AIInsightCard';
 import ExpandedChartModal from '../components/dashboard/ExpandedChartModal';
+import MarketingAssets from '../components/marketing/MarketingAssets';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCurrencyFormatter } from '../hooks/useCurrencyFormatter';
 import { useToast } from '../hooks/useToast';
@@ -280,6 +281,8 @@ export default function Marketing() {
         <KPICard title="Umumiy ROAS" value={`${overall_roas.toFixed(2)}x`} change="" trend="neutral" icon={Activity} data={kpiData} onClick={() => setAnalytics({isOpen: true, title: 'ROAS Analysis', metric: 'roas'})} />
         <KPICard title={t('cac')} value={formatCurrency(total_cac)} change="" trend="neutral" icon={Users} data={kpiData} onClick={() => setAnalytics({isOpen: true, title: t('cac_analysis'), metric: 'cac'})} />
       </div>
+
+      <MarketingAssets />
 
       {/* Main Analytics Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

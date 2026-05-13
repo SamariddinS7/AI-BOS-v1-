@@ -1,6 +1,7 @@
 import { Type } from '@google/genai';
 import { MarketingAgentFramework } from './marketingAgents';
 import { FinanceAgentFramework } from './financeAgents';
+import { WorkflowAgentFramework } from './workflowAgents';
 import { callGeminiWithRetry } from './gemini';
 import { logAIFailure } from './aiLogger';
 
@@ -87,9 +88,10 @@ export async function executeAICommand(command: string, context: any, language: 
     Context: ${JSON.stringify(context)}
     
     Analyze the command and generate a structured ActionIntent JSON.
-    Available Modules: marketing, finance, inventory, hr, sales.
+    Available Modules: marketing, finance, inventory, hr, sales, workflow.
     If module is 'marketing', specify a 'sub_agent' if applicable: market_analyst, campaign_strategist, performance_optimizer, content_messaging, growth_forecast, orchestrator.
     If module is 'finance', specify a 'sub_agent' if applicable: finance_analyst.
+    If module is 'workflow', specify a 'sub_agent' if applicable: workflow_analyst.
     
     IMPORTANT: All text fields in the JSON output MUST be written in the ${language} language.
   `;
@@ -221,6 +223,25 @@ export async function executeAICommand(command: string, context: any, language: 
         message: `Moliya agentini ishga tushirishda xatolik: ${error.message}`
       };
     }
+  } else if (intent.module === 'workflow') {
+    const workflowFramework = new WorkflowAgentFramework();
+    let agentOutput;
+
+    try {
+      agentOutput = await workflowFramework.runWorkflowAnalyst(context);
+
+      result = {
+        success: true,
+        action_id,
+        message: `Ish oqimi agenti (workflow_analyst) muvaffaqiyatli bajarildi.`,
+        data: agentOutput
+      };
+    } catch (error: any) {
+      result = {
+        success: false,
+        message: `Ish oqimi agentini ishga tushirishda xatolik: ${error.message}`
+      };
+    }
   } else if (intent.action_type.toUpperCase() === "READ" || intent.action_type.toUpperCase() === "PROPOSE") {
     const responsePrompt = `As an AI-BOS Core agent, provide a realistic ${intent.action_type} response for the module '${intent.module}'. The user asked: '${command}'. Provide a concise, professional business response in ${language}.`;
     
@@ -272,7 +293,7 @@ export async function executeAICommand(command: string, context: any, language: 
   }
 
   // 4. Analyze Result
-  if (intent.action_type.toUpperCase() === "READ" || intent.action_type.toUpperCase() === "PROPOSE" || intent.module === 'marketing') {
+  if (intent.action_type.toUpperCase() === "READ" || intent.action_type.toUpperCase() === "PROPOSE" || intent.module === 'marketing' || intent.module === 'workflow') {
     return {
       status: "success",
       intent,

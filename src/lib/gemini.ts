@@ -1,11 +1,17 @@
 import { GoogleGenAI } from '@google/genai';
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  console.error("API kaliti topilmadi (GEMINI_API_KEY).");
-}
+let aiClient: GoogleGenAI | null = null;
 
-export const ai = new GoogleGenAI({ apiKey: apiKey || 'dummy-key' });
+export function getAi(): GoogleGenAI {
+  if (!aiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is required");
+    }
+    aiClient = new GoogleGenAI({ apiKey });
+  }
+  return aiClient;
+}
 
 /**
  * Calls the Gemini API with exponential backoff retry logic for 429 errors.
@@ -21,7 +27,7 @@ export async function callGeminiWithRetry(
   delay = 2000
 ): Promise<any> {
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAi().models.generateContent({
       model: modelName,
       ...params
     });
