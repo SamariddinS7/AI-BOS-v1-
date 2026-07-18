@@ -7,7 +7,9 @@ import { GoogleGenAI } from '@google/genai';
 import db from './src/lib/db/settings';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const archiver = require('archiver') as typeof import('archiver');
+// archiver is CJS-only; cast to any to avoid ESM namespace type mismatch
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const archiver = require('archiver') as any;
 import path from 'path';
 import fs from 'fs';
 import { WebSocketServer } from 'ws';
