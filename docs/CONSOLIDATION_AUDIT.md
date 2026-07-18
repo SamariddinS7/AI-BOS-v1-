@@ -1,267 +1,198 @@
 # Konsolidatsiya Audit Hisoboti
 **Sana:** 2026-07-18  
-**Maqsad:** Ikki parallel backendni (Node/Express + Python/FastAPI) bitta yagona Node/Express backendga birlashtirish rejalashtirilmoqda. Ushbu hujjat hozirgi holat tahlili, arxivlash natijalari va keyingi bosqichlarga mo'ljallangan ko'chirish rejasini o'z ichiga oladi.
+**Maqsad:** AI-BOS loyihasidagi ikki parallel backend (Node/Express va Python/FastAPI) holatini tahlil qilish va konsolidatsiya rejasini hujjatlashtirish.
 
 ---
 
-## 1. Arxivlash natijalari
+## 1. Backend Holati — Qisqa Xulosa
 
-| Harakat | Natija |
-|---------|--------|
-| `backend/` papkasi `archive/python-backend/` ga ko'chirildi | ✅ |
-| `backend/` papkasi git tarixidan olib tashlandi (`git rm -r`) | ✅ |
-| Barcha 68 ta `.py` fayl arxivda saqlanib qoldi | ✅ |
-| `archive/python-backend/` `.gitignore`ga qo'shilmagan — tarix saqlanadi | ✅ |
+| Holat | Node.js/Express (`apps/api/`) | Python/FastAPI (`archive/python-backend/`) |
+|-------|-------------------------------|---------------------------------------------|
+| Joylashuv | `apps/api/src/` (faol) | `archive/python-backend/` (arxivlangan) |
+| Port | 5000 | 8000 (ishlatilmaydi) |
+| DB | SQLite (`better-sqlite3`) | PostgreSQL + SQLAlchemy (mahalliy) |
+| Frontend bog'liq | ✅ Ha (barcha `/api/*` chaqiruvlar) | ❌ Yo'q (frontend unga murojaat qilmaydi) |
+| Faol | ✅ Ha | ❌ Arxivlangan |
 
-**Sabab:** Python/FastAPI backend haqiqiy biznes-mantiq (PnL, Cashflow, KPI, Marketing, CircuitBreaker, Prometheus metrics va h.k.) saqlaydi, lekin frontend bilan **hech qanday bog'lanishi yo'q** — frontend faqat Node backend `/api/*` marshrut­laridan foydalanadi. Resurslarni birlashtirib, bitta yetuk stack qilish uchun Python backend arxivlandi. Kelajakda og'ir ML/data-science kerak bo'lsa, `ml-service/` sifatida mustaqil mikroservis bo'lib qaytarilishi mumkin.
-
----
-
-## 2. Node/Express backend — haqiqatan ishlaydigan funksiyalar
-
-| Modul | Endpoint | Status | Tavsif |
-|-------|----------|--------|--------|
-| **Finance** | `GET/POST /api/finance/accounts` | ✅ REAL | SQLite, hisob raqamlar CRUD |
-| | `GET /api/finance/categories` | ✅ REAL | Kategoriyalar ro'yxati |
-| | `GET/POST /api/finance/transactions` | ✅ REAL | Tranzaksiyalar CRUD |
-| | `GET /api/finance/summary` | ✅ REAL | Moliyaviy umumiy ko'rsatkich |
-| **Accounting** | `GET /api/accounting/kpis` | ✅ REAL | KPI ko'rsatkichlari (SQLite) |
-| | `GET/POST /api/accounting/transactions` | ✅ REAL | Buxgalteriya tranzaksiyalari |
-| **CRM** | `GET/POST /api/crm/customers` | ✅ REAL | Mijozlar CRUD |
-| | `GET /api/crm/deals` | ✅ REAL | Bitimlar ro'yxati |
-| | `PUT /api/crm/deals/:id/stage` | ✅ REAL | Bitim bosqichini yangilash |
-| | `GET/POST /api/crm/interactions` | ✅ REAL | Mijoz bilan muloqotlar |
-| **Admin** | `GET/POST /api/admin/users` | ✅ REAL | Foydalanuvchilar boshqaruvi |
-| | `GET /api/admin/roles` | ✅ REAL | Rollar ro'yxati |
-| | `GET/POST /api/admin/audit-logs` | ✅ REAL | Audit jurnali |
-| | `GET /api/admin/api-keys` | ✅ REAL | API kalitlar boshqaruvi |
-| | `GET /api/admin/backups` | ✅ REAL | Zaxira nusxalar |
-| | `GET /api/admin/tenants` | ✅ REAL | Tenant boshqaruvi |
-| | `GET /api/admin/dashboard-metrics` | ✅ REAL | Dashboard metrikalar |
-| **Agents** | `GET/POST /api/agents` | ✅ REAL | AI agentlar CRUD |
-| | `PATCH /api/agents/:id` | ✅ REAL | Agent yangilash |
-| | `DELETE /api/agents/:id` | ✅ REAL | Agent o'chirish |
-| | `POST /api/agents/:id/check-health` | ✅ REAL | Agent holat tekshiruv |
-| **Analytics** | `GET /api/analytics/:module/:metric` | ⚠️ QISMAN | Parametrga qarab hisoblash, ba'zi qismlar stub |
-| | `GET /api/analytics/:module/:metric/drilldown/:dimension` | ⚠️ QISMAN | Drilldown qisman stub |
-| | `GET /api/analytics/export` | ✅ REAL | Ma'lumot eksport |
-| **Integrations** | `GET/POST /api/integrations/v1/customers` | ✅ REAL | Tashqi integratsiyalar |
-| | `GET/POST /api/integrations/webhooks` | ✅ REAL | Webhook boshqaruvi |
-| | `GET/POST /api/integrations/api-keys` | ✅ REAL | API kalitlar |
-| | `GET /api/integrations/gateway/stats` | ✅ REAL | Gateway statistikasi |
-| **Settings** | `GET/PUT /api/settings/user` | ✅ REAL | Foydalanuvchi sozlamalari |
-| | `GET/PUT /api/settings/notifications` | ✅ REAL | Bildirishnoma sozlamalari |
-| | `GET/PUT /api/settings/security` | ✅ REAL | Xavfsizlik sozlamalari |
-| | `GET /api/settings/sessions` | ✅ REAL | Faol sessiyalar |
-| | `GET/PUT /api/settings/integrations` | ✅ REAL | Integratsiya sozlamalari |
-| | `GET /api/settings/audit` | ✅ REAL | Sozlamalar audit jurnali |
-| **Skills** | `GET /api/skills/available` | ✅ REAL | Mavjud AI ko'nikmalar |
-| | `POST /api/skills/execute` | ✅ REAL | Ko'nikma bajarish (Gemini) |
-| | `POST /api/skills/approve` | ✅ REAL | Ko'nikma tasdiqlash |
-| **Workflows** | `GET /api/workflows` | ✅ REAL | Workflow ro'yxati |
-| | `POST /api/workflows` | ✅ REAL | Yangi workflow yaratish |
-| | `POST /api/workflows/:id/execute` | ✅ REAL | Workflow ishga tushirish |
-| **Telegram** | `GET/POST /api/telegram/settings` | ✅ REAL | Telegram bot sozlamalari |
-| | `GET /api/telegram/status` | ✅ REAL | Bot holati |
-| | `POST /api/telegram/start` | ✅ REAL | Botni ishga tushirish |
-| **Voice** | `POST /voice/process` | ✅ REAL | Ovozli buyruq (Gemini AI) |
-| **n8n** | `GET/POST /api/integrations/n8n/config` | ✅ REAL | n8n integratsiyasi |
-| **System** | `GET /api/health` | ⚠️ STUB | Faqat `{ ok: true }` qaytaradi |
-| | `GET /api/system/download` | ✅ REAL | Loyihani zip qilib yuklab olish |
+**Xulosa:** Python/FastAPI backend `archive/python-backend/` ga ko'chirilgan va ishlatilmaydi. Frontend **faqat** Node.js backendga murojaat qiladi.
 
 ---
 
-## 3. Python/FastAPI backend — haqiqatan ishlaydigan funksiyalar
+## 2. Node.js Backend — REAL vs MOCK tahlil jadvali
 
-| Modul | Servis | Status | Tavsif |
-|-------|--------|--------|--------|
-| **Finance** | `PnLService` | ✅ REAL | Daromad-xarajat hisoboti (Revenue, COGS, Gross Profit, Net Profit) |
-| | `CashflowService` | ✅ REAL | Pul oqimi (Operational/Investing/Financing) |
-| | `LedgerService` | ✅ REAL | Buxgalteriya kitobi |
-| | `TaxService` | ✅ REAL | Soliq hisoblash |
-| **HR** | `KPIService` | ✅ REAL | Xodim KPI balli (og'irlik bo'yicha o'rtacha) |
-| | `PayrollService` | ✅ REAL | Ish haqi hisoblash |
-| **CRM** | `RevenueService` | ✅ REAL | Daromad hisobi (davr bo'yicha) |
-| | `ForecastService` | ✅ REAL | CRM prognoz |
-| **Analytics** | `DemandForecastService` | ✅ REAL | Talab prognozi |
-| | `OptimizationService` | ✅ REAL | Narx optimallashtirish, zarar ko'rayotgan mahsulotlar |
-| **Marketing** | `MarketingAnalyticsService` | ✅ REAL | Marketing analitika to'plami |
-| | `CampaignAgent`, `StrategistAgent` | ✅ REAL | AI marketing agentlar |
-| | `MarketingOrchestrator` | ✅ REAL | Marketing AI orkestratsiya |
-| | `metrics/dashboard` | ❌ MOCK | Hardcoded JSON qaytaradi |
-| **Intelligence** | `ExecutiveInsightsEngine` | ✅ REAL | Rahbariyat uchun xulosa/risk/o'sish |
-| | `DataAggregator` | ✅ REAL | Modullararo ma'lumot yig'ish |
-| | `AIService (chat/think/execute)` | ✅ REAL | AI suhbat va bajarish |
-| **Admin** | `AIControlService` | ✅ REAL | AI rejim boshqaruvi |
-| | `ModelRegistryService` | ✅ REAL | Model registri |
-| | `PolicyConfigService` | ✅ REAL | Qoidalar konfiguratsiyasi |
-| | `AuditViewerService` | ✅ REAL | Audit ko'rish |
-| | `SystemHealthMonitor` | ✅ REAL | Tizim holat monitoru |
-| | `ApprovalWorkflowService` | ✅ REAL | Tasdiqlash workflow |
-| **Lifecycle** | `ABTestingService` | ✅ REAL | A/B test |
-| | `VersionManager` | ✅ REAL | Model versiyalar |
-| | `RollbackService` | ✅ REAL | Rollback mexanizmi |
-| **Resilience** | `CircuitBreaker` | ✅ REAL | 3 xatoda OPEN, 30s timeout, recovery |
-| | `SelfHealingService` | ✅ REAL | Avtomatik o'z-o'zini tiklash |
-| | `FailoverManager` | ✅ REAL | Zaxira tizimga o'tish |
-| | `RetryPolicy` | ✅ REAL | Qayta urinish siyosati |
-| | `DegradedMode` | ✅ REAL | Cheklangan rejim |
-| **Observability** | `MetricsService` (Prometheus) | ✅ REAL | Counter, Histogram, Gauge |
-| | `StructuredLogger` | ✅ REAL | Tizimli logging |
-| | `BenchmarkService` | ✅ REAL | Model benchmark |
+### `apps/api/src/routes/` va `apps/api/src/services/`
+
+| Modul | Fayl | Endpoint(lar) | Holat | Izoh |
+|-------|------|---------------|-------|------|
+| **Analytics** | `routes/analytics.ts` + `services/AnalyticsService.ts` | `GET /:module/:metric`, `GET /:module/:metric/drilldown/:dim`, `GET /export` | ✅ **REAL** | SQLite `transactions` va `AnalyticsData` jadvallaridan haqiqiy ma'lumot. Gemini AI bilan insights generatsiyasi. `simple-statistics` bilan statistik hisob. |
+| **CRM** | `routes/crm.ts` | `GET /customers`, `POST /customers`, `GET /deals`, `PUT /deals/:id/stage`, `GET /interactions/:cId`, `POST /interactions` | ✅ **REAL** | SQLite `Customers`, `Deals`, `Interactions` jadvallaridan haqiqiy CRUD. |
+| **Accounting** | `routes/accounting.ts` + `services/TransactionService.ts` | `GET /kpis`, `GET /transactions`, `POST /transactions` | ✅ **REAL** | SQLite `transactions` jadvalidan haqiqiy hisob-kitob. KPI (joriy balans, kutilayotgan tushum) formulalari real. |
+| **Agents** | `routes/agents.ts` + `lib/db/agentDb.ts` | `GET /`, `POST /`, `PATCH /:id`, `DELETE /:id`, `POST /:id/check-health` | ✅ **REAL** | SQLite `Agents` jadvalida haqiqiy CRUD. |
+| **Workflows** | `routes/workflows.ts` + `lib/workflow-engine/ExecutionEngine.ts` | `GET /`, `GET /:id`, `POST /`, `DELETE /:id`, `POST /:id/execute` | ✅ **REAL** | SQLite `Workflows`, `WorkflowNodes`, `WorkflowEdges` — haqiqiy saqlash. `ExecutionEngine` — haqiqiy ijro mexanizmi. |
+| **Admin** | `routes/admin.ts` | `GET /users`, `POST /users`, `PUT /users/:id`, `GET /roles`, `GET /permissions`, `GET /audit-logs`, `POST /audit-logs`, `GET /api-keys`, `GET /backups` | ✅ **REAL** | SQLite jadvallaridan haqiqiy ma'lumot. |
+| **Settings** | `routes/settings.ts` | `GET /user`, `PUT /user`, `GET /audit`, `GET /integrations`, `PUT /integrations`, `GET /notifications`, `PUT /notifications`, `GET /security`, `PUT /security`, `GET /sessions`, `DELETE /sessions/:id` | ✅ **REAL** | SQLite + Supabase sinxronizatsiyasi. |
+| **Integrations** | `routes/integrations.ts` | `/plugins`, `/webhooks`, `/gateway/stats`, `/api-keys` | ✅ **REAL** | `PluginManager`, `WebhookManager` orqali haqiqiy boshqaruv. |
+| **Skills** | `routes/skills.ts` | `GET /available`, `POST /execute`, `POST /approve` | ✅ **REAL** | Gemini AI orqali haqiqiy bajarish. |
+| **Finance (accounts)** | `server.ts` inline | `GET /api/finance/accounts` | ✅ **REAL** | SQLite `accounts` jadvalidan. |
+| **AI/Gemini** | `lib/ai/agent.ts`, `services/geminiService.ts`, `lib/gemini.ts` | `/api/chat`, `/api/ai/*` | ✅ **REAL** | Haqiqiy Gemini API integratsiyasi. `GEMINI_API_KEY` bo'lmasa graceful xato. |
+| **Telegram Bot** | `lib/telegram/bot.ts` | `/api/telegram/*` | ✅ **REAL** | Token bo'lmasa o'chiriladi (graceful). Token bo'lsa to'liq ishlaydi. |
+| **Admin — dashboard-metrics** | `routes/admin.ts` | `GET /dashboard-metrics` | ⚠️ **MOCK** | `mock` yoki hardcoded qiymatlar qaytarishi mumkin — tekshiruv kerak. |
+| **n8n Integration** | `lib/n8n-integration/` | `/api/n8n/*` | ⚠️ **SHARTLI** | n8n instance konfiguratsiya qilinmasa ishlaydi lekin ulana olmaydi. |
 
 ---
 
-## 4. Frontend qaysi backend bilan gaplashadi
+## 3. Python/FastAPI Backend — REAL vs MOCK tahlil jadvali
 
-**Xulosa: Frontend faqat Node/Express backend bilan bog'liq.**
-
-| Frontend fayl | Chaqiriladigan endpoint | Backend |
-|---------------|------------------------|---------|
-| `src/pages/Admin*` | `/api/admin/*` | Node ✅ |
-| `src/pages/Finance*` | `/api/finance/*`, `/api/accounting/*` | Node ✅ |
-| `src/pages/CRM*` | `/api/crm/*` | Node ✅ |
-| `src/pages/Integrations*` | `/api/integrations/*` | Node ✅ |
-| `src/pages/Settings*` | `/api/settings/*` | Node ✅ |
-| `src/services/agentService.ts` | `/api/agents` | Node ✅ |
-| `src/services/crmService.ts` | `/api/crm/deals`, `/api/crm/interactions` | Node ✅ |
-| `src/services/workflowService.ts` | `/api/workflows` | Node ✅ |
-| `src/services/voicePipeline.ts` | `https://api.anthropic.com/v1/messages` | Tashqi ⚠️ |
-
-**Muhim:** `voicePipeline.ts` to'g'ridan-to'g'ri Anthropic API'ga murojaat qiladi (server.ts esa Gemini ishlatadi) — bu nomuvofiqlik keyingi bosqichlarda hal qilinishi kerak.
-
-Python/FastAPI backend hech qanday frontend qismidan chaqirilmagan. U mustaqil, ulangan bo'lmagan holda mavjud edi.
-
----
-
-## 5. Node backendida YO'Q, Python backendida bor funksiyalar (ko'chirish kerak)
-
-Quyidagi biznes-mantiq Python backendida REAL ishlaydi, lekin Node backendida mavjud emas yoki to'liq emas:
-
-| #  | Funksiya | Python fayl | Node'da holati | Muhimlik |
-|----|----------|-------------|----------------|----------|
-| 1  | **P&L hisoboti** (Revenue, COGS, Gross/Net Profit) | `modules/finance/pnl.py` | Yo'q | 🔴 Yuqori |
-| 2  | **Cashflow hisoboti** (Operational/Investing/Financing) | `modules/finance/cashflow.py` | Yo'q | 🔴 Yuqori |
-| 3  | **Soliq hisoblash** | `modules/finance/tax.py` | Yo'q | 🟡 O'rta |
-| 4  | **HR KPI skoring** (og'irlikli o'rtacha, normalizatsiya) | `modules/hr/kpi.py` | Yo'q | 🔴 Yuqori |
-| 5  | **Ish haqi hisoblash** | `modules/hr/payroll.py` | Yo'q | 🟡 O'rta |
-| 6  | **CRM daromad hisobi** (davr bo'yicha) | `modules/crm/revenue.py` | Qisman (stub) | 🔴 Yuqori |
-| 7  | **Talab prognozi** | `modules/analytics/forecasting.py` | Yo'q | 🟡 O'rta |
-| 8  | **Narx optimallashtirish** | `modules/analytics/optimization.py` | Yo'q | 🟡 O'rta |
-| 9  | **Marketing analitika** (attribution, forecasting, KPI) | `modules/marketing/` | Yo'q | 🟡 O'rta |
-| 10 | **CircuitBreaker (real)** | `resilience/circuit_breaker.py` | Faqat izoh/stub | 🔴 Yuqori |
-| 11 | **SelfHealing xizmati** | `resilience/self_healing.py` | Yo'q | 🟡 O'rta |
-| 12 | **Prometheus metrikalar** | `observability/metrics.py` | Yo'q | 🟡 O'rta |
-| 13 | **Tizimli logger** (request_id, latency) | `observability/logging.py` | Yo'q | 🔴 Yuqori |
-| 14 | **Real `/health` tekshiruvi** (DB + AI holati) | `admin/system_health.py` | Stub | 🟡 O'rta |
-| 15 | **Model registry va lifecycle** | `lifecycle/` | Yo'q | 🟢 Past |
-| 16 | **A/B test infratuzilmasi** | `lifecycle/ab_testing.py` | Yo'q | 🟢 Past |
-| 17 | **Rahbariyat xulosasi** (intelligence) | `intelligence/executive_summary.py` | Qisman (Gemini orqali) | 🟡 O'rta |
-
-**Ustuvorlik tartibi (keyingi bosqichlarga):**
-1. 🔴 Yuqori — Prompt 6 da Finance (PnL, Cashflow), HR KPI, CRM Revenue ko'chiriladi
-2. 🔴 Yuqori — Prompt 7 da CircuitBreaker va tizimli logger qo'shiladi
-3. 🟡 O'rta — Qolganlar Prompt 6-9 jarayonida navbat bilan bajariladi
+| Modul | Servis | Holat | Ko'chirish kerakmi? |
+|-------|--------|-------|---------------------|
+| **Finance — P&L** | `modules/finance/pnl.py` → `PnLService.generate_pnl()` | ✅ **REAL** (PostgreSQL bilan) | ✅ **Ha** — Node.js da mavjud emas |
+| **Finance — Cashflow** | `modules/finance/cashflow.py` → `CashflowService.generate_cashflow()` | ✅ **REAL** (PostgreSQL bilan) | ✅ **Ha** — Node.js da mavjud emas |
+| **Finance — Ledger** | `modules/finance/ledger.py` | ✅ **REAL** | ✅ **Ha** — Node.js da mavjud emas |
+| **Finance — Tax** | `modules/finance/tax.py` | ✅ **REAL** | ✅ **Ha** — Node.js da mavjud emas |
+| **HR — KPI** | `modules/hr/kpi.py` → `KPIService` | ✅ **REAL** | ✅ **Ha** — Node.js da yo'q |
+| **HR — Payroll** | `modules/hr/payroll.py` | ✅ **REAL** | ✅ **Ha** — Node.js da yo'q |
+| **CRM — Revenue** | `modules/crm/revenue.py` → `RevenueService` | ✅ **REAL** | ⚠️ **Qisman** — Node tarafida analytics bor, lekin CRM revenue projection yo'q |
+| **CRM — Forecast** | `modules/crm/forecast.py` | ✅ **REAL** | ✅ **Ha** — Node.js da yo'q |
+| **Analytics — Forecasting** | `modules/analytics/forecasting.py` → `DemandForecastService` | ✅ **REAL** | ✅ **Ha** — Node tarafida faqat tarixiy ma'lumot bor, forecast yo'q |
+| **Analytics — Optimization** | `modules/analytics/optimization.py` | ✅ **REAL** | ⚠️ **Keyingi bosqich** |
+| **Marketing — Attribution** | `modules/marketing/attribution.py` | ✅ **REAL** | ✅ **Ha** — Node.js da yo'q |
+| **Marketing — KPI** | `modules/marketing/kpi.py` | ✅ **REAL** | ✅ **Ha** — Node.js da yo'q |
+| **Intelligence — Executive Summary** | `intelligence/executive_summary.py` → `ExecutiveInsightsEngine` | ✅ **REAL** | ✅ **Ha** — risk/growth/efficiency score Node da yo'q |
+| **Intelligence — Cross Analysis** | `intelligence/cross_analysis.py` → `CrossModuleAnalyzer` | ✅ **REAL** | ✅ **Ha** — modular cross-analysis Node da yo'q |
+| **Admin — AI Control** | `admin/ai_control.py` | ✅ **REAL** | ✅ **Ha** — Node tarafida yo'q |
+| **Admin — Model Registry** | `admin/model_registry.py` | ✅ **REAL** | ✅ **Ha** — Node tarafida yo'q |
+| **Admin — Approval Workflow** | `admin/approval_workflow.py` | ✅ **REAL** | ✅ **Ha** — Node tarafida yo'q |
+| **Resilience — Circuit Breaker** | `resilience/circuit_breaker.py` | ✅ **REAL** | ✅ **Ha** — Node tarafida faqat izoh sifatida |
+| **Resilience — Self Healing** | `resilience/self_healing.py` | ✅ **REAL** | ✅ **Ha** — Node tarafida mavjud emas |
+| **Observability — Prometheus metrics** | `observability/metrics.py` + `middleware/metrics_middleware.py` | ✅ **REAL** | ✅ **Ha** — Node tarafida `/metrics` endpoint yo'q |
+| **Workflows — Cost/Revenue/Risk** | `workflows/cost_optimization.py`, `revenue_growth.py`, `risk_assessment.py` | ✅ **REAL** | ⚠️ **Keyingi bosqich** — Node WorkflowEngine bor, lekin bu templatelar yo'q |
+| **Lifecycle — A/B Testing** | `lifecycle/ab_testing.py` | ✅ **REAL** | ⚠️ **Keyingi bosqich** |
 
 ---
 
-## 6. Arxivlangan fayllar ro'yxati
+## 4. Frontend — Qaysi Backendga Murojaat Qiladi?
 
-`archive/python-backend/` papkasida jami **68 ta Python fayli** saqlanmoqda:
+**Frontend faqat Node.js/Express backendiga murojaat qiladi.**
+
+Barcha `fetch()` chaqiruvlari **relative URL** (`/api/...`, `/voice/...`) orqali:
+
+| Frontend sahifasi/komponenti | Endpoint(lar) | Backend |
+|-----------------------------|---------------|---------|
+| `Dashboard`, `CEOMode` | `/api/analytics/revenue/*`, `/api/analytics/expenses/*` | ✅ Node.js |
+| `Finance.tsx` | `/api/finance/accounts` | ✅ Node.js |
+| `CRM` related | `/api/crm/customers`, `/api/crm/deals` | ✅ Node.js |
+| `Agents.tsx` | `/api/agents`, `/api/agents/:id/*` | ✅ Node.js |
+| `Admin.tsx` | `/api/admin/*` (users, roles, audit-logs, api-keys, backups) | ✅ Node.js |
+| `AISkills.tsx` | `/api/skills/available`, `/api/skills/execute`, `/api/skills/approve` | ✅ Node.js |
+| `Integrations.tsx` | `/api/integrations/plugins`, `/api/integrations/webhooks`, `/api/integrations/gateway/stats` | ✅ Node.js |
+| `Settings/*` | `/api/settings/*`, `/api/telegram/*` | ✅ Node.js |
+| `VoiceControl.tsx` | `/voice/process` | ✅ Node.js |
+| `LiveChat.tsx` | `/api/analytics/*`, `/api/crm/customers`, `/api/workflows/:id/execute` | ✅ Node.js |
+| `DrillDownModal.tsx`, `UniversalChart.tsx` | `/api/analytics/:module/:metric*` | ✅ Node.js |
+
+**Python/FastAPI endpointlariga (`localhost:8000`) birorta ham frontend chaqiruvi yo'q.**
+
+---
+
+## 5. Node.js da Mavjud Emas — Ko'chirish Kerak (Prioritet bo'yicha)
+
+### 🔴 Yuqori prioritet (MVP uchun kerak)
+
+| Python moduli | Servis/Funksiya | Node.js ekvivalenti | Tavsiya |
+|---------------|-----------------|---------------------|---------|
+| `modules/finance/pnl.py` | `PnLService.generate_pnl()` | ❌ Yo'q | `apps/api/src/modules/finance/pnl.service.ts` yaratish |
+| `modules/finance/cashflow.py` | `CashflowService.generate_cashflow()` | ❌ Yo'q | `apps/api/src/modules/finance/cashflow.service.ts` yaratish |
+| `modules/hr/kpi.py` | `KPIService.calculate_kpi_score()`, `calculate_productivity()` | ❌ Yo'q | `apps/api/src/modules/hr/kpi.service.ts` yaratish |
+| `resilience/circuit_breaker.py` | `CircuitBreaker` (CLOSED/OPEN/HALF_OPEN) | ❌ Faqat izoh | Haqiqiy implementatsiya kerak |
+
+### 🟡 O'rta prioritet
+
+| Python moduli | Servis/Funksiya | Tavsiya |
+|---------------|-----------------|---------|
+| `modules/analytics/forecasting.py` | `DemandForecastService.demand_forecast()` | `apps/api/src/modules/analytics/forecasting.service.ts` |
+| `intelligence/executive_summary.py` | `ExecutiveInsightsEngine` (risk/growth/efficiency score) | `apps/api/src/intelligence/InsightsEngine.ts` |
+| `modules/marketing/attribution.py`, `kpi.py` | Marketing attribution va KPI | `apps/api/src/modules/marketing/` |
+| `observability/metrics.py` | Prometheus `/metrics` endpoint | `prom-client` kutubxonasi bilan |
+| `modules/hr/payroll.py` | `PayrollService` | `apps/api/src/modules/hr/payroll.service.ts` |
+
+### 🟢 Keyingi bosqichlarga qoldirish mumkin
+
+| Python moduli | Sabab |
+|---------------|-------|
+| `lifecycle/ab_testing.py` | MVP uchun kerak emas |
+| `lifecycle/version_manager.py`, `rollback.py` | MVP uchun kerak emas |
+| `workflows/cost_optimization.py`, `revenue_growth.py` | Node WorkflowEngine bor — keyinroq template sifatida qo'shish |
+
+---
+
+## 6. Arxivlash Holati
+
+### Python Backend
 
 ```
-archive/python-backend/
-├── main.py                          # FastAPI asosiy dastur (25+ endpoint)
-├── requirements.txt                 # fastapi, uvicorn, sqlalchemy, pydantic...
-├── __init__.py
-├── admin/                           # AI boshqaruv, model registry, audit, siyosat
-│   ├── ai_control.py
-│   ├── approval_workflow.py
-│   ├── audit_viewer.py
-│   ├── model_registry.py
-│   ├── policy_config.py
-│   └── system_health.py
-├── database/                        # SQLAlchemy modellari va sessiya
-│   ├── __init__.py
-│   ├── admin_models.py
-│   ├── model_versions.py
-│   ├── models.py                    # Account, JournalEntry, Employee, KPI modellari
-│   └── session.py
-├── intelligence/                    # AI orkestratsiya va tahlil
-│   ├── aggregator.py
-│   ├── ai_service.py
-│   ├── business_context.py
-│   ├── cross_analysis.py
-│   ├── execution_engine.py
-│   ├── executive_summary.py
-│   ├── prompts.py
-│   ├── router.py
-│   └── schemas.py
-├── lifecycle/                       # Model versiyalar, A/B test, rollback
-│   ├── ab_testing.py
-│   ├── compatibility.py
-│   ├── health_monitor.py
-│   ├── model_registry.py
-│   ├── rollback.py
-│   └── version_manager.py
-├── middleware/
-│   └── metrics_middleware.py        # Prometheus middleware
+archive/python-backend/   ← ✅ Mavjud (to'liq arxivlangan)
+├── admin/                ← AI control, model registry, audit
+├── database/             ← SQLAlchemy models va session
+├── intelligence/         ← aggregator, executive summary, cross-analysis
+├── lifecycle/            ← A/B testing, versioning, rollback
+├── middleware/           ← metrics middleware
 ├── modules/
-│   ├── analytics/
-│   │   ├── forecasting.py           # Talab prognozi
-│   │   └── optimization.py          # Narx optimallashtirish
-│   ├── crm/
-│   │   ├── forecast.py
-│   │   └── revenue.py               # CRM daromad hisoblash
-│   ├── finance/
-│   │   ├── cashflow.py              # Pul oqimi hisoboti ⭐
-│   │   ├── ledger.py
-│   │   ├── pnl.py                   # P&L hisoboti ⭐
-│   │   └── tax.py
-│   ├── hr/
-│   │   ├── kpi.py                   # Xodim KPI skoring ⭐
-│   │   └── payroll.py
-│   └── marketing/                   # To'liq marketing analitika to'plami
-│       ├── attribution.py
-│       ├── forecasting.py
-│       ├── kpi.py
-│       ├── models.py
-│       ├── optimization.py
-│       ├── prompts.py
-│       ├── router.py
-│       ├── schemas.py
-│       └── services/
-│           ├── agents.py
-│           └── analytics.py
-├── observability/                   # Prometheus, tizimli logger, benchmark
-│   ├── logging.py
-│   ├── metrics.py                   # Prometheus Counter/Histogram/Gauge ⭐
-│   ├── model_benchmark.py
-│   └── optimization_engine.py
-├── resilience/                      # CircuitBreaker, SelfHealing, Failover ⭐
-│   ├── circuit_breaker.py
-│   ├── degraded_mode.py
-│   ├── failover_manager.py
-│   ├── health_registry.py
-│   ├── retry_policy.py
-│   └── self_healing.py
-└── workflows/                       # Biznes workflow'lar
-    ├── cost_optimization.py
-    ├── revenue_growth.py
-    ├── risk_assessment.py
-    └── workforce_analysis.py
+│   ├── analytics/        ← forecasting, optimization
+│   ├── crm/              ← revenue, forecast
+│   ├── finance/          ← pnl, cashflow, ledger, tax
+│   ├── hr/               ← kpi, payroll
+│   └── marketing/        ← attribution, kpi, optimization
+├── observability/        ← structured logging, Prometheus metrics
+├── resilience/           ← circuit breaker, self-healing, failover
+├── workflows/            ← cost, revenue, risk, workforce workflows
+├── main.py               ← FastAPI app entry point
+└── requirements.txt
 ```
+
+**Holat:** Python backend to'liq `archive/python-backend/` da saqlangan. Hech qanday kod o'chirilmagan. Istalgan vaqt reference sifatida ishlatish mumkin.
 
 ---
 
-## 7. Xulosa
+## 7. Kod Ikkilanishi (Duplication) Topildi
 
-| Savol | Javob |
-|-------|-------|
-| Frontend qaysi backend bilan ishlaydi? | **Faqat Node/Express** |
-| Python backend frontenddga ulangan edimi? | **Yo'q — hech qachon ulangan emas** |
-| Python backendda noyob biznes-mantiq bormi? | **Ha — 17 ta funksiya** (jadval 5 da) |
-| Arxiv to'liqmi? | **Ha — 68 ta fayl** `archive/python-backend/` da |
-| Node backendining holati? | **Ishlamoqda**, lekin Finance (P&L), HR KPI, real CircuitBreaker yo'q |
+**Muammo:** Root `src/` papkasi `apps/api/src/` bilan deyarli bir xil backend fayllarini ham, frontend fayllarini ham o'z ichiga oladi:
 
-**Keyingi qadam:** Prompt 2 — Monorepo poydevorini qurish (npm workspaces, `apps/web/` + `apps/api/` tuzilishi).
+| Root `src/` | Holati |
+|-------------|--------|
+| `src/routes/`, `src/lib/`, `src/middleware/` | Eski backend kodi — `apps/api/src/` bilan dublikat |
+| `src/pages/`, `src/components/`, `src/contexts/` | Eski frontend kodi — `apps/web/src/` bilan dublikat |
+| Root `server.ts` | Eski entry point — `apps/api/src/server.ts` bilan dublikat |
+
+**Tavsiya (Prompt 2 uchun):** `npm run dev` `apps/api/src/server.ts` ni ishlatadi — bu to'g'ri. Root `src/`, root `server.ts`, root `vite.config.ts`, root `index.html` esa eski monolitik strukturaning qoldig'i. Ular Prompt 2 da tozalanishi kerak.
+
+---
+
+## 8. Xavfsizlik Topilmalari (Diqqat!)
+
+| Muammo | Joylashuv | Xavf darajasi |
+|--------|-----------|---------------|
+| `settings.db` (SQLite) repo'ga commit qilingan | Root papka | 🔴 Yuqori |
+| Ko'pchilik `/admin/*`, `/finance/*` endpointlarda autentifikatsiya yo'q | `apps/api/src/routes/` | 🔴 Yuqori |
+| `tenantId = 'default-tenant-id'` hardcoded | Barcha route fayllar | 🟡 O'rta |
+| `APP_AUTH_TOKEN` undefined bo'lsa ishlab turadi | `apps/api/src/server.ts` | 🟡 O'rta |
+
+---
+
+## 9. Keyingi Bosqichlar (Prompt 2–10)
+
+| Bosqich | Maqsad |
+|---------|--------|
+| **Prompt 2** | Root `src/`, `server.ts`, `vite.config.ts`, `index.html` larni tozalash; monorepo strukturasini to'liq qilish |
+| **Prompt 3** | Barcha endpointlarga JWT + RBAC autentifikatsiyasi qo'shish |
+| **Prompt 4** | SQLite → PostgreSQL (Prisma ORM), `settings.db` ni git tarixidan olib tashlash |
+| **Prompt 5** | `AIOrchestrator` markazlashtirish, fallback mexanizmi |
+| **Prompt 6** | `PnLService`, `CashflowService` ni Node/TypeScript da qayta yozish |
+| **Prompt 7** | Structured logging, Prometheus metrics, real CircuitBreaker |
+| **Prompt 8** | CI/CD, test qamrovi ≥70% |
+| **Prompt 9** | Docker Compose (api + web + postgres + redis) |
+| **Prompt 10** | Hujjatlar sinxronizatsiyasi |
+
+---
+
+*Ushbu hujjat Prompt 1 — Audit va Konsolidatsiya bosqichi natijasi sifatida yaratildi.*  
+*Barcha keyingi o'zgarishlar ushbu hujjatga mos holda yangilanishi shart.*
