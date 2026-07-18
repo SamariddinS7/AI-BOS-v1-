@@ -776,10 +776,10 @@ return reply;`
 
     // 5. CRM Deals
     db.prepare("INSERT INTO customers (id, tenant_id, name, type) VALUES (?, ?, ?, ?)").run('cust-1', tenantId, 'Acme Corp', 'b2b');
-    const insertDeal = db.prepare("INSERT INTO deals (id, tenant_id, customer_id, title, value, stage, expected_close_date) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    insertDeal.run('deal-1', tenantId, 'cust-1', 'Enterprise License', 50000, 'negotiation', now.toISOString());
-    insertDeal.run('deal-2', tenantId, 'cust-1', 'Support Package', 12000, 'won', now.toISOString());
-    insertDeal.run('deal-3', tenantId, 'cust-1', 'Consulting', 8000, 'proposal', now.toISOString());
+    const insertDeal = db.prepare("INSERT INTO deals (id, tenant_id, customer_id, name, title, value, stage, expected_close_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    insertDeal.run('deal-1', tenantId, 'cust-1', 'Enterprise License', 'Enterprise License', 50000, 'negotiation', now.toISOString());
+    insertDeal.run('deal-2', tenantId, 'cust-1', 'Support Package', 'Support Package', 12000, 'won', now.toISOString());
+    insertDeal.run('deal-3', tenantId, 'cust-1', 'Consulting', 'Consulting', 8000, 'proposal', now.toISOString());
     
     console.log('Analytics data seeded successfully.');
   }

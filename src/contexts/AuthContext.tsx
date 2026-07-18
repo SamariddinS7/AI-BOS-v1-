@@ -26,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Helper to construct guest session
   const getMockUser = () => ({
     id: 'admin-user-id',
-    email: 'boshqahramon0@gmail.com',
+    email: 'admin@ai-bos.com',
     email_confirmed_at: new Date().toISOString(),
     app_metadata: {},
     user_metadata: {},
@@ -34,23 +34,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     created_at: new Date().toISOString()
   } as any);
 
+  const getMockSession = (mockUser: any): Session => ({
+    access_token: 'mock-token',
+    token_type: 'bearer',
+    expires_in: 3600,
+    refresh_token: 'mock-refresh-token',
+    user: mockUser
+  } as any);
+
   useEffect(() => {
+    // If Supabase is not configured, fall back to mock/guest user immediately
+    if (!supabase) {
+      const mockUser = getMockUser();
+      setSession(getMockSession(mockUser));
+      setUser(mockUser);
+      setIsLoading(false);
+      return;
+    }
+
     // Check if user previously logged in as guest
     const isGuest = localStorage.getItem('is_guest_user') === 'true';
-    
+
     if (isGuest) {
       const mockUser = getMockUser();
-      setSession({
-        access_token: 'mock-token',
-        token_type: 'bearer',
-        expires_in: 3600,
-        refresh_token: 'mock-refresh-token',
-        user: mockUser
-      } as any);
+      setSession(getMockSession(mockUser));
       setUser(mockUser);
       setIsLoading(false);
     } else {
-      // Current sessionni olish
       supabase.auth.getSession()
         .then(({ data: { session } }) => {
           if (session) {
@@ -60,21 +70,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsLoading(false);
         })
         .catch((err) => {
-          console.warn('Supabase getSession failed, falling back to mock user profile:', err);
+          console.warn('Supabase getSession failed, falling back to mock user:', err);
           const mockUser = getMockUser();
-          setSession({
-            access_token: 'mock-token',
-            token_type: 'bearer',
-            expires_in: 3600,
-            refresh_token: 'mock-refresh-token',
-            user: mockUser
-          } as any);
+          setSession(getMockSession(mockUser));
           setUser(mockUser);
           setIsLoading(false);
         });
     }
 
-    // Auth holati o'zgarishini tinglash (login, logout)
+    // Listen for auth state changes (login, logout)
     let subscription: any = null;
     try {
       const res = supabase.auth.onAuthStateChange((_event, session) => {
@@ -99,20 +103,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInAsGuest = () => {
     localStorage.setItem('is_guest_user', 'true');
     const mockUser = getMockUser();
-    setSession({
-      access_token: 'mock-token',
-      token_type: 'bearer',
-      expires_in: 3600,
-      refresh_token: 'mock-refresh-token',
-      user: mockUser
-    } as any);
+    setSession(getMockSession(mockUser));
     setUser(mockUser);
   };
 
   const signOut = async () => {
     localStorage.removeItem('is_guest_user');
     try {
-      await supabase.auth.signOut();
+      await supabase?.auth.signOut();
     } catch (e) {
       console.warn('Supabase signout failed, clearing local state anyway:', e);
     }

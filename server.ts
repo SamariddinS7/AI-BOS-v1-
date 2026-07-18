@@ -5,7 +5,9 @@ import { startTelegramBot, stopTelegramBot, getTelegramBotStatus } from './src/l
 import { processAICommand } from './src/lib/ai/agent';
 import { GoogleGenAI } from '@google/genai';
 import db from './src/lib/db/settings';
-import archiver from 'archiver';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const archiver = require('archiver') as typeof import('archiver');
 import path from 'path';
 import fs from 'fs';
 import { WebSocketServer } from 'ws';
@@ -449,7 +451,7 @@ app.post('/voice/process', async (req, res) => {
 app.use(apiGatewayMiddleware);
 
 // API Catch-all (to prevent falling through to SPA fallback)
-app.use('/api/*', (req, res) => {
+app.use('/api/*path', (req, res) => {
   console.warn(`[API] 404 Not Found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ error: 'API endpoint not found', path: req.originalUrl });
 });

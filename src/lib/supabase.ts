@@ -1,11 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Supabase URL va Key qadriyatlarini yuklab olamiz.
-// .env yoki .env.local faylida belgilash kerak:
-// VITE_SUPABASE_URL=your-supabase-url
-// VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase URL or Anon Key is missing. Ensure they are set in your environment variables.');
@@ -13,14 +9,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 /**
  * Universal Supabase Client
- * 
- * Barcha so'rovlar Row-Level Security (RLS) qoidalaridan o'tadi va bitta
- * mijoz barcha ma'lumotlarni ishonchli yuklab oladi.
+ * Returns null when credentials are not configured so the app can still
+ * render in demo / local mode without throwing on startup.
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-});
+export const supabase: SupabaseClient | null =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      })
+    : null;
