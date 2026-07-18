@@ -1,8 +1,13 @@
 import express from 'express';
 import db from '../lib/db/settings';
 import { TransactionService } from '../services/TransactionService';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = express.Router();
+
+// Finance/accounting requires MANAGER role or higher
+router.use(requireAuth, requireRole(['MANAGER']));
 
 router.get('/kpis', (req, res) => {
   try {

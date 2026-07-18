@@ -1,30 +1,23 @@
-import { defineWorkspace } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
+import path from 'path';
 
-// Root vitest config runs tests from all workspaces.
-// Each app can also run its own tests via: npm test -w apps/api
-export default defineWorkspace([
-  {
-    test: {
-      name: 'web',
-      root: './apps/web',
-      globals: true,
-      environment: 'jsdom',
-      setupFiles: './src/setupTests.ts',
-      env: {
-        GEMINI_API_KEY: 'test-key',
-      },
+// Root vitest config — runs all tests in the monorepo.
+// Each app also has its own vitest.config.ts for workspace-scoped runs.
+export default defineConfig({
+  test: {
+    globals: true,
+    include: [
+      'apps/web/src/**/*.test.{ts,tsx}',
+      'apps/api/src/**/*.test.ts',
+    ],
+    env: {
+      GEMINI_API_KEY: 'test-key',
+      API_PORT: '5001',
     },
   },
-  {
-    test: {
-      name: 'api',
-      root: './apps/api',
-      globals: true,
-      environment: 'node',
-      env: {
-        GEMINI_API_KEY: 'test-key',
-        API_PORT: '5001',
-      },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'apps/web/src'),
     },
   },
-]);
+});

@@ -1,7 +1,12 @@
 import express from 'express';
 import { agentDbService } from '../lib/db/agentDb';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = express.Router();
+
+// Agent management requires MANAGER role or higher
+router.use(requireAuth, requireRole(['MANAGER']));
 
 router.get('/', async (req, res) => {
   try {

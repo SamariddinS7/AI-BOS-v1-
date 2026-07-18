@@ -1,8 +1,13 @@
 import express from 'express';
 import db from '../lib/db/settings.js';
 import { v4 as uuidv4 } from 'uuid';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = express.Router();
+
+// All admin endpoints require ADMIN role or higher
+router.use(requireAuth, requireRole(['ADMIN']));
 
 // --- User Management ---
 

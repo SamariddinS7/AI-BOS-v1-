@@ -3,12 +3,17 @@ import db from '../lib/db/settings';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { apiGatewayMiddleware } from '../middleware/gateway';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = express.Router();
 
 // --- Public API Gateway Entry Point ---
-// All external requests to /api/v1/* go through the gateway
+// External requests via /api/v1/* use API-key auth (apiGatewayMiddleware)
 router.use('/v1', apiGatewayMiddleware);
+
+// All internal integration management endpoints require ADMIN role
+router.use(requireAuth, requireRole(['ADMIN']));
 
 // Example V1 API Routes
 router.get('/v1/customers', (req, res) => {

@@ -2,10 +2,12 @@ import { Router } from 'express';
 import db from '../lib/db/settings.js';
 import { AuditLogger } from '../lib/audit/logger.js';
 import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = Router();
 
-router.use(requireAuth);
+// Settings accessible to all authenticated users; write ops handled per-route
+router.use(requireAuth, requireRole(['VIEWER']));
 
 // --- User Settings ---
 router.get('/user', (req: any, res) => {

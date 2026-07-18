@@ -1,36 +1,98 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import db from '../lib/db/settings.js';
 
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  // Mock user extraction from JWT
-  const userId = 'admin';
-  const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
+export interface AuthUser {
+  id: string;
+  email: string;
+  role: string;
+  tenant_id: string;
+}
 
-  try {
-    // 1. Fetch Security Settings
-    const securitySettings = db.prepare('SELECT * FROM SecuritySettings WHERE user_id = ?').get(userId) as any;
-    
-    if (securitySettings) {
-      // 2. IP Allowlist Enforcement
-      const allowedIps = JSON.parse(securitySettings.allowed_ips || '[]');
-      if (allowedIps.length > 0 && !allowedIps.includes(clientIp)) {
-        return res.status(403).json({ error: 'Access denied from this IP address.' });
+// Extend Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
+  }
+}
+
+const ACCESS_SECRET = process.env.SESSION_SECRET || 'dev-access-secret-change-in-prod';
+const REFRESH_SECRET = ACCESS_SECRET + '_refresh';
+
+// In development, if REQUIRE_AUTH is not 'true', skip authentication
+// so the frontend works without a login flow. Set REQUIRE_AUTH=true in tests.
+const DEV_BYPASS =
+  process.env.NODE_ENV !== 'production' && process.env.REQUIRE_AUTH !== 'true';
+
+const DEV_USER: AuthUser = {
+  id: 'admin-user-id',
+  email: 'admin@ai-bos.com',
+  role: 'ADMIN',
+  tenant_id: 'default-tenant-id',
+};
+
+// ─── Token helpers ────────────────────────────────────────────────────────────
+
+export function generateAccessToken(payload: AuthUser): string {
+  return jwt.sign(payload, ACCESS_SECRET, { expiresIn: '15m' });
+}
+
+export function generateRefreshToken(payload: { id: string; email: string }): string {
+  return jwt.sign(payload, REFRESH_SECRET, { expiresIn: '7d' });
+}
+
+export function verifyAccessToken(token: string): AuthUser {
+  return jwt.verify(token, ACCESS_SECRET) as AuthUser;
+}
+
+export function verifyRefreshToken(token: string): { id: string; email: string } {
+  return jwt.verify(token, REFRESH_SECRET) as { id: string; email: string };
+}
+
+// ─── requireAuth middleware ───────────────────────────────────────────────────
+
+export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+  const authHeader = req.headers.authorization;
+
+  // 1. Bearer JWT token
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    try {
+      const decoded = verifyAccessToken(token);
+      req.user = decoded;
+
+      // IP allowlist enforcement (carry forward from legacy)
+      const clientIp = req.ip || req.socket.remoteAddress || '';
+      try {
+        const secSettings = db
+          .prepare('SELECT allowed_ips FROM SecuritySettings WHERE user_id = ?')
+          .get(decoded.id) as any;
+        if (secSettings) {
+          const allowedIps: string[] = JSON.parse(secSettings.allowed_ips || '[]');
+          if (allowedIps.length > 0 && !allowedIps.includes(clientIp)) {
+            res.status(403).json({ error: 'Access denied from this IP address.' });
+            return;
+          }
+        }
+      } catch {
+        // Security settings not critical — proceed
       }
 
-      // 3. Session Timeout Enforcement
-      // In a real app, check JWT expiration or session last_activity against session_timeout_minutes
-      const timeoutMinutes = securitySettings.session_timeout_minutes || 30;
-      // const session = db.prepare('SELECT last_activity FROM SessionLog WHERE user_id = ? AND status = "active"').get(userId);
-      // if (session && (Date.now() - new Date(session.last_activity).getTime()) > timeoutMinutes * 60000) {
-      //   return res.status(401).json({ error: 'Session expired due to inactivity.' });
-      // }
+      return next();
+    } catch {
+      res.status(401).json({ error: 'Invalid or expired access token.' });
+      return;
     }
-
-    // Attach user to request
-    (req as any).user = { id: userId, ip: clientIp };
-    next();
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    res.status(500).json({ error: 'Internal server error during authentication.' });
   }
+
+  // 2. Dev bypass — auto-authenticate as ADMIN so the frontend works
+  if (DEV_BYPASS) {
+    req.user = DEV_USER;
+    return next();
+  }
+
+  // 3. No credentials
+  res.status(401).json({ error: 'Authentication required. Provide a Bearer token.' });
 };

@@ -1,8 +1,13 @@
 import { Router } from 'express';
 import db from '../lib/db/settings';
 import { callGeminiWithRetry } from '../lib/gemini';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = Router();
+
+// Skills readable by VIEWER+; execution requires MANAGER+
+router.use(requireAuth, requireRole(['VIEWER']));
 
 async function executeSkillWithAI(skillType: string, parameters: any) {
   const prompt = `Siz maxsus AI Marketing kouchisiz (O'zbek tilida gapiradigan).
@@ -34,24 +39,6 @@ Diqqat! Ingliz tilidagi eski shablonlarni unuting. Barcha so'zlar haqiqiy tahlil
     throw new Error(`AI execution failed: ${e.message}`);
   }
 }
-
-// Middleware to check authentication (mock)
-const requireAuth = (req: any, res: any, next: any) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing or invalid authentication token' });
-  }
-  
-  const token = authHeader.substring(7);
-  const expectedToken = process.env.APP_AUTH_TOKEN || "your-secure-token";
-  if (token !== expectedToken && token !== "your-secure-token") {
-     return res.status(403).json({ error: 'Permission denied: Invalid token' });
-  }
-  
-  // Set user from token
-  req.user = { id: 'admin-user-id', tenantId: 'real-tenant-id', role: 'ADMIN' };
-  next();
-};
 
 // Get available marketing skills
 router.get('/available', (req, res) => {

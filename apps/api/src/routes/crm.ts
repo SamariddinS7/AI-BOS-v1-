@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import db from '../lib/db/settings.js';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = Router();
+
+// CRM readable by VIEWER+; write operations need MANAGER+ (enforced per-route below)
+router.use(requireAuth, requireRole(['VIEWER']));
 
 router.get('/customers', (req, res) => {
   try {

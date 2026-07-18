@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import path from 'path';
+import bcrypt from 'bcryptjs';
 
 let db: any;
 
@@ -631,6 +632,20 @@ try {
     );
   `);
 
+  // Auth: refresh tokens table (JWT auth)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      revoked_at DATETIME
+    );
+    CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+    CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash ON refresh_tokens(token_hash);
+  `);
+
   try {
     db.prepare('ALTER TABLE transactions ADD COLUMN counterparty TEXT').run();
   } catch (e) {
@@ -672,13 +687,37 @@ try {
     db.prepare("INSERT INTO tenants (id, name, domain) VALUES (?, ?, ?)").run('default-tenant-id', 'AI-BOS Global', 'ai-bos.com');
   }
 
-  // Seed default user
+  // Seed RBAC roles
+  const defaultRoles = [
+    { id: 'role-owner',    name: 'OWNER',    description: 'Full system access' },
+    { id: 'role-admin',    name: 'ADMIN',    description: 'Administrative access' },
+    { id: 'role-manager',  name: 'MANAGER',  description: 'Manage resources' },
+    { id: 'role-viewer',   name: 'VIEWER',   description: 'Read-only access' },
+    { id: 'role-ai-agent', name: 'AI_AGENT', description: 'AI agent service account' },
+  ];
+  const insertRole = db.prepare(
+    'INSERT OR IGNORE INTO roles (id, tenant_id, name, description) VALUES (?, ?, ?, ?)'
+  );
+  for (const r of defaultRoles) {
+    insertRole.run(r.id, 'default-tenant-id', r.name, r.description);
+  }
+
+  // Seed default admin user (password: admin123)
+  const adminPasswordHash = bcrypt.hashSync('admin123', 10);
   const checkUser = db.prepare('SELECT id FROM users WHERE email = ?').get('admin@ai-bos.com');
   if (!checkUser) {
     db.prepare(`
-      INSERT INTO users (id, tenant_id, first_name, email, password_hash, status)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run('admin-user-id', 'default-tenant-id', 'System Admin', 'admin@ai-bos.com', 'hashed_password', 'active');
+      INSERT INTO users (id, tenant_id, role_id, first_name, email, password_hash, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run('admin-user-id', 'default-tenant-id', 'role-admin', 'System Admin', 'admin@ai-bos.com', adminPasswordHash, 'active');
+  } else {
+    // Fix placeholder hash and missing role_id from old seed
+    db.prepare(`
+      UPDATE users SET
+        password_hash = CASE WHEN password_hash = 'hashed_password' THEN ? ELSE password_hash END,
+        role_id = COALESCE(role_id, 'role-admin')
+      WHERE id = 'admin-user-id'
+    `).run(adminPasswordHash);
   }
   
   // Seed UserSettings for legacy code

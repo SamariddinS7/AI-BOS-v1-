@@ -29,6 +29,7 @@ import integrationsRouter from './routes/integrations';
 import accountingRouter from './routes/accounting';
 import agentsRouter from './routes/agents';
 import skillsRouter from './routes/skills';
+import authRouter from './routes/auth';
 import { apiGatewayMiddleware } from './middleware/gateway';
 
 const app = express();
@@ -317,6 +318,9 @@ app.get('/api/v1/customers', (req, res) => {
 app.get('/api/v1/health', (req, res) => {
   res.json({ status: 'ok', version: 'v1.0.0' });
 });
+
+// Auth — must be registered BEFORE protected routes (no auth required for login/refresh)
+app.use('/api/auth', authRouter);
 
 // Analytics
 app.use('/api/analytics', analyticsRouter);

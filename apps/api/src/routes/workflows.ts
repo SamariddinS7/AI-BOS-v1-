@@ -2,8 +2,13 @@ import express from 'express';
 import db from '../lib/db/settings.js';
 import { Workflow, WorkflowNode, WorkflowEdge } from '../lib/workflow-engine/types';
 import { ExecutionEngine } from '../lib/workflow-engine/ExecutionEngine';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = express.Router();
+
+// Workflow read/execute requires MANAGER+
+router.use(requireAuth, requireRole(['MANAGER']));
 const engine = new ExecutionEngine();
 
 // Get all workflows

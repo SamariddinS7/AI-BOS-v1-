@@ -1,8 +1,13 @@
 import express from 'express';
 import { AnalyticsService } from '../services/AnalyticsService';
 import { createObjectCsvStringifier } from 'csv-writer';
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/rbac.js';
 
 const router = express.Router();
+
+// Analytics readable by all authenticated users (VIEWER+)
+router.use(requireAuth, requireRole(['VIEWER']));
 
 // Drill-Down Endpoint
 router.get('/:module/:metric/drilldown/:dimension', async (req, res) => {
