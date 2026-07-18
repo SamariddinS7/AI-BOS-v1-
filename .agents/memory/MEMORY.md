@@ -1,2 +1,3 @@
 - [Monorepo dev server ports](monorepo-ports.md) — API on 5001 (API_PORT), Vite on 5000 (PORT); WebSocket at /ws path, proxied via Vite
 - [Python backend archived](python-archive.md) — archive/python-backend/ has PnL, Cashflow, KPI, CircuitBreaker not yet in Node
+- [Auth & RBAC step complete](auth-rbac-done.md) — All endpoints locked; inline server.ts routes were the gap; dev bypass active when NODE_ENV!=production

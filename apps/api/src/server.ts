@@ -31,6 +31,8 @@ import agentsRouter from './routes/agents';
 import skillsRouter from './routes/skills';
 import authRouter from './routes/auth';
 import { apiGatewayMiddleware } from './middleware/gateway';
+import { requireAuth } from './middleware/auth.js';
+import { requireRole } from './middleware/rbac.js';
 
 const app = express();
 // In monorepo dev mode: API runs on API_PORT (5001), Vite runs on PORT (5000).
@@ -71,7 +73,7 @@ function getAiClient(): GoogleGenAI {
 }
 
 // Finance API
-app.get('/api/finance/accounts', (req, res) => {
+app.get('/api/finance/accounts', requireAuth, requireRole(['VIEWER']), (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     const accounts = db.prepare('SELECT * FROM accounts WHERE tenant_id = ? AND deleted_at IS NULL').all(tenantId);
@@ -81,7 +83,7 @@ app.get('/api/finance/accounts', (req, res) => {
   }
 });
 
-app.post('/api/finance/accounts', (req, res) => {
+app.post('/api/finance/accounts', requireAuth, requireRole(['MANAGER']), (req, res) => {
   const tenantId = 'default-tenant-id';
   const { name, currency = 'UZS', balance = 0 } = req.body;
   const id = `acc-${Date.now()}`;
@@ -93,7 +95,7 @@ app.post('/api/finance/accounts', (req, res) => {
   }
 });
 
-app.get('/api/finance/categories', (req, res) => {
+app.get('/api/finance/categories', requireAuth, requireRole(['VIEWER']), (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     const categories = db.prepare('SELECT * FROM transaction_categories WHERE tenant_id = ? AND deleted_at IS NULL').all(tenantId);
@@ -103,7 +105,7 @@ app.get('/api/finance/categories', (req, res) => {
   }
 });
 
-app.get('/api/finance/transactions', (req, res) => {
+app.get('/api/finance/transactions', requireAuth, requireRole(['VIEWER']), (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     const transactions = db.prepare(`
@@ -121,7 +123,7 @@ app.get('/api/finance/transactions', (req, res) => {
   }
 });
 
-app.post('/api/finance/transactions', (req, res) => {
+app.post('/api/finance/transactions', requireAuth, requireRole(['MANAGER']), (req, res) => {
   const tenantId = 'default-tenant-id';
   const { account_id, category_id, type, amount, transaction_date, description, counterparty } = req.body;
   const id = `txn-${Date.now()}`;
@@ -146,7 +148,7 @@ app.post('/api/finance/transactions', (req, res) => {
   }
 });
 
-app.get('/api/finance/summary', (req, res) => {
+app.get('/api/finance/summary', requireAuth, requireRole(['VIEWER']), (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     const income = db.prepare("SELECT SUM(amount) as total FROM transactions WHERE tenant_id = ? AND type = 'income' AND deleted_at IS NULL").get(tenantId) as any;
@@ -168,7 +170,7 @@ app.get('/api/finance/summary', (req, res) => {
 });
 
 // Telegram Settings API
-app.get('/api/telegram/settings', (req, res) => {
+app.get('/api/telegram/settings', requireAuth, requireRole(['ADMIN']), (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     const settings = db.prepare('SELECT * FROM TelegramSettings WHERE tenant_id = ?').get(tenantId);
@@ -178,7 +180,7 @@ app.get('/api/telegram/settings', (req, res) => {
   }
 });
 
-app.post('/api/telegram/settings', async (req, res) => {
+app.post('/api/telegram/settings', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   const { bot_token, system_prompt, custom_code, auto_reply, use_custom_code, is_active } = req.body;
   
@@ -210,11 +212,11 @@ app.post('/api/telegram/settings', async (req, res) => {
   }
 });
 
-app.get('/api/telegram/status', (req, res) => {
+app.get('/api/telegram/status', requireAuth, requireRole(['VIEWER']), (req, res) => {
   res.json({ isPolling: getTelegramBotStatus() });
 });
 
-app.post('/api/telegram/start', async (req, res) => {
+app.post('/api/telegram/start', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     db.prepare('UPDATE TelegramSettings SET is_active = 1 WHERE tenant_id = ?').run(tenantId);
@@ -225,7 +227,7 @@ app.post('/api/telegram/start', async (req, res) => {
   }
 });
 
-app.post('/api/telegram/stop', async (req, res) => {
+app.post('/api/telegram/stop', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     db.prepare('UPDATE TelegramSettings SET is_active = 0 WHERE tenant_id = ?').run(tenantId);
@@ -236,7 +238,7 @@ app.post('/api/telegram/stop', async (req, res) => {
   }
 });
 
-app.get('/api/telegram/messages', (req, res) => {
+app.get('/api/telegram/messages', requireAuth, requireRole(['VIEWER']), (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     const messages = db.prepare('SELECT * FROM TelegramMessages WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50').all(tenantId);
@@ -246,7 +248,7 @@ app.get('/api/telegram/messages', (req, res) => {
   }
 });
 
-app.post('/api/telegram/messages', async (req, res) => {
+app.post('/api/telegram/messages', requireAuth, requireRole(['MANAGER']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   const { chat_id, text } = req.body;
   try {
@@ -274,7 +276,7 @@ app.post('/api/telegram/messages', async (req, res) => {
   }
 });
 
-app.delete('/api/telegram/messages', (req, res) => {
+app.delete('/api/telegram/messages', requireAuth, requireRole(['ADMIN']), (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
     db.prepare('DELETE FROM TelegramMessages WHERE tenant_id = ?').run(tenantId);
@@ -285,7 +287,7 @@ app.delete('/api/telegram/messages', (req, res) => {
 });
 
 // Telegram API Proxy
-app.post('/api/telegram/proxy', async (req, res) => {
+app.post('/api/telegram/proxy', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   const { token, method, body } = req.body;
   if (!token || !method) {
     return res.status(400).json({ ok: false, description: 'Token and method are required' });
@@ -310,7 +312,7 @@ app.post('/api/telegram/proxy', async (req, res) => {
 // --- API Routes ---
 
 // External API v1 (Protected by Gateway)
-app.get('/api/v1/customers', (req, res) => {
+app.get('/api/v1/customers', requireAuth, requireRole(['VIEWER']), (req, res) => {
   const customers = db.prepare('SELECT * FROM Customers').all();
   res.json(customers);
 });
@@ -359,8 +361,8 @@ app.use('/api/admin', adminRouter);
 // Integrations
 app.use('/api/integrations', integrationsRouter);
 
-// System Download Endpoint
-app.get('/api/system/download', (req, res) => {
+// System Download Endpoint — OWNER only (downloads entire project source)
+app.get('/api/system/download', requireAuth, requireRole(['OWNER']), (req, res) => {
   const archive = archiver('zip', {
     zlib: { level: 9 }
   });
@@ -387,7 +389,7 @@ app.get('/api/system/download', (req, res) => {
 });
 
 // Voice Processing
-app.post('/voice/process', async (req, res) => {
+app.post('/voice/process', requireAuth, requireRole(['VIEWER']), async (req, res) => {
   console.log('Voice processing request received');
   try {
     const { audioBase64, lang } = req.body;
@@ -455,7 +457,9 @@ app.post('/voice/process', async (req, res) => {
   }
 });
 
-app.use(apiGatewayMiddleware);
+// NOTE: apiGatewayMiddleware (API-key auth for external /api/v1/* calls) is applied
+// inside integrationsRouter for those specific routes. The global catch-all was removed
+// because it was registered after all route handlers and never fired.
 
 // API Catch-all
 app.use('/api/*path', (req, res) => {
