@@ -16,7 +16,10 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      hmr: process.env.DISABLE_HMR !== 'true',
+      host: '0.0.0.0',
+      hmr: process.env.DISABLE_HMR !== 'true'
+        ? { clientPort: process.env.REPLIT_DEV_DOMAIN ? 443 : undefined }
+        : false,
       allowedHosts: true,
       proxy: {
         '/api': 'http://localhost:5000',
