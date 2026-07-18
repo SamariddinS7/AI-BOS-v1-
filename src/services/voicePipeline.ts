@@ -80,15 +80,15 @@ export async function callAIStream(
   const ai = getAi();
   
   const result = await ai.models.generateContentStream({
-    model: "gemini-1.5-flash",
+    model: "gemini-3.5-flash",
     contents: [
       { role: "user", parts: [{ text: system + "\n" + messages.map(m => m.content).join("\n") }] }
     ]
   });
   
   let full = "";
-  for await (const chunk of result.stream) {
-    const text = chunk.text();
+  for await (const chunk of result) {
+    const text = chunk.text || "";
     full += text;
     onToken(text, full);
   }

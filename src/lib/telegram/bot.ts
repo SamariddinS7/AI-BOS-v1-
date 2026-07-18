@@ -147,13 +147,5 @@ export function getTelegramBotStatus() {
   return currentBot !== null && currentBot.isPolling();
 }
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  await stopTelegramBot();
-  process.exit(0);
-});
+// Graceful shutdown is coordinated by the main server entry point.
 
-process.on('SIGTERM', async () => {
-  await stopTelegramBot();
-  process.exit(0);
-});

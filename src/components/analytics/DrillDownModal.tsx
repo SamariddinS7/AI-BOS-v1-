@@ -156,6 +156,7 @@ export default function DrillDownModal({ isOpen, onClose, title, module, metric,
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } else if (type === 'JSON') {
       const jsonContent = JSON.stringify({ summary, insights, data }, null, 2);
       const blob = new Blob([jsonContent], { type: 'application/json' });
@@ -166,6 +167,7 @@ export default function DrillDownModal({ isOpen, onClose, title, module, metric,
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } else {
       console.log(`Export to ${type} is not implemented.`);
     }

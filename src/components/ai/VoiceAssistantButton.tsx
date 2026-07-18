@@ -11,6 +11,19 @@ export default function VoiceAssistantButton() {
   const audioChunksRef = useRef<Blob[]>([]);
   const pipelineRef = useRef(new VoicePipeline(process.env.GEMINI_API_KEY || ''));
 
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {}
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
   const startListening = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -34,7 +47,15 @@ export default function VoiceAssistantButton() {
         if (audioResponse && audioResponse.size > 0) {
           const audioUrl = URL.createObjectURL(audioResponse);
           const audio = new Audio(audioUrl);
-          audio.play().catch(e => console.error("Error playing audio:", e));
+          const revoke = () => {
+            try { URL.revokeObjectURL(audioUrl); } catch (e) {}
+          };
+          audio.onended = revoke;
+          audio.onerror = revoke;
+          audio.play().catch(e => {
+            console.error("Error playing audio:", e);
+            revoke();
+          });
         } else {
           console.warn("No valid audio response to play");
         }

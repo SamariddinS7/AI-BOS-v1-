@@ -87,6 +87,8 @@ export class ExecutionEngine implements IExecutionEngine {
       db.prepare('UPDATE WorkflowExecutions SET status = ?, end_time = CURRENT_TIMESTAMP WHERE id = ?')
         .run('failed', executionId);
       this.log(executionId, null, 'error', `Workflow failed: ${error.message}`);
+    } finally {
+      this.executions.delete(executionId);
     }
 
     return executionId;

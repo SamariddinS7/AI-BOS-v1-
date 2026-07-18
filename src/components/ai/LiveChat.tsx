@@ -64,6 +64,8 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animationFrameIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -167,15 +169,20 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
   };
 
   const setupVisualizer = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const audioContext = new AudioContext();
-    const source = audioContext.createMediaStreamSource(stream);
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
-    audioContextRef.current = audioContext;
-    analyserRef.current = analyser;
-    drawWaveform();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      drawWaveform();
+    } catch (e) {
+      console.error("Error setting up live visualizer:", e);
+    }
   };
 
   const drawWaveform = () => {
@@ -186,8 +193,9 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
     const dataArray = new Uint8Array(bufferLength);
 
     const draw = () => {
-      requestAnimationFrame(draw);
-      analyserRef.current!.getByteFrequencyData(dataArray);
+      if (!analyserRef.current) return;
+      animationFrameIdRef.current = requestAnimationFrame(draw);
+      analyserRef.current.getByteFrequencyData(dataArray);
       ctx.fillStyle = 'rgb(10, 15, 25)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       const barWidth = (canvas.width / bufferLength) * 2.5;
@@ -208,7 +216,19 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
       sessionRef.current = null;
       setIsConnected(false);
     }
-    if (audioContextRef.current) audioContextRef.current.close();
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (animationFrameIdRef.current !== null) {
+      cancelAnimationFrame(animationFrameIdRef.current);
+      animationFrameIdRef.current = null;
+    }
+    analyserRef.current = null;
   };
 
   const playAudio = (base64Audio: string) => {
@@ -220,7 +240,22 @@ export default function LiveChat({ isOpen, onClose }: LiveChatProps) {
     const blob = new Blob([bytes], { type: 'audio/pcm' });
     const audioUrl = URL.createObjectURL(blob);
     const audio = new Audio(audioUrl);
-    audio.play();
+    
+    const cleanUpUrl = () => {
+      try {
+        URL.revokeObjectURL(audioUrl);
+      } catch (e) {
+        // Safe ignore
+      }
+    };
+    
+    audio.onended = cleanUpUrl;
+    audio.onerror = cleanUpUrl;
+    
+    audio.play().catch((err) => {
+      console.warn("Audio play interrupted or failed:", err);
+      cleanUpUrl();
+    });
   };
 
   const toggleRecording = () => {

@@ -20,7 +20,7 @@ export default function AISkills() {
 
   useEffect(() => {
     fetch('/api/skills/available', {
-      headers: { 'Authorization': `Bearer ${import.meta.env.VITE_APP_AUTH_TOKEN}` }
+      headers: { 'Authorization': `Bearer ${import.meta.env.VITE_APP_AUTH_TOKEN || "your-secure-token"}` }
     })
       .then(r => r.json())
       .then(d => setSkills(d.skills || []))
@@ -34,7 +34,7 @@ export default function AISkills() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_APP_AUTH_TOKEN}`
+          'Authorization': `Bearer ${import.meta.env.VITE_APP_AUTH_TOKEN || "your-secure-token"}`
         },
         body: JSON.stringify({
           skill_type: skill.type,
@@ -65,7 +65,7 @@ export default function AISkills() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_APP_AUTH_TOKEN}`
+          'Authorization': `Bearer ${import.meta.env.VITE_APP_AUTH_TOKEN || "your-secure-token"}`
         },
         body: JSON.stringify({ workflow_id: workflowId, decision })
       });

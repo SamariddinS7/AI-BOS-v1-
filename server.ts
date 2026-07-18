@@ -23,7 +23,7 @@ import skillsRouter from './src/routes/skills';
 import { apiGatewayMiddleware } from './src/middleware/gateway';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 console.log('APP_AUTH_TOKEN:', process.env.APP_AUTH_TOKEN ? 'DEFINED' : 'UNDEFINED');
 
 // Middleware
@@ -511,7 +511,7 @@ async function startServer() {
   });
 
   // Simulate real-time data updates
-  setInterval(() => {
+  const simulationInterval = setInterval(() => {
     const modules = ['revenue', 'sales', 'marketing', 'hr', 'inventory', 'expenses', 'finance'];
     const randomModule = modules[Math.floor(Math.random() * modules.length)];
     
@@ -542,6 +542,57 @@ async function startServer() {
       }
     });
   }, 3000); // Broadcast every 3 seconds for better visual effect
+
+  // Graceful shutdown handler
+  const shutdown = async (signal: string) => {
+    console.log(`[Server] Received ${signal}. Starting graceful shutdown...`);
+    clearInterval(simulationInterval);
+    
+    // Stop Telegram Bot
+    try {
+      console.log('[Server] Stopping Telegram Bot...');
+      await stopTelegramBot();
+    } catch (e) {
+      console.error('[Server] Error stopping Telegram bot during shutdown:', e);
+    }
+
+    // Close WebSockets
+    try {
+      console.log('[Server] Closing WebSocket Server...');
+      wss.clients.forEach((client) => {
+        client.close();
+      });
+      wss.close();
+    } catch (e) {
+      console.error('[Server] Error closing WebSockets during shutdown:', e);
+    }
+
+    // Close SQLite database connection
+    try {
+      console.log('[Server] Closing SQLite Database...');
+      if (db && typeof db.close === 'function') {
+        db.close();
+      }
+    } catch (e) {
+      console.error('[Server] Error closing database during shutdown:', e);
+    }
+
+    // Close HTTP Server
+    console.log('[Server] Closing HTTP Server...');
+    server.close(() => {
+      console.log('[Server] HTTP Server closed successfully.');
+      process.exit(0);
+    });
+
+    // Force exit after 5 seconds to prevent hanging
+    setTimeout(() => {
+      console.warn('[Server] Force exiting after timeout');
+      process.exit(1);
+    }, 5000).unref();
+  };
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 startServer();

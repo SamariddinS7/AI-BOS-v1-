@@ -46,7 +46,7 @@ export default function APITesting() {
           } else {
             notes = 'Failed missing auth test';
           }
-          headers['Authorization'] = `Bearer ${import.meta.env.VITE_APP_AUTH_TOKEN}`;
+          headers['Authorization'] = `Bearer ${import.meta.env.VITE_APP_AUTH_TOKEN || "your-secure-token"}`;
         }
 
         // Send incorrect payload if POST to test 422

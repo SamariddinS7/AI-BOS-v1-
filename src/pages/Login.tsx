@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Bot, Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
+  const { signInAsGuest } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +28,13 @@ export default function Login({ onLogin }: LoginProps) {
           email,
           password,
         });
-        if (signUpError) throw signUpError;
+
+        if (signUpError) {
+          if (signUpError.message.includes('rate limit')) {
+             throw new Error("Supabase email yuborish limiti tugadi (soatiga 3 ta). Iltimos, Supabase sozlamalarida Authentication -> Providers -> Email bo'limidan 'Confirm email' ni o'chirib qo'ying!");
+          }
+          throw signUpError;
+        }
         
         if (data.session) {
           // Email confirmation is disabled, logged in automatically
@@ -129,6 +137,21 @@ export default function Login({ onLogin }: LoginProps) {
                   {isSignUp ? "Ro'yxatdan o'tish" : "Kirish"} <ArrowRight className="w-5 h-5" />
                 </>
               )}
+            </button>
+
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-border-dark opacity-50"></div>
+              <span className="flex-shrink mx-4 text-text-muted text-sm font-medium">yoki</span>
+              <div className="flex-grow border-t border-border-dark opacity-50"></div>
+            </div>
+
+            <button 
+              type="button" 
+              onClick={signInAsGuest}
+              className="w-full bg-surface-ground border border-border-dark hover:bg-surface-dark text-text-primary py-3 rounded-xl font-bold text-base focus:ring-4 focus:ring-brand-500/10 transition-all flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
+            >
+              <Bot className="w-5 h-5 text-brand-500" />
+              Tizimga to'g'ridan-to'g'ri (Demo) kirish
             </button>
 
           </form>

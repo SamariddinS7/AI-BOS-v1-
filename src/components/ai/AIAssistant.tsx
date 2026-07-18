@@ -70,7 +70,14 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
       voicePipelineRef.current = new VoicePipeline(process.env.GEMINI_API_KEY || '');
     }
     return () => {
-      // Optional cleanup if needed
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {}
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
     };
   }, [isOpen]);
 
@@ -225,10 +232,21 @@ const AIAssistant = memo(({ isOpen, onClose, activePage }: AIAssistantProps) => 
         console.log('[AIAssistant] Audio URL:', audioUrl);
         const audio = new Audio(audioUrl);
         
-        audio.onloadedmetadata = () => console.log('[AIAssistant] Audio loaded metadata');
-        audio.onerror = (e) => console.error('[AIAssistant] Audio error:', e);
+        const revoke = () => {
+          try { URL.revokeObjectURL(audioUrl); } catch (e) {}
+        };
+        audio.onended = revoke;
+        audio.onerror = (e) => {
+          console.error('[AIAssistant] Audio error:', e);
+          revoke();
+        };
         
-        audio.play().catch(e => console.error("Audio playback failed:", e));
+        audio.onloadedmetadata = () => console.log('[AIAssistant] Audio loaded metadata');
+        
+        audio.play().catch(e => {
+          console.error("Audio playback failed:", e);
+          revoke();
+        });
       } else {
         console.warn('[AIAssistant] No audio data to play');
       }

@@ -17,6 +17,19 @@ const VoiceControl = memo(({ onAction }: VoiceControlProps) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  React.useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {}
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -82,7 +95,15 @@ const VoiceControl = memo(({ onAction }: VoiceControlProps) => {
             const wavBlob = pcmToWav(data.audioBase64, 24000);
             const audioUrl = URL.createObjectURL(wavBlob);
             const audio = new Audio(audioUrl);
-            await audio.play();
+            const revoke = () => {
+              try { URL.revokeObjectURL(audioUrl); } catch (e) {}
+            };
+            audio.onended = revoke;
+            audio.onerror = revoke;
+            await audio.play().catch(e => {
+              revoke();
+              throw e;
+            });
           } catch (e) {
             console.error("Audio playback failed:", e);
           }

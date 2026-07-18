@@ -5,6 +5,16 @@ import crypto from 'crypto';
 // Simple in-memory rate limiter
 const rateLimits = new Map<string, { count: number, resetTime: number }>();
 
+// Prune expired rate limit entries every 5 minutes to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of rateLimits.entries()) {
+    if (now > value.resetTime) {
+      rateLimits.delete(key);
+    }
+  }
+}, 300000).unref();
+
 export const apiGatewayMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   // Only enforce for /api/v1 routes
   if (!req.path.startsWith('/api/v1')) {
