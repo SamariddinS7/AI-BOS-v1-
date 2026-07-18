@@ -1,4 +1,4 @@
-import db from '../db/settings';
+import prisma from '../db/prisma.js';
 
 export class AgentCommunication {
   static async sendMessage(fromAgent: string, toAgent: string, payload: any) {
@@ -7,18 +7,17 @@ export class AgentCommunication {
     
     console.log(`[AgentComm] ${fromAgent} -> ${toAgent}:`, payload);
     
-    db.prepare(`
-      INSERT INTO IntegrationLogs (tenant_id, integration_id, type, action, status, response_time, payload)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      'default',
-      `agent-${fromAgent}`,
-      'agent_comm',
-      `to_${toAgent}`,
-      'success',
-      0,
-      JSON.stringify({ from: fromAgent, to: toAgent, payload })
-    );
+    await prisma.integrationLog.create({
+      data: {
+        tenant_id: 'default',
+        integration_id: `agent-${fromAgent}`,
+        type: 'agent_comm',
+        action: `to_${toAgent}`,
+        status: 'success',
+        response_time: 0,
+        payload: JSON.stringify({ from: fromAgent, to: toAgent, payload }),
+      }
+    });
     
     return { success: true, message: 'Message delivered' };
   }

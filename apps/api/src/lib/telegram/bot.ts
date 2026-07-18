@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import db from '../db/settings';
+import prisma from '../db/prisma.js';
 import { processAICommand } from '../ai/agent';
 
 let currentBot: TelegramBot | null = null;
@@ -20,7 +20,7 @@ export async function startTelegramBot(tenantId: string = 'default-tenant-id') {
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
-    const settings = db.prepare('SELECT * FROM TelegramSettings WHERE tenant_id = ?').get(tenantId) as any;
+    const settings = await prisma.telegramSettings.findFirst({ where: { tenant_id: tenantId } }) as any;
     const botToken = settings?.bot_token || process.env.TELEGRAM_BOT_TOKEN;
     const isActive = settings?.is_active || (process.env.TELEGRAM_BOT_TOKEN ? 1 : 0);
 
@@ -61,12 +61,18 @@ export async function startTelegramBot(tenantId: string = 'default-tenant-id') {
       if (!msg.text) return;
       
       // Save user message
-      db.prepare('INSERT INTO TelegramMessages (tenant_id, chat_id, username, text, is_bot) VALUES (?, ?, ?, ?, 0)').run(
-        tenantId, msg.chat.id.toString(), msg.from?.username || msg.from?.first_name || 'User', msg.text
-      );
+      await prisma.telegramMessage.create({
+        data: {
+          tenant_id: tenantId,
+          chat_id: msg.chat.id.toString(),
+          username: msg.from?.username || msg.from?.first_name || 'User',
+          text: msg.text,
+          is_bot: false,
+        }
+      });
 
       // Re-fetch settings to ensure we have the latest
-      const currentSettings = db.prepare('SELECT * FROM TelegramSettings WHERE tenant_id = ?').get(tenantId) as any;
+      const currentSettings = await prisma.telegramSettings.findFirst({ where: { tenant_id: tenantId } }) as any;
       if (!currentSettings || !currentSettings.auto_reply) return;
 
       try {
@@ -88,9 +94,15 @@ export async function startTelegramBot(tenantId: string = 'default-tenant-id') {
         if (replyText) {
           currentBot?.sendMessage(msg.chat.id, replyText, { reply_to_message_id: msg.message_id });
           // Save bot message
-          db.prepare('INSERT INTO TelegramMessages (tenant_id, chat_id, username, text, is_bot) VALUES (?, ?, ?, ?, 1)').run(
-            tenantId, msg.chat.id.toString(), 'AI-BOS Bot', replyText
-          );
+          await prisma.telegramMessage.create({
+            data: {
+              tenant_id: tenantId,
+              chat_id: msg.chat.id.toString(),
+              username: 'AI-BOS Bot',
+              text: replyText,
+              is_bot: true,
+            }
+          });
         }
       } catch (error: any) {
         console.error('Telegram bot error:', error);
@@ -148,4 +160,3 @@ export function getTelegramBotStatus() {
 }
 
 // Graceful shutdown is coordinated by the main server entry point.
-

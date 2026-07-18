@@ -1,19 +1,19 @@
-import db from '../db/settings.js';
+import prisma from '../db/prisma.js';
 
 export class WorkflowEngineBinding {
   static async executeWorkflow(userId: string, workflowId: string, payload: any) {
     try {
       // 1. Fetch User and Tenant Info
-      const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any;
+      const user = await prisma.user.findFirst({ where: { id: userId, deleted_at: null } }) as any;
       if (!user) {
         throw new Error('User not found');
       }
 
-      const tenant = db.prepare('SELECT * FROM tenants WHERE id = ?').get(user.tenant_id) as any;
+      const tenant = await prisma.tenant.findFirst({ where: { id: user.tenant_id, deleted_at: null } }) as any;
 
       // 2. Fetch User Settings (Legacy compatibility)
-      const userSettings = db.prepare('SELECT * FROM UserSettings WHERE user_id = ?').get(userId) as any;
-      const integrationSettings = db.prepare('SELECT * FROM IntegrationSettings WHERE user_id = ?').get(userId) as any;
+      const userSettings = await prisma.userSettings.findFirst({ where: { user_id: userId } }) as any;
+      const integrationSettings = await prisma.integrationSettings.findFirst({ where: { user_id: userId } }) as any;
 
       if (!userSettings || !integrationSettings) {
         console.warn(`[Workflow] Settings not found for user ${userId}, using defaults.`);
@@ -29,7 +29,7 @@ export class WorkflowEngineBinding {
       const aiConfidenceThreshold = userSettings?.animations_enabled ? 0.8 : 0.9;
 
       // 5. Fetch Workflow Details
-      const workflow = db.prepare('SELECT * FROM workflows WHERE id = ? AND tenant_id = ?').get(workflowId, user.tenant_id) as any;
+      const workflow = await prisma.workflow.findFirst({ where: { id: workflowId, tenant_id: user.tenant_id, deleted_at: null } }) as any;
       if (!workflow) {
         console.warn(`[Workflow] Workflow ${workflowId} not found for tenant ${tenant?.name}`);
       }
@@ -45,4 +45,3 @@ export class WorkflowEngineBinding {
     }
   }
 }
-

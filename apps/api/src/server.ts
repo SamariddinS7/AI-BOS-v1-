@@ -4,7 +4,7 @@ import { Workflow } from './lib/workflow-engine/types';
 import { startTelegramBot, stopTelegramBot, getTelegramBotStatus } from './lib/telegram/bot';
 import { processAICommand } from './lib/ai/agent';
 import { GoogleGenAI } from '@google/genai';
-import db from './lib/db/settings';
+import prisma from './lib/db/prisma.js';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 // archiver is CJS-only; cast to any to avoid ESM namespace type mismatch
@@ -73,74 +73,71 @@ function getAiClient(): GoogleGenAI {
 }
 
 // Finance API
-app.get('/api/finance/accounts', requireAuth, requireRole(['VIEWER']), (req, res) => {
+app.get('/api/finance/accounts', requireAuth, requireRole(['VIEWER']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    const accounts = db.prepare('SELECT * FROM accounts WHERE tenant_id = ? AND deleted_at IS NULL').all(tenantId);
+    const accounts = await prisma.account.findMany({ where: { tenant_id: tenantId, deleted_at: null } });
     res.json(accounts);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch accounts' });
   }
 });
 
-app.post('/api/finance/accounts', requireAuth, requireRole(['MANAGER']), (req, res) => {
+app.post('/api/finance/accounts', requireAuth, requireRole(['MANAGER']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   const { name, currency = 'UZS', balance = 0 } = req.body;
   const id = `acc-${Date.now()}`;
   try {
-    db.prepare('INSERT INTO accounts (id, tenant_id, name, currency, balance) VALUES (?, ?, ?, ?, ?)').run(id, tenantId, name, currency, balance);
+    await prisma.account.create({ data: { id, tenant_id: tenantId, name, currency, balance } });
     res.json({ success: true, id });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create account' });
   }
 });
 
-app.get('/api/finance/categories', requireAuth, requireRole(['VIEWER']), (req, res) => {
+app.get('/api/finance/categories', requireAuth, requireRole(['VIEWER']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    const categories = db.prepare('SELECT * FROM transaction_categories WHERE tenant_id = ? AND deleted_at IS NULL').all(tenantId);
+    const categories = await prisma.transactionCategory.findMany({ where: { tenant_id: tenantId, deleted_at: null } });
     res.json(categories);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch categories' });
   }
 });
 
-app.get('/api/finance/transactions', requireAuth, requireRole(['VIEWER']), (req, res) => {
+app.get('/api/finance/transactions', requireAuth, requireRole(['VIEWER']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    const transactions = db.prepare(`
+    const transactions = await prisma.$queryRaw`
       SELECT t.*, a.name as account_name, c.name as category_name 
       FROM transactions t
       LEFT JOIN accounts a ON t.account_id = a.id
       LEFT JOIN transaction_categories c ON t.category_id = c.id
-      WHERE t.tenant_id = ? AND t.deleted_at IS NULL
+      WHERE t.tenant_id = ${tenantId} AND t.deleted_at IS NULL
       ORDER BY t.transaction_date DESC
       LIMIT 100
-    `).all(tenantId);
+    `;
     res.json(transactions);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch transactions' });
   }
 });
 
-app.post('/api/finance/transactions', requireAuth, requireRole(['MANAGER']), (req, res) => {
+app.post('/api/finance/transactions', requireAuth, requireRole(['MANAGER']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   const { account_id, category_id, type, amount, transaction_date, description, counterparty } = req.body;
   const id = `txn-${Date.now()}`;
   try {
-    db.transaction(() => {
-      db.prepare(`
-        INSERT INTO transactions (id, tenant_id, account_id, category_id, type, amount, transaction_date, description, counterparty) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(id, tenantId, account_id, category_id, type, amount, transaction_date, description, counterparty);
-      
-      // Update account balance
-      if (type === 'income') {
-        db.prepare('UPDATE accounts SET balance = balance + ? WHERE id = ?').run(amount, account_id);
-      } else if (type === 'expense') {
-        db.prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?').run(amount, account_id);
-      }
-    })();
+    await prisma.$transaction([
+      prisma.transaction.create({
+        data: { id, tenant_id: tenantId, account_id, category_id, type, amount, transaction_date: new Date(transaction_date), description, counterparty }
+      }),
+      ...(type === 'income'
+        ? [prisma.account.update({ where: { id: account_id }, data: { balance: { increment: amount } } })]
+        : type === 'expense'
+        ? [prisma.account.update({ where: { id: account_id }, data: { balance: { decrement: amount } } })]
+        : []),
+    ]);
     res.json({ success: true, id });
   } catch (error) {
     console.error('Failed to create transaction:', error);
@@ -148,21 +145,27 @@ app.post('/api/finance/transactions', requireAuth, requireRole(['MANAGER']), (re
   }
 });
 
-app.get('/api/finance/summary', requireAuth, requireRole(['VIEWER']), (req, res) => {
+app.get('/api/finance/summary', requireAuth, requireRole(['VIEWER']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    const income = db.prepare("SELECT SUM(amount) as total FROM transactions WHERE tenant_id = ? AND type = 'income' AND deleted_at IS NULL").get(tenantId) as any;
-    const expense = db.prepare("SELECT SUM(amount) as total FROM transactions WHERE tenant_id = ? AND type = 'expense' AND deleted_at IS NULL").get(tenantId) as any;
-    
-    const totalIncome = income?.total || 0;
-    const totalExpense = expense?.total || 0;
-    const netProfit = totalIncome - totalExpense;
+    const incomeAgg = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { tenant_id: tenantId, type: 'income', deleted_at: null },
+    });
+    const expenseAgg = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { tenant_id: tenantId, type: 'expense', deleted_at: null },
+    });
+
+    const totalIncome = incomeAgg._sum.amount ?? 0;
+    const totalExpense = expenseAgg._sum.amount ?? 0;
+    const netProfit = Number(totalIncome) - Number(totalExpense);
     
     res.json({
       totalIncome,
       totalExpense,
       netProfit,
-      ebitda: totalIncome > 0 ? ((netProfit / totalIncome) * 100).toFixed(1) : 0
+      ebitda: Number(totalIncome) > 0 ? ((netProfit / Number(totalIncome)) * 100).toFixed(1) : 0
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch summary' });
@@ -170,10 +173,10 @@ app.get('/api/finance/summary', requireAuth, requireRole(['VIEWER']), (req, res)
 });
 
 // Telegram Settings API
-app.get('/api/telegram/settings', requireAuth, requireRole(['ADMIN']), (req, res) => {
+app.get('/api/telegram/settings', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    const settings = db.prepare('SELECT * FROM TelegramSettings WHERE tenant_id = ?').get(tenantId);
+    const settings = await prisma.telegramSettings.findFirst({ where: { tenant_id: tenantId } });
     res.json(settings || {});
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch settings' });
@@ -185,18 +188,16 @@ app.post('/api/telegram/settings', requireAuth, requireRole(['ADMIN']), async (r
   const { bot_token, system_prompt, custom_code, auto_reply, use_custom_code, is_active } = req.body;
   
   try {
-    const existing = db.prepare('SELECT tenant_id FROM TelegramSettings WHERE tenant_id = ?').get(tenantId);
+    const existing = await prisma.telegramSettings.findFirst({ where: { tenant_id: tenantId } });
     if (existing) {
-      db.prepare(`
-        UPDATE TelegramSettings 
-        SET bot_token = ?, system_prompt = ?, custom_code = ?, auto_reply = ?, use_custom_code = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE tenant_id = ?
-      `).run(bot_token, system_prompt, custom_code, auto_reply ? 1 : 0, use_custom_code ? 1 : 0, is_active ? 1 : 0, tenantId);
+      await prisma.telegramSettings.update({
+        where: { tenant_id: tenantId },
+        data: { bot_token, system_prompt, custom_code, auto_reply, use_custom_code, is_active, updated_at: new Date() },
+      });
     } else {
-      db.prepare(`
-        INSERT INTO TelegramSettings (tenant_id, bot_token, system_prompt, custom_code, auto_reply, use_custom_code, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(tenantId, bot_token, system_prompt, custom_code, auto_reply ? 1 : 0, use_custom_code ? 1 : 0, is_active ? 1 : 0);
+      await prisma.telegramSettings.create({
+        data: { tenant_id: tenantId, bot_token, system_prompt, custom_code, auto_reply, use_custom_code, is_active },
+      });
     }
 
     if (is_active) {
@@ -219,7 +220,7 @@ app.get('/api/telegram/status', requireAuth, requireRole(['VIEWER']), (req, res)
 app.post('/api/telegram/start', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    db.prepare('UPDATE TelegramSettings SET is_active = 1 WHERE tenant_id = ?').run(tenantId);
+    await prisma.telegramSettings.updateMany({ where: { tenant_id: tenantId }, data: { is_active: true } });
     const success = await startTelegramBot(tenantId);
     res.json({ success });
   } catch (error) {
@@ -230,7 +231,7 @@ app.post('/api/telegram/start', requireAuth, requireRole(['ADMIN']), async (req,
 app.post('/api/telegram/stop', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    db.prepare('UPDATE TelegramSettings SET is_active = 0 WHERE tenant_id = ?').run(tenantId);
+    await prisma.telegramSettings.updateMany({ where: { tenant_id: tenantId }, data: { is_active: false } });
     await stopTelegramBot();
     res.json({ success: true });
   } catch (error) {
@@ -238,10 +239,14 @@ app.post('/api/telegram/stop', requireAuth, requireRole(['ADMIN']), async (req, 
   }
 });
 
-app.get('/api/telegram/messages', requireAuth, requireRole(['VIEWER']), (req, res) => {
+app.get('/api/telegram/messages', requireAuth, requireRole(['VIEWER']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    const messages = db.prepare('SELECT * FROM TelegramMessages WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50').all(tenantId);
+    const messages = await prisma.telegramMessage.findMany({
+      where: { tenant_id: tenantId },
+      orderBy: { created_at: 'desc' },
+      take: 50,
+    });
     res.json(messages.reverse());
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch messages' });
@@ -252,7 +257,7 @@ app.post('/api/telegram/messages', requireAuth, requireRole(['MANAGER']), async 
   const tenantId = 'default-tenant-id';
   const { chat_id, text } = req.body;
   try {
-    const settings = db.prepare('SELECT bot_token FROM TelegramSettings WHERE tenant_id = ?').get(tenantId) as any;
+    const settings = await prisma.telegramSettings.findFirst({ where: { tenant_id: tenantId } }) as any;
     if (!settings || !settings.bot_token) {
       return res.status(400).json({ error: 'Bot token not found' });
     }
@@ -264,9 +269,9 @@ app.post('/api/telegram/messages', requireAuth, requireRole(['MANAGER']), async 
     });
     
     if (response.ok) {
-      db.prepare('INSERT INTO TelegramMessages (tenant_id, chat_id, username, text, is_bot) VALUES (?, ?, ?, ?, 1)').run(
-        tenantId, chat_id, 'AI-BOS Bot (Manual)', text
-      );
+      await prisma.telegramMessage.create({
+        data: { tenant_id: tenantId, chat_id, username: 'AI-BOS Bot (Manual)', text, is_bot: true }
+      });
       res.json({ success: true });
     } else {
       res.status(500).json({ error: 'Failed to send message to Telegram' });
@@ -276,10 +281,10 @@ app.post('/api/telegram/messages', requireAuth, requireRole(['MANAGER']), async 
   }
 });
 
-app.delete('/api/telegram/messages', requireAuth, requireRole(['ADMIN']), (req, res) => {
+app.delete('/api/telegram/messages', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   const tenantId = 'default-tenant-id';
   try {
-    db.prepare('DELETE FROM TelegramMessages WHERE tenant_id = ?').run(tenantId);
+    await prisma.telegramMessage.deleteMany({ where: { tenant_id: tenantId } });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to clear messages' });
@@ -312,8 +317,8 @@ app.post('/api/telegram/proxy', requireAuth, requireRole(['ADMIN']), async (req,
 // --- API Routes ---
 
 // External API v1 (Protected by Gateway)
-app.get('/api/v1/customers', requireAuth, requireRole(['VIEWER']), (req, res) => {
-  const customers = db.prepare('SELECT * FROM Customers').all();
+app.get('/api/v1/customers', requireAuth, requireRole(['VIEWER']), async (req, res) => {
+  const customers = await prisma.customer.findMany({ where: { deleted_at: null } });
   res.json(customers);
 });
 
@@ -437,10 +442,17 @@ app.post('/voice/process', requireAuth, requireRole(['VIEWER']), async (req, res
     const errorMessage = error.message || JSON.stringify(error);
     
     try {
-      db.prepare(`
-        INSERT INTO AuditLog (user_id, tenant_id, action, module, ip_address, old_value, new_value)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run('system', 'default', 'AI_VOICE_FAILURE', 'VOICE_AGENT', req.ip, 'Voice Command', errorMessage);
+      await prisma.legacyAuditLog.create({
+        data: {
+          user_id: 'system',
+          tenant_id: 'default',
+          action: 'AI_VOICE_FAILURE',
+          module: 'VOICE_AGENT',
+          ip_address: req.ip ?? '',
+          old_value: 'Voice Command',
+          new_value: errorMessage,
+        }
+      });
     } catch (logError) {
       console.error('Failed to log AI failure to AuditLog:', logError);
     }
@@ -575,12 +587,10 @@ async function startServer() {
     }
 
     try {
-      console.log('[Server] Closing SQLite Database...');
-      if (db && typeof db.close === 'function') {
-        db.close();
-      }
+      console.log('[Server] Disconnecting Prisma Client...');
+      await prisma.$disconnect();
     } catch (e) {
-      console.error('[Server] Error closing database during shutdown:', e);
+      console.error('[Server] Error disconnecting Prisma during shutdown:', e);
     }
 
     console.log('[Server] Closing HTTP Server...');

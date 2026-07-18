@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../lib/db/settings.js';
+import prisma from '../lib/db/prisma.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 
@@ -8,65 +8,86 @@ const router = Router();
 // CRM readable by VIEWER+; write operations need MANAGER+ (enforced per-route below)
 router.use(requireAuth, requireRole(['VIEWER']));
 
-router.get('/customers', (req, res) => {
+router.get('/customers', async (req, res) => {
   try {
-    const customers = db.prepare('SELECT * FROM Customers').all();
+    const customers = await prisma.customer.findMany({
+      where: { deleted_at: null },
+    });
     res.json(customers);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/customers', (req, res) => {
+router.post('/customers', async (req, res) => {
   try {
     const customer = req.body;
-    const stmt = db.prepare(`
-      INSERT INTO Customers (id, name, company, email, phone, industry, region, account_value, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(customer.id, customer.name, customer.company, customer.email, customer.phone, customer.industry, customer.region, customer.account_value, customer.status);
+    await prisma.customer.create({
+      data: {
+        id: customer.id,
+        name: customer.name,
+        company: customer.company,
+        email: customer.email,
+        phone: customer.phone,
+        industry: customer.industry,
+        region: customer.region,
+        account_value: customer.account_value,
+        status: customer.status,
+      },
+    });
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/deals', (req, res) => {
+router.get('/deals', async (req, res) => {
   try {
-    const deals = db.prepare('SELECT * FROM Deals').all();
+    const deals = await prisma.deal.findMany({
+      where: { deleted_at: null },
+    });
     res.json(deals);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.put('/deals/:id/stage', (req, res) => {
+router.put('/deals/:id/stage', async (req, res) => {
   try {
     const { stage } = req.body;
-    db.prepare('UPDATE Deals SET stage = ? WHERE id = ?').run(stage, req.params.id);
+    await prisma.deal.update({
+      where: { id: req.params.id },
+      data: { stage },
+    });
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/interactions/:customerId', (req, res) => {
+router.get('/interactions/:customerId', async (req, res) => {
   try {
-    const interactions = db.prepare('SELECT * FROM Interactions WHERE customer_id = ? ORDER BY timestamp DESC').all(req.params.customerId);
+    const interactions = await prisma.interaction.findMany({
+      where: { customer_id: req.params.customerId },
+      orderBy: { timestamp: 'desc' },
+    });
     res.json(interactions);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/interactions', (req, res) => {
+router.post('/interactions', async (req, res) => {
   try {
     const interaction = req.body;
-    const stmt = db.prepare(`
-      INSERT INTO Interactions (id, customer_id, type, description)
-      VALUES (?, ?, ?, ?)
-    `);
-    stmt.run(interaction.id, interaction.customer_id, interaction.type, interaction.description);
+    await prisma.interaction.create({
+      data: {
+        id: interaction.id,
+        customer_id: interaction.customer_id,
+        type: interaction.type,
+        description: interaction.description,
+      },
+    });
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

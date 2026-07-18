@@ -1,6 +1,6 @@
 import express from 'express';
-import db from '../lib/db/settings';
-import { TransactionService } from '../services/TransactionService';
+import prisma from '../lib/db/prisma.js';
+import { TransactionService } from '../services/TransactionService.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 
@@ -9,35 +9,35 @@ const router = express.Router();
 // Finance/accounting requires MANAGER role or higher
 router.use(requireAuth, requireRole(['MANAGER']));
 
-router.get('/kpis', (req, res) => {
+router.get('/kpis', async (req, res) => {
   try {
-    // Joriy Balans: sum(income) - sum(expense) where is_verified = 1
-    const currentBalanceRow = db.prepare(`
-      SELECT 
-        SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as balance
-      FROM transactions
-      WHERE is_verified = 1
-    `).get();
-
-    // Kutilayotgan Tushum: sum(income) where is_verified = 0
-    const expectedIncomeRow = db.prepare(`
-      SELECT SUM(amount) as expected
-      FROM transactions
-      WHERE type = 'income' AND is_verified = 0
-    `).get();
-
-    // To'lanishi Kerak: sum(expense) where is_verified = 0
-    const accountsPayableRow = db.prepare(`
-      SELECT SUM(amount) as payable
-      FROM transactions
-      WHERE type = 'expense' AND is_verified = 0
-    `).get();
-
-    res.json({
-      currentBalance: currentBalanceRow.balance || 0,
-      expectedIncome: expectedIncomeRow.expected || 0,
-      accountsPayable: accountsPayableRow.payable || 0
+    // Joriy Balans: sum(income) - sum(expense) where is_verified = true
+    const incomeAgg = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { type: 'income', is_verified: true },
     });
+    const expenseAgg = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { type: 'expense', is_verified: true },
+    });
+    const currentBalance =
+      (incomeAgg._sum.amount ?? 0) - (expenseAgg._sum.amount ?? 0);
+
+    // Kutilayotgan Tushum: sum(income) where is_verified = false
+    const expectedIncomeAgg = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { type: 'income', is_verified: false },
+    });
+    const expectedIncome = expectedIncomeAgg._sum.amount ?? 0;
+
+    // To'lanishi Kerak: sum(expense) where is_verified = false
+    const accountsPayableAgg = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { type: 'expense', is_verified: false },
+    });
+    const accountsPayable = accountsPayableAgg._sum.amount ?? 0;
+
+    res.json({ currentBalance, expectedIncome, accountsPayable });
   } catch (error) {
     console.error('Error fetching accounting KPIs:', error);
     res.status(500).json({ error: 'Failed to fetch accounting KPIs' });
@@ -59,11 +59,11 @@ router.post('/transactions', async (req, res) => {
   try {
     const tenantId = 'default-tenant-id'; // In a real app, this would come from auth
     const userId = 'admin-user-id'; // In a real app, this would come from auth
-    
+
     const transactionData = {
       ...req.body,
       tenant_id: tenantId,
-      created_by: userId
+      created_by: userId,
     };
 
     const newTransaction = await TransactionService.createTransaction(transactionData);

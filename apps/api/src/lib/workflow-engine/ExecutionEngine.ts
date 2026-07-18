@@ -2,7 +2,7 @@ import { IExecutionEngine, Workflow, WorkflowNode, ExecutionContext, NodeExecuti
 import { PluginSandbox } from './PluginSandbox';
 import { GovernanceEngine } from './GovernanceEngine';
 import { callGeminiWithRetry } from '../gemini';
-import db from '../db/settings.js';
+import prisma from '../db/prisma.js';
 
 /**
  * A Production-Grade Workflow Execution Engine.
@@ -65,8 +65,14 @@ export class ExecutionEngine implements IExecutionEngine {
     this.executions.set(executionId, context);
     
     // Persist execution start
-    db.prepare('INSERT INTO WorkflowExecutions (id, workflow_id, status, trigger_data) VALUES (?, ?, ?, ?)')
-      .run(executionId, workflowId, 'running', JSON.stringify(payload));
+    await prisma.workflowExecution.create({
+      data: {
+        id: executionId,
+        workflow_id: workflowId,
+        status: 'running',
+        trigger_data: JSON.stringify(payload),
+      }
+    });
 
     this.log(executionId, null, 'info', `Started execution for workflow: ${workflow.name}`);
 
@@ -80,12 +86,16 @@ export class ExecutionEngine implements IExecutionEngine {
       }
       
       // Update execution status to completed if all nodes finished successfully
-      db.prepare('UPDATE WorkflowExecutions SET status = ?, end_time = CURRENT_TIMESTAMP WHERE id = ?')
-        .run('completed', executionId);
+      await prisma.workflowExecution.update({
+        where: { id: executionId },
+        data: { status: 'completed', end_time: new Date() },
+      });
       
     } catch (error: any) {
-      db.prepare('UPDATE WorkflowExecutions SET status = ?, end_time = CURRENT_TIMESTAMP WHERE id = ?')
-        .run('failed', executionId);
+      await prisma.workflowExecution.update({
+        where: { id: executionId },
+        data: { status: 'failed', end_time: new Date() },
+      });
       this.log(executionId, null, 'error', `Workflow failed: ${error.message}`);
     } finally {
       this.executions.delete(executionId);
@@ -94,11 +104,17 @@ export class ExecutionEngine implements IExecutionEngine {
     return executionId;
   }
 
-  private log(executionId: string, nodeId: string | null, level: string, message: string) {
+  private async log(executionId: string, nodeId: string | null, level: string, message: string) {
     console.log(`[Engine][${level.toUpperCase()}] ${message}`);
     try {
-      db.prepare('INSERT INTO WorkflowLogs (execution_id, node_id, level, message) VALUES (?, ?, ?, ?)')
-        .run(executionId, nodeId, level, message);
+      await prisma.workflowLog.create({
+        data: {
+          execution_id: executionId,
+          node_id: nodeId,
+          level,
+          message,
+        }
+      });
     } catch (e) {
       console.error('Failed to log to DB:', e);
     }
@@ -115,7 +131,7 @@ export class ExecutionEngine implements IExecutionEngine {
   }
 
   public async getExecutionStatus(executionId: string): Promise<any> {
-    const exec = db.prepare('SELECT status FROM WorkflowExecutions WHERE id = ?').get(executionId);
+    const exec = await prisma.workflowExecution.findFirst({ where: { id: executionId } });
     return exec ? (exec as any).status : 'not_found';
   }
 

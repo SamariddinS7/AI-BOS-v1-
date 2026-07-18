@@ -9,7 +9,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import db from '../lib/db/settings.js';
+import prisma from '../lib/db/prisma.js';
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -28,15 +28,10 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'email and password are required.' });
   }
 
-  const user = db
-    .prepare(`
-      SELECT u.id, u.tenant_id, u.first_name, u.last_name, u.email,
-             u.password_hash, u.status, r.name AS role_name
-      FROM users u
-      LEFT JOIN roles r ON u.role_id = r.id
-      WHERE u.email = ? AND u.deleted_at IS NULL
-    `)
-    .get(email) as any;
+  const user = await prisma.user.findFirst({
+    where: { email, deleted_at: null },
+    include: { role: true },
+  });
 
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password.' });
@@ -54,7 +49,7 @@ router.post('/login', async (req, res) => {
   const authUser: AuthUser = {
     id: user.id,
     email: user.email,
-    role: (user.role_name as string)?.toUpperCase() ?? 'VIEWER',
+    role: (user.role?.name as string)?.toUpperCase() ?? 'VIEWER',
     tenant_id: user.tenant_id,
   };
 
@@ -63,12 +58,15 @@ router.post('/login', async (req, res) => {
 
   // Persist refresh token hash
   const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  db.prepare(`
-    INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at)
-    VALUES (?, ?, ?, ?)
-  `).run(crypto.randomUUID(), user.id, tokenHash, expiresAt);
+  await prisma.refreshToken.create({
+    data: {
+      id: crypto.randomUUID(),
+      user_id: user.id,
+      token_hash: tokenHash,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
 
   return res.json({
     accessToken,
@@ -84,7 +82,7 @@ router.post('/login', async (req, res) => {
 });
 
 // ─── POST /refresh ────────────────────────────────────────────────────────────
-router.post('/refresh', (req, res) => {
+router.post('/refresh', async (req, res) => {
   const { refreshToken } = req.body ?? {};
 
   if (!refreshToken) {
@@ -101,26 +99,23 @@ router.post('/refresh', (req, res) => {
 
   // Check token is still in DB (not revoked)
   const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-  const stored = db
-    .prepare(`
-      SELECT * FROM refresh_tokens
-      WHERE token_hash = ? AND revoked_at IS NULL AND expires_at > datetime('now')
-    `)
-    .get(tokenHash) as any;
+  const stored = await prisma.refreshToken.findFirst({
+    where: {
+      token_hash: tokenHash,
+      revoked_at: null,
+      expires_at: { gt: new Date() },
+    },
+  });
 
   if (!stored) {
     return res.status(401).json({ error: 'Refresh token has been revoked or expired.' });
   }
 
   // Look up current user + role
-  const user = db
-    .prepare(`
-      SELECT u.id, u.tenant_id, u.email, r.name AS role_name, u.status
-      FROM users u
-      LEFT JOIN roles r ON u.role_id = r.id
-      WHERE u.id = ?
-    `)
-    .get(payload.id) as any;
+  const user = await prisma.user.findFirst({
+    where: { id: payload.id },
+    include: { role: true },
+  });
 
   if (!user || user.status !== 'active') {
     return res.status(401).json({ error: 'User not found or inactive.' });
@@ -129,7 +124,7 @@ router.post('/refresh', (req, res) => {
   const authUser: AuthUser = {
     id: user.id,
     email: user.email,
-    role: (user.role_name as string)?.toUpperCase() ?? 'VIEWER',
+    role: (user.role?.name as string)?.toUpperCase() ?? 'VIEWER',
     tenant_id: user.tenant_id,
   };
 
@@ -137,31 +132,27 @@ router.post('/refresh', (req, res) => {
 });
 
 // ─── POST /logout ─────────────────────────────────────────────────────────────
-router.post('/logout', requireAuth, (req, res) => {
+router.post('/logout', requireAuth, async (req, res) => {
   const { refreshToken } = req.body ?? {};
 
   if (refreshToken) {
     const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-    db.prepare(`
-      UPDATE refresh_tokens SET revoked_at = datetime('now') WHERE token_hash = ?
-    `).run(tokenHash);
+    await prisma.refreshToken.updateMany({
+      where: { token_hash: tokenHash },
+      data: { revoked_at: new Date() },
+    });
   }
 
   return res.json({ message: 'Logged out successfully.' });
 });
 
 // ─── GET /me ──────────────────────────────────────────────────────────────────
-router.get('/me', requireAuth, (req, res) => {
+router.get('/me', requireAuth, async (req, res) => {
   const user = req.user!;
-  const dbUser = db
-    .prepare(`
-      SELECT u.id, u.tenant_id, u.first_name, u.last_name, u.email, u.status,
-             r.name AS role_name
-      FROM users u
-      LEFT JOIN roles r ON u.role_id = r.id
-      WHERE u.id = ? AND u.deleted_at IS NULL
-    `)
-    .get(user.id) as any;
+  const dbUser = await prisma.user.findFirst({
+    where: { id: user.id, deleted_at: null },
+    include: { role: true },
+  });
 
   if (!dbUser) {
     return res.status(404).json({ error: 'User not found.' });
@@ -171,7 +162,7 @@ router.get('/me', requireAuth, (req, res) => {
     id: dbUser.id,
     email: dbUser.email,
     name: `${dbUser.first_name} ${dbUser.last_name ?? ''}`.trim(),
-    role: (dbUser.role_name as string)?.toUpperCase() ?? user.role,
+    role: (dbUser.role?.name as string)?.toUpperCase() ?? user.role,
     tenant_id: dbUser.tenant_id,
     status: dbUser.status,
   });

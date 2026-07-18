@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../lib/db/settings';
+import prisma from '../lib/db/prisma.js';
 import { callGeminiWithRetry } from '../lib/gemini';
 import { requireAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
@@ -30,7 +30,7 @@ Diqqat! Ingliz tilidagi eski shablonlarni unuting. Barcha so'zlar haqiqiy tahlil
         temperature: 0.9
       }
     });
-    
+
     const output_result = JSON.parse(aiResponse.text || '{}');
     const confidenceScore = 0.95; // Use a fixed high confidence for production, or extract from model metadata if available
     return { output_result, confidenceScore };
@@ -41,7 +41,7 @@ Diqqat! Ingliz tilidagi eski shablonlarni unuting. Barcha so'zlar haqiqiy tahlil
 }
 
 // Get available marketing skills
-router.get('/available', (req, res) => {
+router.get('/available', async (req, res) => {
   const skills = [
     { type: 'pricing-strategy', name: 'Pricing Strategy', description: 'Develop pricing strategies and packaging', risk: 'low' },
     { type: 'discount-strategy', name: 'Discount Strategy', description: 'Create discount and promotion strategies', risk: 'low' },
@@ -77,10 +77,15 @@ router.post('/execute', requireAuth, async (req, res) => {
     // Check Approval Workflow
     if (riskLevel === 'high' || riskLevel === 'critical') {
       const workflowId = `wf_${Date.now()}`;
-      db.prepare(`
-        INSERT INTO ApprovalWorkflow (id, tenant_id, skill_type, requester_id, status)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(workflowId, tenantId, skill_type, userId, 'pending');
+      await prisma.approvalWorkflow.create({
+        data: {
+          id: workflowId,
+          tenant_id: tenantId,
+          skill_type,
+          requester_id: userId,
+          status: 'pending'
+        }
+      });
 
       return res.json({
         id: null,
@@ -93,13 +98,20 @@ router.post('/execute', requireAuth, async (req, res) => {
     // Call real AI logic
     const { output_result, confidenceScore } = await executeSkillWithAI(skill_type, parameters);
 
-    const dbRes = db.prepare(`
-      INSERT INTO MarketingSkillExecution (tenant_id, skill_type, status, input_parameters, output_result, confidence_score, user_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(tenantId, skill_type, 'completed', JSON.stringify(parameters), JSON.stringify(output_result), confidenceScore, userId);
+    const execution = await prisma.marketingSkillExecution.create({
+      data: {
+        tenant_id: tenantId,
+        skill_type,
+        status: 'completed',
+        input_parameters: JSON.stringify(parameters),
+        output_result: JSON.stringify(output_result),
+        confidence_score: confidenceScore,
+        user_id: userId
+      }
+    });
 
     res.json({
-      id: dbRes.lastInsertRowid,
+      id: execution.id,
       skill_type,
       status: 'completed',
       confidence: confidenceScore,
@@ -126,7 +138,9 @@ router.post('/approve', requireAuth, async (req, res) => {
     }
     const tenantId = 'default-tenant-id';
 
-    const workflow: any = db.prepare('SELECT * FROM ApprovalWorkflow WHERE id = ? AND tenant_id = ?').get(workflow_id, tenantId);
+    const workflow = await prisma.approvalWorkflow.findFirst({
+      where: { id: workflow_id, tenant_id: tenantId }
+    }) as any;
     if (!workflow) {
       return res.status(404).json({ error: 'Workflow not found' });
     }
@@ -135,22 +149,33 @@ router.post('/approve', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Workflow is already ' + workflow.status });
     }
 
-    db.prepare('UPDATE ApprovalWorkflow SET status = ? WHERE id = ?').run(decision, workflow_id);
+    await prisma.approvalWorkflow.update({
+      where: { id: workflow_id },
+      data: { status: decision }
+    });
 
     if (decision === 'approved') {
       // Execute the skill since approved
       const { output_result, confidenceScore } = await executeSkillWithAI(workflow.skill_type, {});
 
-      const dbRes = db.prepare(`
-        INSERT INTO MarketingSkillExecution (tenant_id, skill_type, status, input_parameters, output_result, confidence_score, user_id, approval_workflow_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(tenantId, workflow.skill_type, 'completed', '{}', JSON.stringify(output_result), confidenceScore, workflow.requester_id, workflow_id);
+      const execution = await prisma.marketingSkillExecution.create({
+        data: {
+          tenant_id: tenantId,
+          skill_type: workflow.skill_type,
+          status: 'completed',
+          input_parameters: '{}',
+          output_result: JSON.stringify(output_result),
+          confidence_score: confidenceScore,
+          user_id: workflow.requester_id,
+          approval_workflow_id: workflow_id
+        }
+      });
 
       return res.json({
         workflow_id,
         status: decision,
         message: 'Approved and executed',
-        execution_id: dbRes.lastInsertRowid
+        execution_id: execution.id
       });
     }
 
@@ -166,7 +191,7 @@ router.post('/approve', requireAuth, async (req, res) => {
 });
 
 // Get User permissions
-router.get('/user/permissions', requireAuth, (req, res) => {
+router.get('/user/permissions', requireAuth, async (req, res) => {
   const userId = (req as any).user?.id || 'admin-user-id';
   res.json({
     user_id: userId,
@@ -184,24 +209,29 @@ router.get('/user/permissions', requireAuth, (req, res) => {
 });
 
 // Check execution status
-router.get('/execution/:id', requireAuth, (req, res) => {
+router.get('/execution/:id', requireAuth, async (req, res) => {
   const accountId = req.params.id;
   try {
-     const execution = db.prepare('SELECT * FROM MarketingSkillExecution WHERE id = ?').get(accountId);
-     if (execution) {
-        res.json(execution);
-     } else {
-        res.status(404).json({ error: 'Execution not found' });
-     }
+    const execution = await prisma.marketingSkillExecution.findFirst({
+      where: { id: Number(accountId) }
+    });
+    if (execution) {
+      res.json(execution);
+    } else {
+      res.status(404).json({ error: 'Execution not found' });
+    }
   } catch (error) {
-     res.status(500).json({ error: 'Failed to find execution' });
+    res.status(500).json({ error: 'Failed to find execution' });
   }
 });
 
 // Get audit history
-router.get('/audit/history', requireAuth, (req, res) => {
+router.get('/audit/history', requireAuth, async (req, res) => {
   try {
-    const logs = db.prepare('SELECT * FROM ApprovalWorkflow ORDER BY created_at DESC LIMIT 50').all();
+    const logs = await prisma.approvalWorkflow.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 50
+    });
     res.json({ logs });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch audit history' });

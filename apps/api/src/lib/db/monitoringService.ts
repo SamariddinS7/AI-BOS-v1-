@@ -1,4 +1,4 @@
-import db from './settings';
+import prisma from './prisma.js';
 
 export interface ApiTestResult {
   endpoint: string;
@@ -12,50 +12,63 @@ export interface ApiTestResult {
 }
 
 export const monitoringService = {
-  logTestResult: (result: ApiTestResult) => {
+  logTestResult: async (result: ApiTestResult) => {
     try {
-      db.prepare(`
-        INSERT INTO api_test_log (
-          endpoint, method, status_code, response_time_ms, passed, error_type, requires_auth, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        result.endpoint,
-        result.method,
-        result.status_code,
-        result.response_time_ms,
-        result.passed ? 1 : 0,
-        result.error_type || null,
-        result.requires_auth ? 1 : 0,
-        result.notes || null
-      );
+      await prisma.apiTestLog.create({
+        data: {
+          endpoint: result.endpoint,
+          method: result.method,
+          status_code: result.status_code,
+          response_time_ms: result.response_time_ms,
+          passed: result.passed,
+          error_type: result.error_type || null,
+          requires_auth: result.requires_auth,
+          notes: result.notes || null
+        }
+      });
     } catch (error) {
       console.error('Failed to log API test result:', error);
     }
   },
 
-  getAnalyticsSummary: () => {
+  getAnalyticsSummary: async () => {
     try {
-      const summary = db.prepare(`
-        SELECT 
-            count(*) as total_tests,
-            avg(response_time_ms) as avg_latency,
-            sum(case when passed = 0 then 1 else 0 end) as failed_tests,
-            sum(case when status_code = 401 or status_code = 403 then 1 else 0 end) as auth_issues
-        FROM api_test_log
-      `).get();
+      const [totalTests, avgLatencyAgg, failedTests, authIssues, topFailures] = await Promise.all([
+        prisma.apiTestLog.count(),
+        prisma.apiTestLog.aggregate({
+          _avg: { response_time_ms: true }
+        }),
+        prisma.apiTestLog.count({
+          where: { passed: false }
+        }),
+        prisma.apiTestLog.count({
+          where: { status_code: { in: [401, 403] } }
+        }),
+        prisma.$queryRaw<{ endpoint: string; fail_count: bigint }[]>`
+          SELECT endpoint, count(*) as fail_count
+          FROM api_test_log
+          WHERE passed = false
+          GROUP BY endpoint
+          ORDER BY fail_count DESC
+          LIMIT 5
+        `
+      ]);
 
-      const topFailures = db.prepare(`
-        SELECT endpoint, count(*) as fail_count 
-        FROM api_test_log 
-        WHERE passed = 0 
-        GROUP BY endpoint 
-        ORDER BY fail_count DESC 
-        LIMIT 5
-      `).all();
+      const summary = {
+        total_tests: totalTests,
+        avg_latency: avgLatencyAgg._avg.response_time_ms,
+        failed_tests: failedTests,
+        auth_issues: authIssues
+      };
+
+      const topFailuresFormatted = topFailures.map((row) => ({
+        endpoint: row.endpoint,
+        fail_count: Number(row.fail_count)
+      }));
 
       return {
         summary,
-        topFailures
+        topFailures: topFailuresFormatted
       };
     } catch (error) {
       console.error('Failed to get analytics summary:', error);

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import db from '../lib/db/settings';
+import prisma from '../lib/db/prisma.js';
 import crypto from 'crypto';
 
 // Simple in-memory rate limiter
@@ -30,7 +30,7 @@ export const apiGatewayMiddleware = async (req: Request, res: Response, next: Ne
   }
 
   const keyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
-  const keyRecord = db.prepare('SELECT * FROM ApiKeys WHERE key_hash = ? AND status = "active"').get(keyHash);
+  const keyRecord = await prisma.apiKey.findFirst({ where: { key_hash: keyHash, status: 'active' } });
 
   if (!keyRecord) {
     return res.status(401).json({ error: 'Invalid or inactive API key' });
@@ -62,35 +62,32 @@ export const apiGatewayMiddleware = async (req: Request, res: Response, next: Ne
   const originalJson = res.json;
   res.json = function (body) {
     const responseTime = Date.now() - startTime;
-    
-    try {
-      db.prepare(`
-        INSERT INTO IntegrationLogs (tenant_id, integration_id, type, action, status, response_time, payload)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        keyRecord.tenant_id,
-        keyRecord.id,
-        'request',
-        `${req.method} ${req.path}`,
-        res.statusCode < 400 ? 'success' : 'error',
-        responseTime,
-        JSON.stringify({
+
+    prisma.integrationLog.create({
+      data: {
+        tenant_id: keyRecord.tenant_id,
+        integration_id: keyRecord.id,
+        type: 'request',
+        action: `${req.method} ${req.path}`,
+        status: res.statusCode < 400 ? 'success' : 'error',
+        response_time: responseTime,
+        payload: JSON.stringify({
           method: req.method,
           path: req.path,
           query: req.query,
           body: req.body,
-          response: body
-        })
-      );
-    } catch (e) {
+          response: body,
+        }),
+      },
+    }).catch((e: unknown) => {
       console.error('Failed to log integration request:', e);
-    }
+    });
 
     return originalJson.call(this, body);
   };
 
   // Attach key info to request
   (req as any).apiKey = keyRecord;
-  
+
   next();
 };

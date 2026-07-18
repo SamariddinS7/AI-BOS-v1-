@@ -1,9 +1,9 @@
-import db from '../db/settings.js';
+import prisma from '../db/prisma.js';
 
 export class NotificationRouter {
   static async send(userId: string, type: 'marketing' | 'financial' | 'ai' | 'system', payload: any) {
     try {
-      const prefs = db.prepare('SELECT * FROM NotificationSettings WHERE user_id = ?').get(userId) as any;
+      const prefs = await prisma.notificationSettings.findFirst({ where: { user_id: userId } }) as any;
       if (!prefs) return;
 
       // 1. Check Alert Type Preferences

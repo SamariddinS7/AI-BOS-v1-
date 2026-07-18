@@ -1,4 +1,4 @@
-import db from '../lib/db/settings';
+import prisma from '../lib/db/prisma.js';
 import * as ss from 'simple-statistics';
 import { GoogleGenAI } from '@google/genai';
 
@@ -39,7 +39,7 @@ export class AnalyticsService {
         query = `SELECT date(transaction_date) as date, sum(amount) as value FROM transactions WHERE type = ?`;
         queryParams.push(type);
     } else {
-        query = `SELECT date, ${aggFunc}(value) as value FROM AnalyticsData WHERE module = ? AND metric = ?`;
+        query = `SELECT date, ${aggFunc}(value) as value FROM "AnalyticsData" WHERE module = ? AND metric = ?`;
         queryParams.push(module, metric);
     }
 
@@ -78,7 +78,7 @@ export class AnalyticsService {
         query += ` GROUP BY date ORDER BY date ASC`;
     }
 
-    const data: DataPoint[] = db.prepare(query).all(...queryParams) as DataPoint[];
+    const data: DataPoint[] = await prisma.$queryRawUnsafe(query, ...queryParams) as DataPoint[];
 
     // Process Data
     const forecast = this.calculateForecast(data, 14, params.model || 'prophet'); // Default to Prophet-style
@@ -405,7 +405,7 @@ export class AnalyticsService {
         } else {
           selectClause = `${dimension} as name, ${aggFunc}(value) as value`;
         }
-        query = `SELECT ${selectClause} FROM AnalyticsData WHERE module = ? AND metric = ?`;
+        query = `SELECT ${selectClause} FROM "AnalyticsData" WHERE module = ? AND metric = ?`;
         queryParams.push(module, metric);
         if (dimension !== 'transactions') groupByClause = `GROUP BY name`;
       }
@@ -422,7 +422,7 @@ export class AnalyticsService {
       } else {
         selectClause = `${dimension} as name, ${aggFunc}(value) as value`;
       }
-      query = `SELECT ${selectClause} FROM AnalyticsData WHERE module = ? AND metric = ?`;
+      query = `SELECT ${selectClause} FROM "AnalyticsData" WHERE module = ? AND metric = ?`;
       queryParams.push(module, metric);
       if (dimension !== 'transactions') groupByClause = `GROUP BY name`;
     }
@@ -488,7 +488,7 @@ export class AnalyticsService {
       query += ` ORDER BY ${dateColumn} DESC LIMIT 50`;
     }
 
-    const data = db.prepare(query).all(...queryParams);
+    const data: any[] = await prisma.$queryRawUnsafe(query, ...queryParams);
 
     // 3. Calculate Summary & Insights
     let total = 0;

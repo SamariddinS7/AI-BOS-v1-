@@ -1,5 +1,5 @@
 import express from 'express';
-import db from '../lib/db/settings.js';
+import prisma from '../lib/db/prisma.js';
 import { Workflow, WorkflowNode, WorkflowEdge } from '../lib/workflow-engine/types';
 import { ExecutionEngine } from '../lib/workflow-engine/ExecutionEngine';
 import { requireAuth } from '../middleware/auth.js';
@@ -12,9 +12,11 @@ router.use(requireAuth, requireRole(['MANAGER']));
 const engine = new ExecutionEngine();
 
 // Get all workflows
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const workflows = db.prepare('SELECT * FROM Workflows ORDER BY updated_at DESC').all();
+    const workflows = await prisma.workflow.findMany({
+      orderBy: { updated_at: 'desc' }
+    });
     res.json(workflows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -22,13 +24,15 @@ router.get('/', (req, res) => {
 });
 
 // Get single workflow with nodes and edges
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const workflow = db.prepare('SELECT * FROM Workflows WHERE id = ?').get(req.params.id);
+    const workflow = await prisma.workflow.findFirst({ where: { id: req.params.id } });
     if (!workflow) return res.status(404).json({ error: 'Workflow not found' });
 
-    const nodes = db.prepare('SELECT * FROM WorkflowNodes WHERE workflow_id = ?').all(req.params.id);
-    const edges = db.prepare('SELECT * FROM WorkflowEdges WHERE workflow_id = ?').all(req.params.id);
+    const [nodes, edges] = await Promise.all([
+      prisma.workflowNode.findMany({ where: { workflow_id: req.params.id } }),
+      prisma.workflowEdge.findMany({ where: { workflow_id: req.params.id } })
+    ]);
 
     res.json({
       ...workflow,
@@ -55,38 +59,63 @@ router.get('/:id', (req, res) => {
 });
 
 // Create or Update workflow
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const workflow: Workflow = req.body;
   const { id, name, description, status, triggerType, nodes, edges } = workflow;
 
-  const transaction = db.transaction(() => {
-    // Upsert Workflow
-    const existing = db.prepare('SELECT id FROM Workflows WHERE id = ?').get(id);
-    if (existing) {
-      db.prepare('UPDATE Workflows SET name = ?, description = ?, status = ?, trigger_event = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-        .run(name, description || '', status, triggerType, id);
-    } else {
-      db.prepare('INSERT INTO Workflows (id, name, description, status, trigger_event) VALUES (?, ?, ?, ?, ?)')
-        .run(id, name, description || '', status, triggerType);
-    }
-
-    // Replace Nodes
-    db.prepare('DELETE FROM WorkflowNodes WHERE workflow_id = ?').run(id);
-    const insertNode = db.prepare('INSERT INTO WorkflowNodes (id, workflow_id, type, label, config, position_x, position_y) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    for (const node of nodes) {
-      insertNode.run(node.id, id, node.type, node.label, JSON.stringify(node.config), node.position.x, node.position.y);
-    }
-
-    // Replace Edges
-    db.prepare('DELETE FROM WorkflowEdges WHERE workflow_id = ?').run(id);
-    const insertEdge = db.prepare('INSERT INTO WorkflowEdges (id, workflow_id, source_node_id, target_node_id, label, config) VALUES (?, ?, ?, ?, ?, ?)');
-    for (const edge of edges) {
-      insertEdge.run(edge.id, id, edge.source, edge.target, edge.condition || '', JSON.stringify({}));
-    }
-  });
-
   try {
-    transaction();
+    await prisma.$transaction(async (tx) => {
+      // Upsert Workflow
+      await tx.workflow.upsert({
+        where: { id },
+        update: {
+          name,
+          description: description || '',
+          status,
+          trigger_event: triggerType,
+          updated_at: new Date()
+        },
+        create: {
+          id,
+          name,
+          description: description || '',
+          status,
+          trigger_event: triggerType
+        }
+      });
+
+      // Replace Nodes
+      await tx.workflowNode.deleteMany({ where: { workflow_id: id } });
+      if (nodes && nodes.length > 0) {
+        await tx.workflowNode.createMany({
+          data: nodes.map((node: any) => ({
+            id: node.id,
+            workflow_id: id,
+            type: node.type,
+            label: node.label,
+            config: JSON.stringify(node.config),
+            position_x: node.position.x,
+            position_y: node.position.y
+          }))
+        });
+      }
+
+      // Replace Edges
+      await tx.workflowEdge.deleteMany({ where: { workflow_id: id } });
+      if (edges && edges.length > 0) {
+        await tx.workflowEdge.createMany({
+          data: edges.map((edge: any) => ({
+            id: edge.id,
+            workflow_id: id,
+            source_node_id: edge.source,
+            target_node_id: edge.target,
+            label: edge.condition || '',
+            config: JSON.stringify({})
+          }))
+        });
+      }
+    });
+
     res.status(201).json({ message: 'Workflow saved successfully', id });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -98,13 +127,14 @@ router.post('/:id/execute', async (req, res) => {
   try {
     const { id } = req.params;
     const payload = req.body;
-    
-    // In a real system, we'd load the workflow from DB and pass to engine
-    const workflowData = db.prepare('SELECT * FROM Workflows WHERE id = ?').get(id);
+
+    const workflowData = await prisma.workflow.findFirst({ where: { id } });
     if (!workflowData) return res.status(404).json({ error: 'Workflow not found' });
 
-    const nodes = db.prepare('SELECT * FROM WorkflowNodes WHERE workflow_id = ?').all(id);
-    const edges = db.prepare('SELECT * FROM WorkflowEdges WHERE workflow_id = ?').all(id);
+    const [nodes, edges] = await Promise.all([
+      prisma.workflowNode.findMany({ where: { workflow_id: id } }),
+      prisma.workflowEdge.findMany({ where: { workflow_id: id } })
+    ]);
 
     const fullWorkflow: Workflow = {
       ...workflowData,
@@ -127,7 +157,7 @@ router.post('/:id/execute', async (req, res) => {
 
     engine.registerWorkflow(fullWorkflow);
     const executionId = await engine.executeWorkflow(id, payload);
-    
+
     res.json({ executionId, status: 'started' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -135,9 +165,12 @@ router.post('/:id/execute', async (req, res) => {
 });
 
 // Get Executions
-router.get('/:id/executions', (req, res) => {
+router.get('/:id/executions', async (req, res) => {
   try {
-    const executions = db.prepare('SELECT * FROM WorkflowExecutions WHERE workflow_id = ? ORDER BY start_time DESC').all(req.params.id);
+    const executions = await prisma.workflowExecution.findMany({
+      where: { workflow_id: req.params.id },
+      orderBy: { start_time: 'desc' }
+    });
     res.json(executions);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -145,9 +178,12 @@ router.get('/:id/executions', (req, res) => {
 });
 
 // Get Execution Logs
-router.get('/executions/:id/logs', (req, res) => {
+router.get('/executions/:id/logs', async (req, res) => {
   try {
-    const logs = db.prepare('SELECT * FROM WorkflowLogs WHERE execution_id = ? ORDER BY timestamp ASC').all(req.params.id);
+    const logs = await prisma.workflowLog.findMany({
+      where: { execution_id: req.params.id },
+      orderBy: { timestamp: 'asc' }
+    });
     res.json(logs);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

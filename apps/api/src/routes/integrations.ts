@@ -1,5 +1,5 @@
 import express from 'express';
-import db from '../lib/db/settings';
+import prisma from '../lib/db/prisma.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { apiGatewayMiddleware } from '../middleware/gateway';
@@ -16,56 +16,55 @@ router.use('/v1', apiGatewayMiddleware);
 router.use(requireAuth, requireRole(['ADMIN']));
 
 // Example V1 API Routes
-router.get('/v1/customers', (req, res) => {
-  const customers = db.prepare('SELECT * FROM Customers WHERE tenant_id = ?').all((req as any).apiKey.tenant_id);
+router.get('/v1/customers', async (req, res) => {
+  const customers = await prisma.customer.findMany({
+    where: { tenant_id: (req as any).apiKey.tenant_id, deleted_at: null }
+  });
   res.json(customers);
 });
 
-router.post('/v1/customers', (req, res) => {
+router.post('/v1/customers', async (req, res) => {
   const { name, email, company } = req.body;
   const id = `CUST-${uuidv4().slice(0, 8).toUpperCase()}`;
-  db.prepare(`
-    INSERT INTO Customers (id, tenant_id, name, email, company, status)
-    VALUES (?, ?, ?, ?, ?, 'Active')
-  `).run(id, (req as any).apiKey.tenant_id, name, email, company);
-  
-  res.json({ id, name, email });
+  const customer = await prisma.customer.create({
+    data: { id, tenant_id: (req as any).apiKey.tenant_id, name, email, company, status: 'Active' }
+  });
+  res.json({ id: customer.id, name: customer.name, email: customer.email });
 });
 
 // --- Internal Management Routes (for the UI) ---
 
 // Plugins
-router.get('/plugins', (req, res) => {
-  const plugins = db.prepare('SELECT * FROM Plugins').all();
+router.get('/plugins', async (req, res) => {
+  const plugins = await prisma.plugin.findMany();
   res.json(plugins);
 });
 
-router.post('/plugins/:id/toggle', (req, res) => {
+router.post('/plugins/:id/toggle', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
-  db.prepare('UPDATE Plugins SET status = ? WHERE id = ?').run(status, id);
+  await prisma.plugin.update({ where: { id }, data: { status } });
   res.json({ success: true });
 });
 
 // Webhooks
-router.get('/webhooks', (req, res) => {
-  const webhooks = db.prepare('SELECT * FROM WebhookSubscriptions').all();
+router.get('/webhooks', async (req, res) => {
+  const webhooks = await prisma.webhookSubscription.findMany();
   res.json(webhooks);
 });
 
-router.post('/webhooks', (req, res) => {
+router.post('/webhooks', async (req, res) => {
   const { event_type, target_url, secret } = req.body;
   const id = uuidv4();
-  db.prepare(`
-    INSERT INTO WebhookSubscriptions (id, tenant_id, event_type, target_url, secret, status)
-    VALUES (?, 'default', ?, ?, ?, 'active')
-  `).run(id, event_type, target_url, secret);
+  await prisma.webhookSubscription.create({
+    data: { id, tenant_id: 'default', event_type, target_url, secret, status: 'active' }
+  });
   res.json({ id, event_type, target_url });
 });
 
 router.post('/webhooks/:id/test', async (req, res) => {
   const { id } = req.params;
-  const webhook = db.prepare('SELECT * FROM WebhookSubscriptions WHERE id = ?').get(id) as any;
+  const webhook = await prisma.webhookSubscription.findFirst({ where: { id } }) as any;
   if (!webhook) {
     return res.status(404).json({ error: 'Webhook not found' });
   }
@@ -79,8 +78,7 @@ router.post('/webhooks/:id/test', async (req, res) => {
   };
 
   try {
-    const crypto = require('crypto');
-    const signatureHex = webhook.secret 
+    const signatureHex = webhook.secret
       ? crypto.createHmac('sha256', webhook.secret).update(JSON.stringify(payload)).digest('hex')
       : null;
 
@@ -99,22 +97,21 @@ router.post('/webhooks/:id/test', async (req, res) => {
 
     const responseText = await response.text();
 
-    db.prepare(`
-      INSERT INTO IntegrationLogs (tenant_id, integration_id, type, action, status, response_time, payload)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      webhook.tenant_id,
-      webhook.id,
-      'webhook',
-      webhook.event_type,
-      response.ok ? 'success' : 'error',
-      0,
-      JSON.stringify({
-        url: webhook.target_url,
-        status: response.status,
-        payload
-      })
-    );
+    await prisma.integrationLog.create({
+      data: {
+        tenant_id: webhook.tenant_id,
+        integration_id: webhook.id,
+        type: 'webhook',
+        action: webhook.event_type,
+        status: response.ok ? 'success' : 'error',
+        response_time: 0,
+        payload: JSON.stringify({
+          url: webhook.target_url,
+          status: response.status,
+          payload
+        })
+      }
+    });
 
     res.json({ success: true, status: response.status, response: responseText });
   } catch (error: any) {
@@ -123,42 +120,57 @@ router.post('/webhooks/:id/test', async (req, res) => {
 });
 
 // API Keys
-router.get('/api-keys', (req, res) => {
-  const keys = db.prepare('SELECT id, name, scopes, status, created_at, expires_at FROM ApiKeys').all();
+router.get('/api-keys', async (req, res) => {
+  const keys = await prisma.apiKey.findMany({
+    select: { id: true, name: true, scopes: true, status: true, created_at: true, expires_at: true }
+  });
   res.json(keys);
 });
 
-router.post('/api-keys', (req, res) => {
+router.post('/api-keys', async (req, res) => {
   const { name, scopes } = req.body;
   const rawKey = `sk_${crypto.randomBytes(24).toString('hex')}`;
   const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
   const id = uuidv4();
-  
-  db.prepare(`
-    INSERT INTO ApiKeys (id, user_id, tenant_id, key_hash, name, scopes, status)
-    VALUES (?, 'admin', 'default', ?, ?, ?, 'active')
-  `).run(id, keyHash, name, JSON.stringify(scopes));
-  
+
+  await prisma.apiKey.create({
+    data: {
+      id,
+      user_id: 'admin',
+      tenant_id: 'default',
+      key_hash: keyHash,
+      name,
+      scopes: JSON.stringify(scopes),
+      status: 'active'
+    }
+  });
+
   res.json({ id, name, key: rawKey });
 });
 
 // Monitoring
-router.get('/gateway/stats', (req, res) => {
-  const stats = db.prepare(`
-    SELECT 
-      count(*) as total_requests,
-      avg(response_time) as avg_latency,
-      sum(case when status = 'error' then 1 else 0 end) as error_count
-    FROM IntegrationLogs
-    WHERE timestamp > datetime('now', '-24 hours')
-  `).get();
-  
-  const recentLogs = db.prepare(`
-    SELECT * FROM IntegrationLogs 
-    ORDER BY timestamp DESC 
-    LIMIT 50
-  `).all();
-  
+router.get('/gateway/stats', async (req, res) => {
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const [totalRequests, errorCount, avgLatencyResult, recentLogs] = await Promise.all([
+    prisma.integrationLog.count({ where: { timestamp: { gt: twentyFourHoursAgo } } }),
+    prisma.integrationLog.count({ where: { timestamp: { gt: twentyFourHoursAgo }, status: 'error' } }),
+    prisma.integrationLog.aggregate({
+      _avg: { response_time: true },
+      where: { timestamp: { gt: twentyFourHoursAgo } }
+    }),
+    prisma.integrationLog.findMany({
+      orderBy: { timestamp: 'desc' },
+      take: 50
+    })
+  ]);
+
+  const stats = {
+    total_requests: totalRequests,
+    avg_latency: avgLatencyResult._avg.response_time ?? 0,
+    error_count: errorCount
+  };
+
   res.json({ stats, recentLogs });
 });
 

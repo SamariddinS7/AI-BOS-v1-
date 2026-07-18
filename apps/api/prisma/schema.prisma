@@ -1,0 +1,914 @@
+// This is your Prisma schema file.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── 1. IAM ───────────────────────────────────────────────────────────────────
+
+model Tenant {
+  id                String    @id @default(uuid())
+  name              String
+  domain            String?   @unique
+  status            String    @default("active")
+  subscription_plan String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  deleted_at        DateTime?
+
+  roles              Role[]
+  users              User[]
+  customers          Customer[]
+  deals              Deal[]
+  interactions       Interaction[]
+  accounts           Account[]
+  transaction_categories TransactionCategory[]
+  transactions       Transaction[]
+  campaigns          Campaign[]
+  marketing_channels MarketingChannel[]
+  ad_metrics         AdMetric[]
+  departments        Department[]
+  employees          Employee[]
+  kpi_records        KpiRecord[]
+  warehouses         Warehouse[]
+  product_categories ProductCategory[]
+  products           Product[]
+  inventory_stock    InventoryStock[]
+  stock_movements    StockMovement[]
+  workflows          Workflow[]
+  agents             Agent[]
+  audit_logs         AuditLog[]
+  WebhookSubscriptions WebhookSubscription[]
+  DataMappings        DataMapping[]
+  AnalyticsMetrics    AnalyticsMetric[]
+  AnalyticsData       AnalyticsDataEntry[]
+  SessionLogs         SessionLog[]
+
+  @@map("tenants")
+}
+
+model Role {
+  id          String    @id @default(uuid())
+  tenant_id   String
+  name        String
+  description String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+
+  tenant      Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  users       User[]
+  role_permissions RolePermission[]
+
+  @@unique([tenant_id, name])
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+
+  role_permissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  role_id       String
+  permission_id String
+
+  role       Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  tenant_id     String
+  role_id       String?
+  first_name    String
+  last_name     String?
+  email         String
+  password_hash String
+  status        String    @default("active")
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  created_by    String?
+  updated_by    String?
+  deleted_at    DateTime?
+
+  tenant  Tenant  @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  role    Role?   @relation(fields: [role_id], references: [id], onDelete: SetNull)
+
+  refresh_tokens  RefreshToken[]
+  security_settings SecuritySettings?
+  notification_settings NotificationSettings?
+  user_settings   UserSettings?
+  integration_settings IntegrationSettings?
+
+  @@unique([tenant_id, email])
+  @@map("users")
+}
+
+// ─── 2. CRM & Sales ───────────────────────────────────────────────────────────
+
+model Customer {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  name       String
+  industry   String?
+  type       String?
+  ltv        Float     @default(0)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  created_by String?
+  updated_by String?
+  deleted_at DateTime?
+
+  tenant       Tenant        @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  contacts     Contact[]
+  deals        Deal[]
+  interactions Interaction[]
+
+  @@index([tenant_id])
+  @@map("customers")
+}
+
+model Contact {
+  id          String    @id @default(uuid())
+  customer_id String
+  first_name  String
+  last_name   String?
+  email       String?
+  phone       String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  created_by  String?
+  updated_by  String?
+  deleted_at  DateTime?
+
+  customer Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+
+  @@map("contacts")
+}
+
+model Deal {
+  id                 String    @id @default(uuid())
+  tenant_id          String
+  customer_id        String
+  assigned_to        String?
+  name               String
+  title              String?
+  value              Float     @default(0)
+  stage              String
+  probability        Int?
+  expected_close_date String?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+  created_by         String?
+  updated_by         String?
+  deleted_at         DateTime?
+
+  tenant       Tenant        @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  customer     Customer      @relation(fields: [customer_id], references: [id], onDelete: Restrict)
+  interactions Interaction[]
+  transactions Transaction[]
+
+  @@index([tenant_id, stage])
+  @@map("deals")
+}
+
+model Interaction {
+  id               String    @id @default(uuid())
+  tenant_id        String
+  customer_id      String?
+  deal_id          String?
+  type             String
+  summary          String?
+  interaction_date DateTime
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  created_by       String?
+  updated_by       String?
+  deleted_at       DateTime?
+
+  tenant   Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  deal     Deal?     @relation(fields: [deal_id], references: [id], onDelete: Cascade)
+
+  @@map("interactions")
+}
+
+// ─── 3. Finance ───────────────────────────────────────────────────────────────
+
+model Account {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  name       String
+  type       String?
+  currency   String    @default("UZS")
+  balance    Float     @default(0)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  created_by String?
+  updated_by String?
+  deleted_at DateTime?
+
+  tenant       Tenant        @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("accounts")
+}
+
+model TransactionCategory {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  name       String
+  type       String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  tenant       Tenant        @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("transaction_categories")
+}
+
+model Transaction {
+  id               String    @id @default(uuid())
+  tenant_id        String
+  account_id       String
+  category_id      String
+  deal_id          String?
+  type             String
+  amount           Float
+  transaction_date DateTime
+  is_verified      Boolean   @default(false)
+  description      String?
+  counterparty     String?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  created_by       String?
+  updated_by       String?
+  deleted_at       DateTime?
+
+  tenant   Tenant              @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  account  Account             @relation(fields: [account_id], references: [id], onDelete: Restrict)
+  category TransactionCategory @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  deal     Deal?               @relation(fields: [deal_id], references: [id], onDelete: SetNull)
+
+  @@index([tenant_id, transaction_date])
+  @@map("transactions")
+}
+
+// ─── 4. Marketing ─────────────────────────────────────────────────────────────
+
+model Campaign {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  name       String
+  budget     Float     @default(0)
+  start_date String?
+  end_date   String?
+  status     String    @default("planned")
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  created_by String?
+  updated_by String?
+  deleted_at DateTime?
+
+  tenant     Tenant      @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  ad_metrics AdMetric[]
+
+  @@map("campaigns")
+}
+
+model MarketingChannel {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  name       String
+  type       String?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  tenant     Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  ad_metrics AdMetric[]
+
+  @@map("marketing_channels")
+}
+
+model AdMetric {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  campaign_id String
+  channel_id  String
+  metric_date String
+  spend       Float    @default(0)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  revenue     Float    @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  tenant   Tenant           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  campaign Campaign         @relation(fields: [campaign_id], references: [id], onDelete: Cascade)
+  channel  MarketingChannel @relation(fields: [channel_id], references: [id], onDelete: Cascade)
+
+  @@unique([campaign_id, channel_id, metric_date])
+  @@index([campaign_id, metric_date])
+  @@map("ad_metrics")
+}
+
+// ─── 5. HR & Team ─────────────────────────────────────────────────────────────
+
+model Department {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  name       String
+  manager_id String?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  tenant    Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  employees Employee[]
+
+  @@map("departments")
+}
+
+model Employee {
+  id            String    @id @default(uuid())
+  tenant_id     String
+  user_id       String    @unique
+  department_id String?
+  position      String?
+  salary        Float?
+  hire_date     String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  created_by    String?
+  updated_by    String?
+  deleted_at    DateTime?
+
+  tenant     Tenant      @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [department_id], references: [id], onDelete: SetNull)
+  kpi_records KpiRecord[]
+
+  @@map("employees")
+}
+
+model KpiRecord {
+  id               String    @id @default(uuid())
+  tenant_id        String
+  employee_id      String
+  evaluation_month String
+  score            Float
+  comments         String?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  created_by       String?
+  updated_by       String?
+  deleted_at       DateTime?
+
+  tenant   Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+
+  @@map("kpi_records")
+}
+
+// ─── 6. Inventory ─────────────────────────────────────────────────────────────
+
+model Warehouse {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  name       String
+  address    String?
+  location   String?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  tenant               Tenant          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  inventory_stock      InventoryStock[]
+  from_stock_movements StockMovement[] @relation("FromWarehouse")
+  to_stock_movements   StockMovement[] @relation("ToWarehouse")
+
+  @@map("warehouses")
+}
+
+model ProductCategory {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  name       String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+
+  tenant   Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@map("product_categories")
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  tenant_id   String
+  category_id String?
+  name        String
+  sku         String?
+  price       Float     @default(0)
+  cost        Float     @default(0)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  created_by  String?
+  updated_by  String?
+  deleted_at  DateTime?
+
+  tenant          Tenant           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  category        ProductCategory? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  inventory_stock InventoryStock[]
+  stock_movements StockMovement[]
+
+  @@unique([tenant_id, sku])
+  @@map("products")
+}
+
+model InventoryStock {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  product_id   String
+  warehouse_id String
+  quantity     Int      @default(0)
+  updated_at   DateTime @updatedAt
+
+  tenant    Tenant    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  warehouse Warehouse @relation(fields: [warehouse_id], references: [id], onDelete: Cascade)
+
+  @@unique([product_id, warehouse_id])
+  @@map("inventory_stock")
+}
+
+model StockMovement {
+  id               String   @id @default(uuid())
+  tenant_id        String
+  product_id       String
+  from_warehouse_id String?
+  to_warehouse_id  String?
+  type             String
+  quantity         Int
+  movement_date    DateTime @default(now())
+  reference_id     String?
+  created_at       DateTime @default(now())
+  created_by       String?
+
+  tenant         Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  product        Product    @relation(fields: [product_id], references: [id], onDelete: Restrict)
+  from_warehouse Warehouse? @relation("FromWarehouse", fields: [from_warehouse_id], references: [id], onDelete: Restrict)
+  to_warehouse   Warehouse? @relation("ToWarehouse", fields: [to_warehouse_id], references: [id], onDelete: Restrict)
+
+  @@map("stock_movements")
+}
+
+// ─── 7. System & Automation ───────────────────────────────────────────────────
+
+model Workflow {
+  id               String    @id @default(uuid())
+  tenant_id        String
+  name             String
+  n8n_webhook_url  String?
+  status           String    @default("active")
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  created_by       String?
+  updated_by       String?
+  deleted_at       DateTime?
+
+  tenant     Tenant              @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  nodes      WorkflowNode[]
+  edges      WorkflowEdge[]
+  executions WorkflowExecution[]
+
+  @@map("workflows")
+}
+
+model WorkflowNode {
+  id          String   @id @default(uuid())
+  workflow_id String?
+  type        String?
+  label       String?
+  config      String?
+  position_x  Float?
+  position_y  Float?
+
+  workflow Workflow? @relation(fields: [workflow_id], references: [id], onDelete: Cascade)
+
+  @@map("WorkflowNodes")
+}
+
+model WorkflowEdge {
+  id             String  @id @default(uuid())
+  workflow_id    String?
+  source_node_id String?
+  target_node_id String?
+  label          String?
+  config         String?
+
+  workflow Workflow? @relation(fields: [workflow_id], references: [id], onDelete: Cascade)
+
+  @@map("WorkflowEdges")
+}
+
+model WorkflowExecution {
+  id           String    @id @default(uuid())
+  workflow_id  String?
+  status       String?
+  start_time   DateTime  @default(now())
+  end_time     DateTime?
+  trigger_data String?
+
+  workflow Workflow?      @relation(fields: [workflow_id], references: [id], onDelete: Cascade)
+  logs     WorkflowLog[]
+
+  @@map("WorkflowExecutions")
+}
+
+model WorkflowLog {
+  id           Int      @id @default(autoincrement())
+  execution_id String?
+  node_id      String?
+  level        String?
+  message      String?
+  timestamp    DateTime @default(now())
+
+  execution WorkflowExecution? @relation(fields: [execution_id], references: [id], onDelete: Cascade)
+
+  @@map("WorkflowLogs")
+}
+
+model Agent {
+  id             String    @id @default(uuid())
+  tenant_id      String
+  name           String
+  platform       String
+  webhook_url    String?
+  allowed_events String?
+  permissions    String?
+  status         String    @default("active")
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  created_by     String?
+  deleted_at     DateTime?
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("agents")
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  user_id    String?
+  tenant_id  String?
+  key_hash   String
+  name       String?
+  scopes     String?
+  status     String    @default("active")
+  created_at DateTime  @default(now())
+  expires_at DateTime?
+
+  @@map("ApiKeys")
+}
+
+model Backup {
+  id         String   @id @default(uuid())
+  filename   String
+  size       Int?
+  status     String?
+  created_at DateTime @default(now())
+
+  @@map("Backups")
+}
+
+model Plugin {
+  id            String   @id @default(uuid())
+  name          String
+  description   String?
+  version       String?
+  author        String?
+  permissions   String?
+  config_schema String?
+  status        String   @default("inactive")
+  created_at    DateTime @default(now())
+
+  @@map("Plugins")
+}
+
+model WebhookSubscription {
+  id         String   @id @default(uuid())
+  tenant_id  String?
+  event_type String
+  target_url String
+  secret     String?
+  status     String   @default("active")
+  created_at DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenant_id], references: [id])
+
+  @@map("WebhookSubscriptions")
+}
+
+model IntegrationLog {
+  id            Int      @id @default(autoincrement())
+  tenant_id     String?
+  integration_id String?
+  type          String?
+  action        String?
+  status        String?
+  response_time Int?
+  payload       String?
+  error_message String?
+  timestamp     DateTime @default(now())
+
+  @@map("IntegrationLogs")
+}
+
+model DataMapping {
+  id             String   @id @default(uuid())
+  tenant_id      String?
+  name           String
+  source_format  String?
+  target_format  String?
+  mapping_rules  String?
+  created_at     DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenant_id], references: [id])
+
+  @@map("DataMappings")
+}
+
+// ─── 8. Analytics ─────────────────────────────────────────────────────────────
+
+model AnalyticsMetric {
+  id         Int      @id @default(autoincrement())
+  tenant_id  String?
+  module     String?
+  metric     String?
+  level      String?
+  period_key String?
+  value      Float?
+  timestamp  DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenant_id], references: [id])
+
+  @@map("AnalyticsMetrics")
+}
+
+model AnalyticsDataEntry {
+  id         Int     @id @default(autoincrement())
+  tenant_id  String?
+  module     String?
+  metric     String?
+  value      Float?
+  date       String?
+  department String?
+  region     String?
+  product    String?
+  campaign   String?
+  employee   String?
+
+  tenant Tenant? @relation(fields: [tenant_id], references: [id])
+
+  @@map("AnalyticsData")
+}
+
+model SessionLog {
+  id            Int      @id @default(autoincrement())
+  user_id       String?
+  tenant_id     String?
+  device        String?
+  ip_address    String?
+  login_time    DateTime @default(now())
+  last_activity DateTime @default(now())
+  status        String   @default("active")
+
+  tenant Tenant? @relation(fields: [tenant_id], references: [id])
+
+  @@map("SessionLog")
+}
+
+// ─── 9. Settings & Security ───────────────────────────────────────────────────
+
+model SecuritySettings {
+  user_id                  String  @id
+  tenant_id                String?
+  two_factor_enabled       Boolean @default(false)
+  biometric_enabled        Boolean @default(false)
+  session_timeout_minutes  Int     @default(30)
+  login_alert_enabled      Boolean @default(true)
+  allowed_ips              String  @default("[]")
+  updated_at               DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("SecuritySettings")
+}
+
+model NotificationSettings {
+  user_id          String  @id
+  tenant_id        String?
+  email_enabled    Boolean @default(true)
+  sms_enabled      Boolean @default(false)
+  push_enabled     Boolean @default(true)
+  marketing_alerts Boolean @default(true)
+  financial_alerts Boolean @default(true)
+  ai_alerts        Boolean @default(true)
+  system_alerts    Boolean @default(true)
+  updated_at       DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("NotificationSettings")
+}
+
+model UserSettings {
+  user_id                  String  @id
+  tenant_id                String?
+  theme                    String  @default("system")
+  font_size                String  @default("medium")
+  primary_color            String  @default("teal")
+  language                 String  @default("uz")
+  timezone                 String  @default("Asia/Tashkent")
+  date_format              String  @default("DD.MM.YYYY")
+  number_format            String  @default("space")
+  currency_format          String  @default("UZS")
+  compact_mode             Boolean @default(false)
+  animations_enabled       Boolean @default(true)
+  high_contrast            Boolean @default(false)
+  large_cursor             Boolean @default(false)
+  focus_highlight          Boolean @default(false)
+  screen_reader_optimized  Boolean @default(false)
+  updated_at               DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("UserSettings")
+}
+
+model IntegrationSettings {
+  user_id        String  @id
+  tenant_id      String?
+  n8n_url        String?
+  n8n_api_key    String?
+  openai_api_key String?
+  webhook_secret String?
+  updated_at     DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("IntegrationSettings")
+}
+
+model TelegramSettings {
+  tenant_id    String  @id
+  bot_token    String?
+  system_prompt String?
+  custom_code  String?
+  auto_reply   Boolean @default(false)
+  use_custom_code Boolean @default(false)
+  is_active    Boolean @default(false)
+  updated_at   DateTime @updatedAt
+
+  @@map("TelegramSettings")
+}
+
+model TelegramMessage {
+  id         Int      @id @default(autoincrement())
+  tenant_id  String?
+  chat_id    String?
+  username   String?
+  text       String?
+  is_bot     Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@map("TelegramMessages")
+}
+
+// ─── 10. Audit ────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  user_id    String?
+  action     String
+  table_name String
+  record_id  String?
+  old_data   String?
+  new_data   String?
+  ip_address String?
+  created_at DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
+}
+
+model LegacyAuditLog {
+  id        Int      @id @default(autoincrement())
+  user_id   String?
+  tenant_id String?
+  action    String?
+  module    String?
+  ip_address String?
+  old_value String?
+  new_value String?
+  timestamp DateTime @default(now())
+
+  @@map("AuditLog")
+}
+
+// ─── 11. Skills & Marketing AI ────────────────────────────────────────────────
+
+model MarketingSkillExecution {
+  id                   Int      @id @default(autoincrement())
+  tenant_id            String?
+  skill_type           String?
+  status               String?
+  input_parameters     String?
+  output_result        String?
+  confidence_score     Float?
+  user_id              String?
+  approval_workflow_id String?
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  @@map("MarketingSkillExecution")
+}
+
+model ApprovalWorkflow {
+  id           String   @id @default(uuid())
+  tenant_id    String?
+  skill_type   String?
+  requester_id String?
+  status       String?
+  approvals    String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@map("ApprovalWorkflow")
+}
+
+model SkillRecommendation {
+  id             Int      @id @default(autoincrement())
+  tenant_id      String?
+  skill_type     String?
+  recommendation String?
+  confidence     Float?
+  created_at     DateTime @default(now())
+
+  @@map("SkillRecommendation")
+}
+
+// ─── 12. Auth ─────────────────────────────────────────────────────────────────
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  user_id    String
+  token_hash String    @unique
+  expires_at DateTime
+  created_at DateTime  @default(now())
+  revoked_at DateTime?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([token_hash])
+  @@map("refresh_tokens")
+}
+
+// ─── 13. API Test Log ─────────────────────────────────────────────────────────
+
+model ApiTestLog {
+  id               Int      @id @default(autoincrement())
+  endpoint         String?
+  method           String?
+  timestamp        DateTime @default(now())
+  status_code      Int?
+  response_time_ms Float?
+  passed           Boolean?
+  error_type       String?
+  requires_auth    Boolean?
+  notes            String?
+
+  @@map("api_test_log")
+}

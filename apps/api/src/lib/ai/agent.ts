@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
-import db from '../db/settings';
+import prisma from '../db/prisma.js';
 
 export async function processAICommand(text: string, systemInstruction?: string, lang: string = 'uz') {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -93,13 +93,11 @@ export async function processAICommand(text: string, systemInstruction?: string,
         const args = call.args as any;
         const { metric, level, period_key } = args;
         
-        let query = 'SELECT * FROM AnalyticsMetrics WHERE metric = ?';
-        const params: any[] = [metric];
-        if (level) { query += ' AND level = ?'; params.push(level); }
-        if (period_key) { query += ' AND period_key = ?'; params.push(period_key); }
-        
         try {
-          const data = db.prepare(query).all(...params);
+          const where: any = { metric };
+          if (level) where.level = level;
+          if (period_key) where.period_key = period_key;
+          const data = await prisma.analyticsMetric.findMany({ where });
           const finalResponse = await ai.models.generateContent({
              model: 'gemini-3.1-pro-preview',
              contents: `Context: User asked "${text}". Data retrieved: ${JSON.stringify(data)}. Provide a natural language summary in ${lang}.`
@@ -111,24 +109,24 @@ export async function processAICommand(text: string, systemInstruction?: string,
         }
      } else if (call.name === 'queryCRM') {
         const { type, id, search } = call.args as any;
-        let query = '';
-        let params: any[] = [];
-
-        if (type === 'customers') {
-          query = 'SELECT * FROM customers';
-          if (id) { query += ' WHERE id = ?'; params.push(id); }
-          else if (search) { query += ' WHERE name LIKE ?'; params.push(`%${search}%`); }
-        } else if (type === 'deals') {
-          query = 'SELECT * FROM deals';
-          if (id) { query += ' WHERE customer_id = ?'; params.push(id); }
-          else if (search) { query += ' WHERE name LIKE ?'; params.push(`%${search}%`); }
-        } else if (type === 'interactions') {
-          query = 'SELECT * FROM interactions';
-          if (id) { query += ' WHERE customer_id = ?'; params.push(id); }
-        }
 
         try {
-          const data = db.prepare(query).all(...params);
+          let data: any[] = [];
+          if (type === 'customers') {
+            const where: any = { deleted_at: null };
+            if (id) where.id = id;
+            else if (search) where.name = { contains: search };
+            data = await prisma.customer.findMany({ where });
+          } else if (type === 'deals') {
+            const where: any = { deleted_at: null };
+            if (id) where.customer_id = id;
+            else if (search) where.name = { contains: search };
+            data = await prisma.deal.findMany({ where });
+          } else if (type === 'interactions') {
+            const where: any = { deleted_at: null };
+            if (id) where.customer_id = id;
+            data = await prisma.interaction.findMany({ where });
+          }
           const finalResponse = await ai.models.generateContent({
              model: 'gemini-3.1-pro-preview',
              contents: `Context: User asked "${text}". CRM Data retrieved: ${JSON.stringify(data)}. Provide a natural language summary in ${lang}.`
@@ -139,21 +137,22 @@ export async function processAICommand(text: string, systemInstruction?: string,
         }
      } else if (call.name === 'queryHR') {
         const { type, id, search } = call.args as any;
-        let query = '';
-        let params: any[] = [];
-
-        if (type === 'employees') {
-          query = 'SELECT e.*, u.first_name, u.last_name, d.name as department_name FROM employees e JOIN users u ON e.user_id = u.id LEFT JOIN departments d ON e.department_id = d.id';
-          if (search) { query += ' WHERE u.first_name LIKE ? OR u.last_name LIKE ?'; params.push(`%${search}%`, `%${search}%`); }
-        } else if (type === 'departments') {
-          query = 'SELECT * FROM departments';
-        } else if (type === 'kpi') {
-          query = 'SELECT * FROM kpi_records';
-          if (id) { query += ' WHERE employee_id = ?'; params.push(id); }
-        }
 
         try {
-          const data = db.prepare(query).all(...params);
+          let data: any[] = [];
+          if (type === 'employees') {
+            const where: any = { deleted_at: null };
+            if (search) {
+              where.user = { OR: [{ first_name: { contains: search } }, { last_name: { contains: search } }] };
+            }
+            data = await prisma.employee.findMany({ where, include: { user: true, department: true } });
+          } else if (type === 'departments') {
+            data = await prisma.department.findMany({ where: { deleted_at: null } });
+          } else if (type === 'kpi') {
+            const where: any = { deleted_at: null };
+            if (id) where.employee_id = id;
+            data = await prisma.kpiRecord.findMany({ where });
+          }
           const finalResponse = await ai.models.generateContent({
              model: 'gemini-3.1-pro-preview',
              contents: `Context: User asked "${text}". HR Data retrieved: ${JSON.stringify(data)}. Provide a natural language summary in ${lang}.`
@@ -164,21 +163,20 @@ export async function processAICommand(text: string, systemInstruction?: string,
         }
      } else if (call.name === 'queryInventory') {
         const { type, id, search } = call.args as any;
-        let query = '';
-        let params: any[] = [];
-
-        if (type === 'products') {
-          query = 'SELECT * FROM products';
-          if (search) { query += ' WHERE name LIKE ?'; params.push(`%${search}%`); }
-        } else if (type === 'stock') {
-          query = 'SELECT s.*, p.name as product_name, w.name as warehouse_name FROM inventory_stock s JOIN products p ON s.product_id = p.id JOIN warehouses w ON s.warehouse_id = w.id';
-          if (id) { query += ' WHERE s.product_id = ?'; params.push(id); }
-        } else if (type === 'warehouses') {
-          query = 'SELECT * FROM warehouses';
-        }
 
         try {
-          const data = db.prepare(query).all(...params);
+          let data: any[] = [];
+          if (type === 'products') {
+            const where: any = { deleted_at: null };
+            if (search) where.name = { contains: search };
+            data = await prisma.product.findMany({ where });
+          } else if (type === 'stock') {
+            const where: any = { deleted_at: null };
+            if (id) where.product_id = id;
+            data = await prisma.inventoryStock.findMany({ where, include: { product: true, warehouse: true } });
+          } else if (type === 'warehouses') {
+            data = await prisma.warehouse.findMany({ where: { deleted_at: null } });
+          }
           const finalResponse = await ai.models.generateContent({
              model: 'gemini-3.1-pro-preview',
              contents: `Context: User asked "${text}". Inventory Data retrieved: ${JSON.stringify(data)}. Provide a natural language summary in ${lang}.`
@@ -189,22 +187,22 @@ export async function processAICommand(text: string, systemInstruction?: string,
         }
      } else if (call.name === 'queryAccounting') {
         const { type, id, limit } = call.args as any;
-        let query = '';
-        let params: any[] = [];
-
-        if (type === 'transactions') {
-          query = 'SELECT * FROM transactions';
-          if (id) { query += ' WHERE id = ?'; params.push(id); }
-          query += ' ORDER BY transaction_date DESC LIMIT ?';
-          params.push(limit || 10);
-        } else if (type === 'accounts') {
-          query = 'SELECT * FROM accounts';
-        } else if (type === 'categories') {
-          query = 'SELECT * FROM transaction_categories';
-        }
 
         try {
-          const data = db.prepare(query).all(...params);
+          let data: any[] = [];
+          if (type === 'transactions') {
+            const where: any = { deleted_at: null };
+            if (id) where.id = id;
+            data = await prisma.transaction.findMany({
+              where,
+              orderBy: { transaction_date: 'desc' },
+              take: limit || 10,
+            });
+          } else if (type === 'accounts') {
+            data = await prisma.account.findMany({ where: { deleted_at: null } });
+          } else if (type === 'categories') {
+            data = await prisma.transactionCategory.findMany({ where: { deleted_at: null } });
+          }
           const finalResponse = await ai.models.generateContent({
              model: 'gemini-3.1-pro-preview',
              contents: `Context: User asked "${text}". Accounting Data retrieved: ${JSON.stringify(data)}. Provide a natural language summary in ${lang}.`

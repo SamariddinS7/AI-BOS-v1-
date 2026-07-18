@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import db from '../lib/db/settings.js';
+import prisma from '../lib/db/prisma.js';
 
 export interface AuthUser {
   id: string;
@@ -53,7 +53,7 @@ export function verifyRefreshToken(token: string): { id: string; email: string }
 
 // ─── requireAuth middleware ───────────────────────────────────────────────────
 
-export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+export const requireAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
 
   // 1. Bearer JWT token
@@ -66,11 +66,9 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
       // IP allowlist enforcement (carry forward from legacy)
       const clientIp = req.ip || req.socket.remoteAddress || '';
       try {
-        const secSettings = db
-          .prepare('SELECT allowed_ips FROM SecuritySettings WHERE user_id = ?')
-          .get(decoded.id) as any;
-        if (secSettings) {
-          const allowedIps: string[] = JSON.parse(secSettings.allowed_ips || '[]');
+        const sec = await prisma.securitySettings.findUnique({ where: { user_id: decoded.id } });
+        if (sec) {
+          const allowedIps: string[] = JSON.parse((sec as any).allowed_ips || '[]');
           if (allowedIps.length > 0 && !allowedIps.includes(clientIp)) {
             res.status(403).json({ error: 'Access denied from this IP address.' });
             return;

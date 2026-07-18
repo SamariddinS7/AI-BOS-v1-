@@ -1,4 +1,4 @@
-import db from '../db/settings';
+import prisma from '../db/prisma.js';
 
 export interface PluginMetadata {
   id: string;
@@ -12,29 +12,29 @@ export interface PluginMetadata {
 
 export class PluginManager {
   static async getActivePlugins() {
-    return db.prepare('SELECT * FROM Plugins WHERE status = "active"').all();
+    return await prisma.plugin.findMany({ where: { status: 'active' } });
   }
 
   static async installPlugin(metadata: PluginMetadata) {
-    db.prepare(`
-      INSERT INTO Plugins (id, name, description, version, author, permissions, config_schema, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-    `).run(
-      metadata.id,
-      metadata.name,
-      metadata.description,
-      metadata.version,
-      metadata.author,
-      JSON.stringify(metadata.permissions),
-      JSON.stringify(metadata.configSchema)
-    );
+    await prisma.plugin.create({
+      data: {
+        id: metadata.id,
+        name: metadata.name,
+        description: metadata.description,
+        version: metadata.version,
+        author: metadata.author,
+        permissions: JSON.stringify(metadata.permissions),
+        config_schema: JSON.stringify(metadata.configSchema),
+        status: 'active',
+      }
+    });
   }
 
   static async uninstallPlugin(id: string) {
-    db.prepare('DELETE FROM Plugins WHERE id = ?').run(id);
+    await prisma.plugin.delete({ where: { id } });
   }
 
   static async updatePluginStatus(id: string, status: 'active' | 'inactive') {
-    db.prepare('UPDATE Plugins SET status = ? WHERE id = ?').run(status, id);
+    await prisma.plugin.update({ where: { id }, data: { status } });
   }
 }
