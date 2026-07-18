@@ -1,0 +1,2 @@
+- [Monorepo dev server ports](monorepo-ports.md) — API on 5001 (API_PORT), Vite on 5000 (PORT); WebSocket at /ws path, proxied via Vite
+- [Python backend archived](python-archive.md) — archive/python-backend/ has PnL, Cashflow, KPI, CircuitBreaker not yet in Node

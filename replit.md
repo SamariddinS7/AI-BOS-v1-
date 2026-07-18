@@ -4,11 +4,13 @@ A full-stack enterprise AI platform integrating workflow automation, CRM, analyt
 
 ## How to run
 
-The workflow "Start application" runs `npm run dev`, which starts:
-- **Express backend** (API routes, WebSocket, SQLite via `better-sqlite3`)
-- **Vite dev server** (React frontend, served via Express middleware)
+The workflow "Start application" runs `npm run dev` (concurrently):
+- **`apps/api`** — Express backend on **port 5001** (`API_PORT=5001`)
+  - API routes, WebSocket (`/ws`), SQLite via `better-sqlite3`
+- **`apps/web`** — Vite dev server on **port 5000** (`PORT=5000`)
+  - React frontend; proxies `/api`, `/voice`, `/ws` → port 5001
 
-App is available on **port 5000**.
+App is available on **port 5000** (Vite). Production: `npm run build && npm start`.
 
 ## Tech stack
 
