@@ -1,48 +1,58 @@
-# AI-BOS — Artificial Intelligence Business Operating System
+# AI-BOS — Business Operating System
 
-A full-stack enterprise AI platform integrating workflow automation, CRM, analytics, finance, and AI agent orchestration.
+AI-BOS is a monorepo business platform with AI integrations, featuring a dashboard, CRM, finance, analytics, HR, and workflow automation modules. The UI is in Uzbek.
 
-## How to run
+## Architecture
 
-The workflow "Start application" runs `npm run dev` (concurrently):
-- **`apps/api`** — Express backend on **port 5001** (`API_PORT=5001`)
-  - API routes, WebSocket (`/ws`), SQLite via `better-sqlite3`
-- **`apps/web`** — Vite dev server on **port 5000** (`PORT=5000`)
-  - React frontend; proxies `/api`, `/voice`, `/ws` → port 5001
+| Layer | Stack |
+|---|---|
+| Frontend | React 19, Vite 8, Tailwind CSS 4, Zustand, Recharts, Three.js |
+| Backend | Node.js/Express 5, TypeScript, `tsx` for dev |
+| Database | SQLite (`better-sqlite3`) for local dev |
+| AI | Google Gemini (lazy-loaded), optional OpenAI/Anthropic |
+| Auth | JWT via `SESSION_SECRET`, dev bypass active in `development` mode |
 
-App is available on **port 5000** (Vite). Production: `npm run build && npm start`.
+## Monorepo Structure
 
-## Tech stack
-
-- **Frontend**: React 19, Vite, Tailwind CSS v4, Recharts, React Three Fiber
-- **Backend**: TypeScript/Express, SQLite (`settings.db`), WebSocket (`ws`)
-- **AI**: Google Gemini via `@google/genai`
-- **Auth/DB**: Supabase (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`)
-- **Integrations**: Telegram bot (`TELEGRAM_BOT_TOKEN`), Firebase/Firestore, n8n
-
-## Required secrets (set in Replit Secrets)
-
-| Secret | Purpose |
-|--------|---------|
-| `GEMINI_API_KEY` | AI agent features — get free at aistudio.google.com |
-| `VITE_SUPABASE_URL` | Supabase project URL (auth & database) |
-| `VITE_SUPABASE_ANON_KEY` | Supabase public anon key |
-| `TELEGRAM_BOT_TOKEN` | Optional — enables Telegram bot integration |
-| `APP_AUTH_TOKEN` | Optional — secures internal API communication |
-
-## Optional Python backend
-
-The `/backend` directory contains a separate FastAPI service (Python). It is **not** required for the main app to run. To use it:
-```bash
-cd backend && pip install -r requirements.txt && uvicorn main:app --reload
 ```
+apps/api/     — Express API server  (port 5001 in dev)
+apps/web/     — Vite/React frontend (port 5000 in dev)
+packages/     — Shared config and types
+infra/        — Docker/K8s configs and env example
+archive/      — Python backend (archived, not used)
+```
+
+## Running
+
+```bash
+npm install     # install all workspace deps
+npm run dev     # starts API (5001) + Web (5000) concurrently
+```
+
+The workflow **Start application** runs `npm run dev` and serves the web app on port 5000.
+
+## Environment Variables
+
+Set via Replit's Secrets/Env panel (not `.env` files):
+
+| Variable | Purpose | Required? |
+|---|---|---|
+| `SESSION_SECRET` | JWT signing secret | Yes (already set) |
+| `API_PORT` | API server port | Set to `5001` |
+| `PORT` | Vite dev port | Set to `5000` |
+| `APP_AUTH_TOKEN` | Internal API auth token | Set to `dev-auth-token` |
+| `VITE_APP_AUTH_TOKEN` | Frontend auth token | Set to `dev-auth-token` |
+| `GEMINI_API_KEY` | Google Gemini AI | Optional (AI features) |
+| `VITE_SUPABASE_URL` | Supabase project URL | Optional (cloud DB) |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key | Optional (cloud DB) |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot | Optional |
 
 ## Notes
 
-- SQLite database (`settings.db`) is pre-seeded and lives at the project root.
-- `PORT` is set to `5000` via Replit environment so the preview works correctly.
-- `npm run build` compiles the app for production; `npm start` serves the built output.
+- Auth is bypassed in `development` mode (`NODE_ENV=development`) — no login required.
+- Gemini is lazy-initialized; missing key only fails when AI endpoints are called.
+- Supabase/Firebase are optional; the app falls back to local SQLite.
 
-## User preferences
+## User Preferences
 
-<!-- Add user preferences here -->
+- Keep the existing monorepo structure and TypeScript/Express stack.
