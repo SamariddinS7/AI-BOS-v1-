@@ -17,7 +17,7 @@ export function useRealTimeAnalytics() {
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    const wsUrl = `${protocol}//${host}`;
+    const wsUrl = `${protocol}//${host}/ws`;
 
     const connect = () => {
       const ws = new WebSocket(wsUrl);

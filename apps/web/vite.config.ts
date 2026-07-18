@@ -17,13 +17,16 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '0.0.0.0',
+      port: 5000,
+      strictPort: true,
       hmr: process.env.DISABLE_HMR !== 'true'
         ? { clientPort: process.env.REPLIT_DEV_DOMAIN ? 443 : undefined }
         : false,
       allowedHosts: true,
       proxy: {
-        '/api': 'http://localhost:5000',
-        '/voice': 'http://localhost:5000',
+        '/api': 'http://localhost:5001',
+        '/voice': 'http://localhost:5001',
+        '/ws': { target: 'ws://localhost:5001', ws: true, changeOrigin: true },
       },
     },
   };

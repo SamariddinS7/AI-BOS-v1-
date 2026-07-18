@@ -32,7 +32,9 @@ import skillsRouter from './routes/skills';
 import { apiGatewayMiddleware } from './middleware/gateway';
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+// In monorepo dev mode: API runs on API_PORT (5001), Vite runs on PORT (5000).
+// In production: API runs on PORT (serves static frontend too).
+const PORT = Number(process.env.API_PORT) || Number(process.env.PORT) || 5001;
 console.log('APP_AUTH_TOKEN:', process.env.APP_AUTH_TOKEN ? 'DEFINED' : 'UNDEFINED');
 
 // Middleware
@@ -462,21 +464,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'AI-BOS Automation Engine', env: process.env.NODE_ENV });
 });
 
-// --- Vite Integration ---
+// --- Frontend Serving ---
+// Dev:  Vite runs as a separate process on PORT 5000 (apps/web/vite.config.ts),
+//       proxying /api and /voice requests to this API server on API_PORT 5001.
+// Prod: This server statically serves the built frontend from apps/web/dist/.
 
 async function startServer() {
-  console.log(`Starting server in ${process.env.NODE_ENV || 'development'} mode...`);
-  if (process.env.NODE_ENV !== 'production') {
-    const { createServer: createViteServer } = await import('vite');
-    // Point to apps/web/vite.config.ts (two levels up from apps/api/src/)
-    const webViteConfig = path.resolve(__dirname, '../../web/vite.config.ts');
-    const vite = await createViteServer({
-      configFile: webViteConfig,
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
+  console.log(`Starting API server in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}...`);
+  if (process.env.NODE_ENV === 'production') {
     // Serve built frontend from apps/web/dist/
     const webDist = path.resolve(__dirname, '../../web/dist');
     app.use(express.static(webDist));
@@ -500,7 +495,8 @@ async function startServer() {
   });
 
   // WebSocket Server for Real-time Analytics
-  const wss = new WebSocketServer({ server });
+  // Path '/ws' allows Vite dev proxy to forward WS connections from port 5000 → 5001
+  const wss = new WebSocketServer({ server, path: '/ws' });
   
   wss.on('error', (err) => {
     console.error('WebSocket server error:', err);
